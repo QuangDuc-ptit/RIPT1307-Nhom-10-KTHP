@@ -1,0 +1,58 @@
+// Prisma schema
+// Tài liệu: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(USER)
+  avatar       String?
+  posts        Post[]
+  refreshTokens RefreshToken[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Post {
+  id         String   @id @default(cuid())
+  title      String
+  slug       String   @unique
+  content    String
+  excerpt    String?
+  coverImage String?
+  published  Boolean  @default(false)
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([published, createdAt])
+  @@index([authorId])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
