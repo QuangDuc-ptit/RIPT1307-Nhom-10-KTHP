@@ -1,18 +1,14 @@
-import { useEffect } from 'react';
-import { AppRoutes } from '@/routes';
-import { useAuthStore } from '@/store/auth';
+import { RouterProvider } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async'; // 1. Import thêm cái này
+import { router } from './routes';
 
-/**
- * App entry component:
- * - khi vừa mở app, nếu có token trong localStorage thì gọi `me` để khôi phục user.
- * - Routes nằm trong <AppRoutes/>.
- */
-export default function App() {
-  const bootstrap = useAuthStore((s) => s.bootstrap);
-
-  useEffect(() => {
-    bootstrap();
-  }, [bootstrap]);
-
-  return <AppRoutes />;
+function App() {
+  return (
+    // 2. Bọc HelmetProvider ra ngoài RouterProvider
+    <HelmetProvider>
+      <RouterProvider router={router} />
+    </HelmetProvider>
+  );
 }
+
+export default App;
