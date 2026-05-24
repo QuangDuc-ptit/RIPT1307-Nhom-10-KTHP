@@ -1,18 +1,18 @@
 import type { MenuProps } from 'antd';
 import {
   DashboardOutlined,
-  FileTextOutlined,
-  SettingOutlined,
-  TeamOutlined,
+  VideoCameraOutlined,    // Icon phù hợp cho Quản lý rạp phim / nội dung
+  CalendarOutlined,       // Lịch chiếu
+  CoffeeOutlined,         // Đồ ăn và nước uống
+  PercentageOutlined,     // Khuyến mãi
+  BarChartOutlined,       // Báo cáo
+  SettingOutlined,        // Cài đặt
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
 /**
- * Menu sidebar cho admin. Chỉ cần sửa file này khi muốn thêm/bớt menu.
- *
+ * Menu sidebar cho admin rạp phim KSTAR.
  * `key` PHẢI trùng với path để menu tự highlight đúng item theo URL.
- *
- * Để phân quyền theo role, thêm `requireRole` rồi lọc ở `AdminLayout`.
  */
 export interface AdminMenuItem {
   key: string;
@@ -29,21 +29,35 @@ export const adminMenu: AdminMenuItem[] = [
     icon: <DashboardOutlined />,
   },
   {
-    key: '/users',
-    label: <Link to='/users'>Người dùng</Link>,
-    icon: <TeamOutlined />,
-    requireRole: ['ADMIN'],
+    key: '/content',
+    label: <Link to='/content'>Quản lý rạp</Link>, // Đã đổi tên danh mục theo yêu cầu của bạn
+    icon: <VideoCameraOutlined />,
   },
   {
-    key: '/posts',
-    label: <Link to='/posts'>Bài viết</Link>,
-    icon: <FileTextOutlined />,
+    key: '/showtimes',
+    label: <Link to='/showtimes'>Lịch chiếu</Link>,
+    icon: <CalendarOutlined />,
+  },
+  {
+    key: '/food-drink',
+    label: <Link to='/food-drink'>Đồ ăn và nước uống</Link>,
+    icon: <CoffeeOutlined />,
+  },
+  {
+    key: '/promotions',
+    label: <Link to='/promotions'>Khuyến mãi</Link>,
+    icon: <PercentageOutlined />,
+  },
+  {
+    key: '/reports',
+    label: <Link to='/reports'>Báo cáo</Link>,
+    icon: <BarChartOutlined />,
   },
   {
     key: '/settings',
     label: <Link to='/settings'>Cài đặt</Link>,
     icon: <SettingOutlined />,
-    requireRole: ['ADMIN'],
+    requireRole: ['ADMIN'], // Chỉ tài khoản ADMIN mới nhìn thấy mục Cài đặt này
   },
 ];
 
