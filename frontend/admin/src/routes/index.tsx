@@ -8,7 +8,8 @@ import ProtectedRoute from './ProtectedRoute';
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
 const UsersPage = lazy(() => import('@/pages/users/UsersPage'));
-const PostsPage = lazy(() => import('@/pages/posts/PostsPage'));
+// Import lazy cho trang Quản lý rạp mới tạo
+const TheatersPage = lazy(() => import('@/pages/theaters/TheatersPage')); 
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'));
 const ForbiddenPage = lazy(() => import('@/pages/ForbiddenPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
@@ -33,7 +34,10 @@ export function AppRoutes() {
             <Route index element={<Navigate to='/dashboard' replace />} />
             <Route path='dashboard' element={<DashboardPage />} />
             <Route path='users' element={<UsersPage />} />
-            <Route path='posts' element={<PostsPage />} />
+            
+            {/* Đổi đường dẫn từ posts sang content để đồng bộ với menu Quản lý rạp */}
+            <Route path='content' element={<TheatersPage />} /> 
+            
             <Route path='settings' element={<SettingsPage />} />
           </Route>
         </Route>
