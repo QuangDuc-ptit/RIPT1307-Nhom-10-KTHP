@@ -55,7 +55,6 @@ const LoginPage: React.FC = () => {
       </div>
 
       <Form.Item>
-        {/* Đã cập nhật: borderRadius: '30px' */}
         <Button type="primary" htmlType="submit" block size="large" style={{ backgroundColor: '#ee1e63', border: 'none', height: '50px', fontSize: '18px', fontWeight: 'bold', borderRadius: '30px' }}>
           Đăng nhập
         </Button>
@@ -68,7 +67,6 @@ const LoginPage: React.FC = () => {
       </div>
 
       <div style={{ display: 'flex', gap: '15px' }}>
-        {/* Đã cập nhật: borderRadius: '30px' */}
         <Button block size="large" icon={<FacebookFilled style={{ fontSize: '22px' }} />} style={{ backgroundColor: '#3A5BA0', color: 'white', border: 'none', height: '50px', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           Facebook
         </Button>
@@ -91,23 +89,39 @@ const LoginPage: React.FC = () => {
         <Input.Password placeholder="Tạo mật khẩu" style={CustomInputStyle} />
       </Form.Item>
       <Form.Item>
-        {/* Đã cập nhật: borderRadius: '30px' */}
         <Button type="primary" htmlType="submit" block size="large" style={{ backgroundColor: '#ee1e63', border: 'none', height: '50px', marginTop: '20px', fontSize: '18px', fontWeight: 'bold', borderRadius: '30px' }}>
           Đăng ký ngay
         </Button>
       </Form.Item>
+
+      {/* --- BỔ SUNG KHỐI SOCIAL LOGIN CHO ĐĂNG KÝ --- */}
+      <div style={{ display: 'flex', alignItems: 'center', margin: '25px 0', color: 'white' }}>
+        <div style={{ flex: 1, height: '1px', backgroundColor: 'white' }} />
+        <span style={{ padding: '0 15px', color: '#aaaaaa' }}>Hoặc đăng ký với</span>
+        <div style={{ flex: 1, height: '1px', backgroundColor: 'white' }} />
+      </div>
+
+      <div style={{ display: 'flex', gap: '15px' }}>
+        <Button block size="large" icon={<FacebookFilled style={{ fontSize: '22px' }} />} style={{ backgroundColor: '#3A5BA0', color: 'white', border: 'none', height: '50px', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          Facebook
+        </Button>
+        <Button block size="large" icon={<GoogleOutlined style={{ fontSize: '22px' }} />} style={{ backgroundColor: '#EA617D', color: 'white', border: 'none', height: '50px', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          Google
+        </Button>
+      </div>
+      {/* ---------------------------------------------- */}
+
     </Form>
   );
 
   return (
     <AuthLayout>
-      {/* Đã cập nhật: borderRadius: '30px' */}
       <div style={{ display: 'flex', marginBottom: '30px', borderRadius: '30px', overflow: 'hidden', border: '1px solid #333' }}>
         <button
           onClick={() => setActiveTab('login')}
           style={{
             flex: 1,
-            padding: '12px', /* Cập nhật padding để cân đối với viền tròn */
+            padding: '12px',
             border: 'none',
             cursor: 'pointer',
             fontSize: '18px',
@@ -123,7 +137,7 @@ const LoginPage: React.FC = () => {
           onClick={() => setActiveTab('register')}
           style={{
             flex: 1,
-            padding: '12px', /* Cập nhật padding để cân đối với viền tròn */
+            padding: '12px',
             border: 'none',
             cursor: 'pointer',
             fontSize: '18px',
@@ -137,7 +151,6 @@ const LoginPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Đã cập nhật: Thêm key={activeTab} và tự động đổi class hiệu ứng trượt */}
       <div 
         key={activeTab} 
         className={activeTab === 'login' ? 'slide-login' : 'slide-register'}
