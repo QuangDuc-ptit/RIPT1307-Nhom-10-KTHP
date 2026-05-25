@@ -5,6 +5,8 @@ import ProfilePage from './pages/Profile';
 import LoginPage from './pages/auth/LoginPage'; 
 // Thêm duy nhất dòng import trang phim mới này
 import MovieDetailPage from './pages/MovieDetail'; 
+// Lich sử giao dịch 
+import OrderHistoryPage from './pages/OrderHistory';
 
 function App() {
   return (
@@ -25,6 +27,8 @@ function App() {
         {/* --- CÁI MỚI THÊM NẰM Ở ĐÂY --- */}
         {/* 3. Trang Chi tiết phim */}
         <Route path="/movie/:id" element={<MovieDetailPage />} />
+        {/* 4. Trang Lịch sử giao dịch */}
+        <Route path="/orders" element={<OrderHistoryPage />} />
         
         {/* Bắt lỗi 404 */}
         <Route path="*" element={
