@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Space, Button, InputNumber, Dropdown, MenuProps, message } from 'antd';
 import { 
   DownOutlined, 
@@ -26,15 +26,30 @@ interface GridState {
 export default function TheatersPage() {
   const [selectedScreen, setSelectedScreen] = useState<string | null>(null);
 
-  // Khởi tạo data mặc định cho toàn bộ các phòng chiếu để không bị lẫn lộn
-  const [theaterConfigs, setTheaterConfigs] = useState<Record<string, ScreenConfig>>({
-    'Screen 1 - IMAX': { rows: 10, cols: 10, priceStandard: 10, priceVip: 25, priceCouple: 18 },
-    'Screen 2 - IMAX': { rows: 12, cols: 12, priceStandard: 12, priceVip: 28, priceCouple: 20 },
-    'Screen 3 - IMAX': { rows: 10, cols: 10, priceStandard: 10, priceVip: 25, priceCouple: 18 },
-    'Screen 4 - IMAX': { rows: 10, cols: 10, priceStandard: 10, priceVip: 25, priceCouple: 18 },
-    'Screen 5 - IMAX': { rows: 10, cols: 10, priceStandard: 10, priceVip: 25, priceCouple: 18 },
-    'Screen 6 - IMAX': { rows: 10, cols: 10, priceStandard: 10, priceVip: 25, priceCouple: 18 },
+  // Khởi tạo data từ localStorage, nếu chưa có dữ liệu cũ thì nạp giá trị mặc định ban đầu
+  const [theaterConfigs, setTheaterConfigs] = useState<Record<string, ScreenConfig>>(() => {
+    const savedConfigs = localStorage.getItem('global_theater_configs');
+    if (savedConfigs) {
+      try {
+        return JSON.parse(savedConfigs);
+      } catch (e) {
+        // Phòng hờ dữ liệu bị lỗi format JSON
+      }
+    }
+    return {
+      'Screen 1 - IMAX': { rows: 10, cols: 10, priceStandard: 10, priceVip: 25, priceCouple: 18 },
+      'Screen 2 - IMAX': { rows: 12, cols: 12, priceStandard: 12, priceVip: 28, priceCouple: 20 },
+      'Screen 3 - IMAX': { rows: 10, cols: 10, priceStandard: 10, priceVip: 25, priceCouple: 18 },
+      'Screen 4 - IMAX': { rows: 10, cols: 10, priceStandard: 10, priceVip: 25, priceCouple: 18 },
+      'Screen 5 - IMAX': { rows: 10, cols: 10, priceStandard: 10, priceVip: 25, priceCouple: 18 },
+      'Screen 6 - IMAX': { rows: 10, cols: 10, priceStandard: 10, priceVip: 25, priceCouple: 18 },
+    };
   });
+
+  // Tự động đồng bộ toàn bộ thay đổi của các phòng chiếu vào localStorage của trình duyệt
+  useEffect(() => {
+    localStorage.setItem('global_theater_configs', JSON.stringify(theaterConfigs));
+  }, [theaterConfigs]);
 
   // Lấy ra cấu hình hiện tại của phòng đang chọn (nếu chưa chọn thì lấy tạm mặc định)
   const currentConfig = useMemo(() => {

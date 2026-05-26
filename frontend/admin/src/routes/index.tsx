@@ -10,6 +10,8 @@ const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
 const UsersPage = lazy(() => import('@/pages/users/UsersPage'));
 // Import lazy cho trang Quản lý rạp mới tạo
 const TheatersPage = lazy(() => import('@/pages/theaters/TheatersPage')); 
+// Import lazy cho trang Lịch chiếu nằm trong folder tiếng Việt của bạn
+const LichChieuPage = lazy(() => import('@/pages/lichchieu/LichChieuPage'));
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'));
 const ForbiddenPage = lazy(() => import('@/pages/ForbiddenPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
@@ -37,6 +39,9 @@ export function AppRoutes() {
             
             {/* Đổi đường dẫn từ posts sang content để đồng bộ với menu Quản lý rạp */}
             <Route path='content' element={<TheatersPage />} /> 
+
+            {/* Route cho trang Lịch chiếu - Khớp path 'showtimes' với file menu chung */}
+            <Route path='showtimes' element={<LichChieuPage />} />
             
             <Route path='settings' element={<SettingsPage />} />
           </Route>

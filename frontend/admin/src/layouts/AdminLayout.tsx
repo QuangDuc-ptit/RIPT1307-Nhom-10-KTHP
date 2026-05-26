@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
-import { Layout, Menu, Avatar, Space, Button, Dropdown, type MenuProps } from 'antd';
+import { Layout, Menu, Avatar, Space, Button, Dropdown, Input, type MenuProps } from 'antd';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   UserOutlined,
   LogoutOutlined,
-  VideoCameraOutlined, // Đã thêm icon cuộn phim cho Logo giống Figma
+  VideoCameraOutlined,
+  SearchOutlined, // Import thêm icon kính lúp cho ô tìm kiếm
 } from '@ant-design/icons';
 import { useAuthStore } from '@/store/auth';
 import { adminMenu, filterMenuByRole } from '@/config/menu';
@@ -104,6 +105,7 @@ export default function AdminLayout() {
             alignItems: 'center',
             background: '#fff',
             borderBottom: '1px solid #f0f0f0',
+            gap: '16px' // Tạo khoảng cách giữa nút menu, ô search và phần avatar bên phải
           }}
         >
           <Button
@@ -112,7 +114,22 @@ export default function AdminLayout() {
             onClick={() => setCollapsed(!collapsed)}
             style={{ fontSize: 16 }}
           />
+          
+          {/* Ô TÌM KIẾM THEO THIẾT KẾ FIGMA */}
+          <Input
+            placeholder="Search movies, screens, or times..."
+            prefix={<SearchOutlined style={{ color: '#94a3b8', marginRight: 8 }} />}
+            style={{ 
+              maxWidth: '400px', // Đặt độ rộng tối đa để không bị tràn
+              borderRadius: '20px', // Bo tròn viền elip
+              background: '#f8fafc', // Màu nền xám nhạt
+              border: '1px solid #e2e8f0', // Viền xám nhạt
+            }}
+            variant="filled" // Sử dụng variant filled của Ant Design v5 để màu nền đồng bộ
+          />
+
           <div style={{ flex: 1 }} />
+          
           <Dropdown menu={{ items: userMenu }} placement='bottomRight'>
             <Space style={{ cursor: 'pointer' }}>
               <Avatar src={user?.avatar || undefined} icon={<UserOutlined />} />
