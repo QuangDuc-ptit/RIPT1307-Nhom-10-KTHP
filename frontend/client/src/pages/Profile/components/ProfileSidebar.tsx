@@ -1,6 +1,6 @@
 import React from 'react';
 import { Avatar } from 'antd';
-import { UserOutlined, SettingOutlined, SafetyCertificateOutlined, BellOutlined, LockOutlined, LogoutOutlined } from '@ant-design/icons';
+import { UserOutlined, SettingOutlined, SafetyCertificateOutlined, BellOutlined, LockOutlined } from '@ant-design/icons';
 import { SidebarProps } from '../typing';
 
 const ProfileSidebar: React.FC<SidebarProps> = ({ activeMenu, setActiveMenu, user }) => {

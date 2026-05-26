@@ -4,6 +4,8 @@ import { createBrowserRouter } from 'react-router-dom';
 // Import các Pages từ thư mục auth
 import LoginPage from '../pages/auth/LoginPage';
 import RegisterPage from '../pages/auth/RegisterPage';
+// Import các Pages từ thư mục public
+import LandingPage from '../pages/public/Landingpage/LandingPage';
 
 export const router = createBrowserRouter([
   // --- NHÓM ROUTE XÁC THỰC (AUTH) ---
@@ -23,7 +25,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <div>Đây là Trang chủ (Public)</div>,
+        element: <LandingPage />,
       },
     ],
   },

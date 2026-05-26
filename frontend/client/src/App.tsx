@@ -3,16 +3,19 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 // --- 1. IMPORT CÁC TRANG (PAGES) ---
 import ProfilePage from './pages/Profile'; 
 import LoginPage from './pages/auth/LoginPage'; 
-// Thêm duy nhất dòng import trang phim mới này
 import MovieDetailPage from './pages/MovieDetail'; 
+import LandingPage from './pages/public/Landingpage/LandingPage';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         {/* Trang chủ */}
-        <Route path="/" element={<div>Đây là Trang chủ (Public)</div>} />
-        
+        <Route path="/" element={<LandingPage />} />        
+
+        {/* Nếu lỡ vào /landingpage thì tự động chuyển hướng về trang chủ / */}
+        <Route path="/landingpage" element={<Navigate to="/" replace />} />
+
         {/* --- CÁC ROUTE CŨ VẪN ĐƯỢC GIỮ NGUYÊN --- */}
         {/* 1. Nhóm Đăng nhập/Đăng ký */}
         <Route path="/auth/login" element={<LoginPage />} />
@@ -22,7 +25,6 @@ function App() {
         {/* 2. Trang Cá nhân */}
         <Route path="/profile" element={<ProfilePage />} />
         
-        {/* --- CÁI MỚI THÊM NẰM Ở ĐÂY --- */}
         {/* 3. Trang Chi tiết phim */}
         <Route path="/movie/:id" element={<MovieDetailPage />} />
         
