@@ -12,6 +12,10 @@ const UsersPage = lazy(() => import('@/pages/users/UsersPage'));
 const TheatersPage = lazy(() => import('@/pages/theaters/TheatersPage')); 
 // Import lazy cho trang Lịch chiếu nằm trong folder tiếng Việt của bạn
 const LichChieuPage = lazy(() => import('@/pages/lichchieu/LichChieuPage'));
+
+// 🌟 Sửa lại import đúng tên file DoAnNuocUongPage của bạn
+const DoAnNuocUongPage = lazy(() => import('@/pages/food/DoAnNuocUongPage'));
+
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'));
 const ForbiddenPage = lazy(() => import('@/pages/ForbiddenPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
@@ -42,6 +46,9 @@ export function AppRoutes() {
 
             {/* Route cho trang Lịch chiếu - Khớp path 'showtimes' với file menu chung */}
             <Route path='showtimes' element={<LichChieuPage />} />
+            
+            {/* 🌟 Route cho trang Đồ ăn và Nước uống */}
+            <Route path='food-drink' element={<DoAnNuocUongPage />} />
             
             <Route path='settings' element={<SettingsPage />} />
           </Route>
