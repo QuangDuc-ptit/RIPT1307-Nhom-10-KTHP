@@ -13,8 +13,11 @@ const TheatersPage = lazy(() => import('@/pages/theaters/TheatersPage'));
 // Import lazy cho trang Lịch chiếu nằm trong folder tiếng Việt của bạn
 const LichChieuPage = lazy(() => import('@/pages/lichchieu/LichChieuPage'));
 
-// 🌟 Sửa lại import đúng tên file DoAnNuocUongPage của bạn
+// Import đúng tên file DoAnNuocUongPage của bạn
 const DoAnNuocUongPage = lazy(() => import('@/pages/food/DoAnNuocUongPage'));
+
+// 🌟 Thêm import lazy cho trang Khuyến mãi mới (đường dẫn folder khuyenmai tiếng Việt)
+const KhuyenMaiPage = lazy(() => import('@/pages/khuyenmai/KhuyenMaiPage'));
 
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'));
 const ForbiddenPage = lazy(() => import('@/pages/ForbiddenPage'));
@@ -47,8 +50,11 @@ export function AppRoutes() {
             {/* Route cho trang Lịch chiếu - Khớp path 'showtimes' với file menu chung */}
             <Route path='showtimes' element={<LichChieuPage />} />
             
-            {/* 🌟 Route cho trang Đồ ăn và Nước uống */}
+            {/* Route cho trang Đồ ăn và Nước uống */}
             <Route path='food-drink' element={<DoAnNuocUongPage />} />
+
+            {/* 🌟 Route cho trang Khuyến mãi - Khớp path 'promotions' theo thiết kế menu Figma */}
+            <Route path='promotions' element={<KhuyenMaiPage />} />
             
             <Route path='settings' element={<SettingsPage />} />
           </Route>
