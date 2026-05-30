@@ -22,6 +22,14 @@ export const verifyAccessToken = (token: string) =>
 export const verifyRefreshToken = (token: string) =>
   jwt.verify(token, env.JWT_REFRESH_SECRET) as JwtPayload & { iat: number; exp: number };
 
+export const signResetToken = (payload: { sub: string }) =>
+  jwt.sign(payload, env.JWT_RESET_SECRET ?? env.JWT_ACCESS_SECRET, {
+    expiresIn: env.JWT_RESET_EXPIRES_IN,
+  } as SignOptions);
+
+export const verifyResetToken = (token: string) =>
+  jwt.verify(token, env.JWT_RESET_SECRET ?? env.JWT_ACCESS_SECRET) as { sub: string; iat: number; exp: number };
+
 /**
  * Parse "7d", "15m", "1h" sang số ms để tính thời điểm hết hạn cho DB.
  */

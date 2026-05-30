@@ -6,7 +6,7 @@ import morgan from 'morgan';
 import { env } from './config/env';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler';
 
-import authRoutes from './modules/auth/auth.route';
+import xacThucRoutes from './modules/auth/routes/xac-thuc.route';
 import usersRoutes, { adminUsersRouter } from './modules/users/users.route';
 import postsRoutes, { adminPostsRouter } from './modules/posts/posts.route';
 
@@ -33,7 +33,7 @@ export const buildApp = () => {
   /* ---------- Routes ---------- */
   app.get('/api/health', (_req, res) => res.json({ success: true, data: { ok: true } }));
 
-  app.use('/api/auth', authRoutes);
+  app.use('/api/auth', xacThucRoutes);
   app.use('/api/users', usersRoutes);
   app.use('/api/posts', postsRoutes);
 

@@ -11,6 +11,20 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+export const socialLoginSchema = z.object({
+  provider: z.string(),
+  idToken: z.string().min(1),
+});
+
+export const quenMatKhauSchema = z.object({
+  email: z.string().email(),
+});
+
+export const datLaiMatKhauSchema = z.object({
+  token: z.string().min(1),
+  newPassword: z.string().min(6).max(72),
+});
+
 export const refreshSchema = z.object({
   refreshToken: z.string().min(1),
 });

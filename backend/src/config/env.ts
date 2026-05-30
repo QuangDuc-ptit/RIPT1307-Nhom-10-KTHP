@@ -13,6 +13,15 @@ const schema = z.object({
   JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET phải >= 32 ký tự'),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
+  JWT_RESET_SECRET: z.string().min(32).optional(),
+  JWT_RESET_EXPIRES_IN: z.string().default('1h'),
+  FRONTEND_URL: z.string().default('http://localhost:5173'),
+  FIREBASE_SERVICE_ACCOUNT: z.string().optional(),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.string().optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  EMAIL_FROM: z.string().optional(),
   CORS_ORIGINS: z.string().default('http://localhost:5173,http://localhost:5174'),
 });
 
