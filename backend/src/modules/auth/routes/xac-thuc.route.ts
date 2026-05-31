@@ -19,6 +19,10 @@ router.post('/login', validate({ body: loginSchema }), asyncHandler(xacThucContr
 router.post('/social-login', validate({ body: socialLoginSchema }), asyncHandler(xacThucController.socialLogin));
 router.post('/quen-mat-khau', validate({ body: quenMatKhauSchema }), asyncHandler(xacThucController.quenMatKhau));
 router.post('/dat-lai-mat-khau', validate({ body: datLaiMatKhauSchema }), asyncHandler(xacThucController.datLaiMatKhau));
+// Dev-only route to preview reset email without DB
+if (process.env.NODE_ENV !== 'production') {
+  router.post('/_dev/send-reset', validate({ body: quenMatKhauSchema }), asyncHandler(xacThucController.devSendReset));
+}
 router.post('/refresh', validate({ body: refreshSchema }), asyncHandler(xacThucController.refresh));
 router.post('/logout', asyncHandler(xacThucController.logout));
 

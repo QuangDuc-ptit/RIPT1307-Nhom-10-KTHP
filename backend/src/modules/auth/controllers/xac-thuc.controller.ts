@@ -28,6 +28,14 @@ export const xacThucController = {
     res.status(204).send();
   },
 
+  // Dev-only: send reset email preview without DB (only in non-prod)
+  devSendReset: async (req: Request, res: Response) => {
+    if (process.env.NODE_ENV === 'production') return res.status(404).send();
+    const { email } = req.body as { email: string };
+    const result = await xacThucService.devSendReset(email);
+    ok(res, result);
+  },
+
   refresh: async (req: Request, res: Response) => {
     const tokens = await xacThucService.refresh(req.body);
     ok(res, tokens);

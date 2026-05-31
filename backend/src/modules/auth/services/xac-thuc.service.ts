@@ -166,4 +166,11 @@ export const xacThucService = {
     // Revoke tất cả refresh tokens
     await prisma.refreshToken.updateMany({ where: { userId: user.id, revokedAt: null }, data: { revokedAt: new Date() } });
   },
+
+  // Dev helper: generate a reset token and send email preview without DB lookup
+  async devSendReset(email: string) {
+    const token = signResetToken({ sub: 'dev-user' });
+    await sendResetEmail(email, token);
+    return { preview: true, token };
+  },
 };
