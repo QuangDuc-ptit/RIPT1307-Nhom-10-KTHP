@@ -60,3 +60,41 @@ model RefreshToken {
 
   @@index([userId])
 }
+
+enum SeatType {
+  NORMAL
+  VIP
+  SWEETBOX
+}
+
+model Cinema {
+  id        String   @id @default(cuid())
+  name      String
+  address   String
+  rooms     Room[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Room {
+  id        String   @id @default(cuid())
+  name      String
+  cinemaId  String
+  cinema    Cinema   @relation(fields: [cinemaId], references: [id], onDelete: Cascade)
+  seats     Seat[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Seat {
+  id        String   @id @default(cuid())
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  row       String
+  number    Int
+  type      SeatType @default(NORMAL)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([roomId, row, number])
+}

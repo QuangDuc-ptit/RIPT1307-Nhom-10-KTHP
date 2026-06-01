@@ -9,6 +9,8 @@ import { errorHandler, notFoundHandler } from './middlewares/errorHandler';
 import xacThucRoutes from './modules/xac-thuc/routes/xac-thuc.route';
 import usersRoutes, { adminUsersRouter } from './modules/nguoi-dung/routes/nguoi-dung.route';
 import postsRoutes, { adminPostsRouter } from './modules/bai-viet/routes/bai-viet.route';
+import rapChieuRoutes from './modules/rap-chieu/routes/rap-chieu.route';
+import phongChieuRoutes from './modules/phong-chieu/routes/phong-chieu.route';
 
 export const buildApp = () => {
   const app = express();
@@ -39,6 +41,8 @@ export const buildApp = () => {
 
   app.use('/api/admin/users', adminUsersRouter);
   app.use('/api/admin/posts', adminPostsRouter);
+  app.use('/api/admin/rap-chieu', rapChieuRoutes);
+  app.use('/api/admin/phong-chieu', phongChieuRoutes);
 
   /* ---------- 404 + Error handler (đặt CUỐI) ---------- */
   app.use(notFoundHandler);
