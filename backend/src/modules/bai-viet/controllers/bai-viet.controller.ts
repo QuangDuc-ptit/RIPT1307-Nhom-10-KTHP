@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { postsService } from './posts.service';
+import { postsService } from '../services/bai-viet.service';
 import { created, noContent, ok } from '@/utils/response';
 
 export const postsController = {

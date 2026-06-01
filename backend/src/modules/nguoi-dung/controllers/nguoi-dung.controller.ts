@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { usersService } from './users.service';
+import { usersService } from '../services/nguoi-dung.service';
 import { created, noContent, ok } from '@/utils/response';
 
 export const usersController = {

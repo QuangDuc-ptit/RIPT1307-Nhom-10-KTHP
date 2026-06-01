@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { usersController } from './users.controller';
+import { usersController } from '../controllers/nguoi-dung.controller';
 import {
   createUserSchema,
   idParamSchema,
   listQuerySchema,
   updateMeSchema,
   updateUserSchema,
-} from './users.schema';
+} from '../schemas/nguoi-dung.schema';
 import { validate } from '@/middlewares/validate';
 import { requireAuth, requireRole } from '@/middlewares/auth';
 import { asyncHandler } from '@/utils/async';

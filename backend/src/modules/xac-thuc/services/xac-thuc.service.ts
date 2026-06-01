@@ -59,19 +59,49 @@ export const xacThucService = {
     const email: string | undefined = payload.email;
     const name: string | undefined = payload.name || payload.displayName;
     const avatar: string | undefined = payload.picture || payload.photoURL;
+    const providerId: string = payload.uid;
 
     if (!email) throw unauthorized('Provider token không chứa email');
+    if (!providerId) throw unauthorized('Provider token không chứa uid');
 
-    let user = await prisma.user.findUnique({ where: { email } });
+    // Tìm user bằng provider và providerId trước
+    let user = await prisma.user.findUnique({
+      where: {
+        provider_providerId: {
+          provider: input.provider,
+          providerId: providerId,
+        },
+      },
+    });
+
     if (!user) {
-      // Tạo mật khẩu ngẫu nhiên vì trường passwordHash bắt buộc
-      const random = crypto.randomBytes(16).toString('hex');
-      const passwordHash = await bcrypt.hash(random, 10);
-      user = await prisma.user.create({
-        data: { email, name: name ?? email.split('@')[0], avatar, passwordHash, role: 'USER' },
-      });
+      // Nếu chưa có theo providerId, thử tìm bằng email (trường hợp user đã đăng ký bằng email này trước đó hoặc đăng nhập bằng provider khác có cùng email)
+      user = await prisma.user.findUnique({ where: { email } });
+
+      if (!user) {
+        // Hoàn toàn chưa có tài khoản -> Tạo mới
+        const random = crypto.randomBytes(16).toString('hex');
+        const passwordHash = await bcrypt.hash(random, 10);
+        user = await prisma.user.create({
+          data: {
+            email,
+            name: name ?? email.split('@')[0],
+            avatar,
+            passwordHash,
+            role: 'USER',
+            provider: input.provider,
+            providerId: providerId,
+          },
+        });
+      } else {
+        // Đã có tài khoản với email này -> Liên kết tài khoản (cập nhật providerId)
+        const data: any = { provider: input.provider, providerId: providerId };
+        if (!user.name && name) data.name = name;
+        if (!user.avatar && avatar) data.avatar = avatar;
+        user = await prisma.user.update({ where: { id: user.id }, data });
+      }
     } else {
-      // Update tên/ảnh nếu chưa có
+      // Đã đăng nhập bằng provider này trước đó -> Chỉ cập nhật thông tin nếu có thay đổi
       const data: any = {};
       if (!user.name && name) data.name = name;
       if (!user.avatar && avatar) data.avatar = avatar;
@@ -169,8 +199,10 @@ export const xacThucService = {
 
   // Dev helper: generate a reset token and send email preview without DB lookup
   async devSendReset(email: string) {
-    const token = signResetToken({ sub: 'dev-user' });
-    await sendResetEmail(email, token);
+    const user = await prisma.user.findUnique({ where: { email } });
+    const sub = user ? user.id : 'dev-user';
+    const token = signResetToken({ sub });
+    await sendResetEmail(email, token).catch(() => undefined);
     return { preview: true, token };
   },
 };

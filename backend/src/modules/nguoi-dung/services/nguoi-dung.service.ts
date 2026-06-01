@@ -88,7 +88,13 @@ export const usersService = {
     const data: any = {};
     if (input.name !== undefined) data.name = input.name;
     if (input.role !== undefined) data.role = input.role;
-    if (input.password) data.passwordHash = await bcrypt.hash(input.password, 10);
+    if (input.password) {
+      data.passwordHash = await bcrypt.hash(input.password, 10);
+      await prisma.refreshToken.updateMany({
+        where: { userId: id, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+    }
 
     try {
       const user = await prisma.user.update({ where: { id }, data, select: publicSelect });

@@ -6,9 +6,9 @@ import morgan from 'morgan';
 import { env } from './config/env';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler';
 
-import xacThucRoutes from './modules/auth/routes/xac-thuc.route';
-import usersRoutes, { adminUsersRouter } from './modules/users/users.route';
-import postsRoutes, { adminPostsRouter } from './modules/posts/posts.route';
+import xacThucRoutes from './modules/xac-thuc/routes/xac-thuc.route';
+import usersRoutes, { adminUsersRouter } from './modules/nguoi-dung/routes/nguoi-dung.route';
+import postsRoutes, { adminPostsRouter } from './modules/bai-viet/routes/bai-viet.route';
 
 export const buildApp = () => {
   const app = express();

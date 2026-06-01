@@ -1,4 +1,5 @@
 import slugify from 'slugify';
+import crypto from 'crypto';
 import { prisma } from '@/config/db';
 import { notFound } from '@/utils/errors';
 
@@ -23,8 +24,8 @@ const buildUniqueSlug = async (title: string, excludeId?: string) => {
     suffix += 1;
     slug = `${base}-${suffix}`;
     if (suffix > 50) {
-      slug = `${base}-${Math.random().toString(36).slice(2, 6)}`;
-      return slug;
+      slug = `${base}-${crypto.randomBytes(4).toString('hex')}`;
+      // Do not return here, let the loop continue to check the newly generated slug
     }
   }
 };

@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { postsController } from './posts.controller';
+import { postsController } from '../controllers/bai-viet.controller';
 import {
   createPostSchema,
   idParamSchema,
   listQuerySchema,
   slugParamSchema,
   updatePostSchema,
-} from './posts.schema';
+} from '../schemas/bai-viet.schema';
 import { validate } from '@/middlewares/validate';
 import { requireAuth, requireRole } from '@/middlewares/auth';
 import { asyncHandler } from '@/utils/async';
