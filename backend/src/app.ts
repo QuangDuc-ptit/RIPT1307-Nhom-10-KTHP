@@ -11,9 +11,14 @@ import usersRoutes, { adminUsersRouter } from './modules/nguoi-dung/routes/nguoi
 import postsRoutes, { adminPostsRouter } from './modules/bai-viet/routes/bai-viet.route';
 import rapChieuRoutes from './modules/rap-chieu/routes/rap-chieu.route';
 import phongChieuRoutes from './modules/phong-chieu/routes/phong-chieu.route';
+import datVeRoutes from './modules/dat-ve/routes/dat-ve.route';
+import { startCronJobs } from './jobs/cron';
 
 export const buildApp = () => {
   const app = express();
+
+  // Khởi động các tiến trình chạy ngầm
+  startCronJobs();
 
   /* ---------- Middleware cơ bản ---------- */
   app.use(helmet());
@@ -38,6 +43,7 @@ export const buildApp = () => {
   app.use('/api/auth', xacThucRoutes);
   app.use('/api/users', usersRoutes);
   app.use('/api/posts', postsRoutes);
+  app.use('/api/dat-ve', datVeRoutes);
 
   app.use('/api/admin/users', adminUsersRouter);
   app.use('/api/admin/posts', adminPostsRouter);
