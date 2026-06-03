@@ -29,6 +29,7 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   showtimeSeats ShowtimeSeat[]
+  bookings     Booking[]
 
   @@unique([provider, providerId])
 }
@@ -118,6 +119,7 @@ model Showtime {
   room      Room           @relation(fields: [roomId], references: [id], onDelete: Cascade)
   startTime DateTime
   seats     ShowtimeSeat[]
+  bookings  Booking[]
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 }
@@ -144,6 +146,59 @@ model ShowtimeSeat {
 
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
+  
+  bookingSeats BookingSeat[]
 
   @@unique([showtimeId, seatId])
+}
+
+enum BookingStatus {
+  PENDING
+  SUCCESS
+  CANCELLED
+}
+
+model Booking {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  showtimeId  String
+  showtime    Showtime      @relation(fields: [showtimeId], references: [id])
+  totalAmount Float         @default(0)
+  status      BookingStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  bookingSeats BookingSeat[]
+  bookingFoods BookingFood[]
+}
+
+model BookingSeat {
+  id             String       @id @default(cuid())
+  bookingId      String
+  booking        Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  showtimeSeatId String
+  showtimeSeat   ShowtimeSeat @relation(fields: [showtimeSeatId], references: [id])
+  price          Float
+}
+
+model Food {
+  id           String        @id @default(cuid())
+  name         String
+  price        Float
+  description  String?
+  imageUrl     String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  bookingFoods BookingFood[]
+}
+
+model BookingFood {
+  id        String  @id @default(cuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  foodId    String
+  food      Food    @relation(fields: [foodId], references: [id])
+  quantity  Int
+  price     Float
 }
