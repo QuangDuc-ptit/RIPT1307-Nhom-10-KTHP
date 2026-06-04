@@ -33,8 +33,16 @@ export default function LoginPage() {
       <Helmet>
         <title>Đăng nhập — Admin</title>
       </Helmet>
-      <h2 style={{ textAlign: 'center', marginBottom: 24 }}>Đăng nhập</h2>
-      <Form layout='vertical' onFinish={onFinish} requiredMark={false}>
+      <h2 style={{ textAlign: 'center', marginBottom: 12 }}>Đăng nhập</h2>
+      <div style={{ textAlign: 'center', marginBottom: 24, color: '#666', fontSize: 14 }}>
+        Tài khoản mẫu: <strong>admin@example.com</strong> / <strong>admin123</strong>
+      </div>
+      <Form
+        layout='vertical'
+        onFinish={onFinish}
+        requiredMark={false}
+        initialValues={{ email: 'admin@example.com' }}
+      >
         <Form.Item
           name='email'
           label='Email'
