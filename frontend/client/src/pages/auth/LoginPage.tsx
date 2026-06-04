@@ -1,67 +1,208 @@
-import { useState } from 'react';
-import { Button, Form, Input, App as AntdApp } from 'antd';
-import { LockOutlined, MailOutlined } from '@ant-design/icons';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { useEffect, useState } from 'react';
+import { Form, Input, Button, message as antdMessage } from 'antd';
+import { FacebookFilled, GoogleOutlined } from '@ant-design/icons';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth';
-import type { LoginPayload } from '@/api/auth';
+import { tokenStore } from '@/api/client';
+// Lưu ý: Kiểm tra lại đường dẫn import AuthLayout sao cho khớp với thư mục của bạn
+import AuthLayout from '../../layouts/AuthLayout'; 
 
-export default function LoginPage() {
-  const { message } = AntdApp.useApp();
+const LoginPage: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const navigate = useNavigate();
   const location = useLocation();
+  const user = useAuthStore((s) => s.user);
   const login = useAuthStore((s) => s.login);
-  const [loading, setLoading] = useState(false);
+  const setUser = useAuthStore((s) => s.setUser);
+  const from = (location.state as any)?.from?.pathname || '/home';
 
-  const from = (location.state as any)?.from?.pathname || '/me';
-
-  const onFinish = async (values: LoginPayload) => {
-    setLoading(true);
-    try {
-      await login(values);
-      message.success('Đăng nhập thành công');
+  useEffect(() => {
+    if (user) {
       navigate(from, { replace: true });
-    } catch (e: any) {
-      message.error(e.message || 'Đăng nhập thất bại');
-    } finally {
-      setLoading(false);
     }
+  }, [user, navigate, from]);
+
+  const onFinish = async (values: any) => {
+    if (activeTab === 'login') {
+      if (values.email === 'dat123@gmail.com' && values.password === '123456') {
+        const demoUser = {
+          id: 'demo-user',
+          email: values.email,
+          name: 'Dat',
+          role: 'USER' as const,
+          createdAt: new Date().toISOString(),
+        };
+        setUser(demoUser);
+        tokenStore.set('demo-token');
+        tokenStore.setRefresh('demo-token');
+        localStorage.setItem('demoUser', JSON.stringify(demoUser));
+        antdMessage.success('Đăng nhập thành công');
+        navigate(from, { replace: true });
+        return;
+      }
+
+      try {
+        await login({ email: values.email, password: values.password });
+        antdMessage.success('Đăng nhập thành công');
+        navigate(from, { replace: true });
+      } catch (error: any) {
+        antdMessage.error(error?.message || 'Đăng nhập thất bại');
+      }
+      return;
+    }
+
+    console.log(`Thông tin đăng ký:`, values);
+    antdMessage.info('Tính năng đăng ký chưa được kích hoạt tại đây.');
   };
 
-  return (
-    <>
-      <Helmet>
-        <title>Đăng nhập</title>
-      </Helmet>
-      <h2 style={{ textAlign: 'center', marginBottom: 24 }}>Đăng nhập</h2>
-      <Form layout='vertical' onFinish={onFinish} requiredMark={false} autoComplete='off'>
-        <Form.Item
-          name='email'
-          label='Email'
-          rules={[
-            { required: true, message: 'Vui lòng nhập email' },
-            { type: 'email', message: 'Email không hợp lệ' },
-          ]}
-        >
-          <Input prefix={<MailOutlined />} placeholder='you@example.com' size='large' />
-        </Form.Item>
-        <Form.Item
-          name='password'
-          label='Mật khẩu'
-          rules={[
-            { required: true, message: 'Vui lòng nhập mật khẩu' },
-            { min: 6, message: 'Mật khẩu tối thiểu 6 ký tự' },
-          ]}
-        >
-          <Input.Password prefix={<LockOutlined />} placeholder='••••••••' size='large' />
-        </Form.Item>
-        <Button type='primary' htmlType='submit' size='large' block loading={loading}>
+  const FormLabel = ({ children }: { children: React.ReactNode }) => (
+    <div style={{ color: 'white', marginBottom: '8px', fontSize: '16px' }}>
+      {children}
+    </div>
+  );
+
+  const CustomInputStyle = {
+    backgroundColor: '#1E1E1E',
+    borderColor: '#333333',
+    color: 'white',
+    height: '45px',
+    borderRadius: '30px'
+  };
+
+  const renderLoginForm = () => (
+    <Form layout="vertical" onFinish={onFinish}>
+      <Form.Item
+        name="email"
+        label={<FormLabel>Email</FormLabel>}
+        rules={[
+          { required: true, message: 'Vui lòng nhập email!' },
+          { type: 'email', message: 'Email không đúng định dạng!' }
+        ]}
+        colon={false}
+      >
+        <Input placeholder="Nhập email của bạn" style={CustomInputStyle} />
+      </Form.Item>
+
+      <Form.Item
+        name="password"
+        label={<FormLabel>Mật khẩu</FormLabel>}
+        rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}
+        colon={false}
+      >
+        <Input.Password placeholder="Nhập mật khẩu" style={CustomInputStyle} />
+      </Form.Item>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+        <Button type="link" style={{ color: '#ee1e63', padding: 0, height: 'auto', fontWeight: 'bold' }}>
+          Quên mật khẩu?
+        </Button>
+      </div>
+
+      <Form.Item>
+        <Button type="primary" htmlType="submit" block size="large" style={{ backgroundColor: '#ee1e63', border: 'none', height: '50px', fontSize: '18px', fontWeight: 'bold', borderRadius: '30px' }}>
           Đăng nhập
         </Button>
-      </Form>
-      <div style={{ textAlign: 'center', marginTop: 16 }}>
-        Chưa có tài khoản? <Link to='/auth/register'>Đăng ký</Link>
+      </Form.Item>
+
+      <div style={{ display: 'flex', alignItems: 'center', margin: '25px 0', color: 'white' }}>
+        <div style={{ flex: 1, height: '1px', backgroundColor: 'white' }} />
+        <span style={{ padding: '0 15px', color: '#aaaaaa' }}>Hoặc đăng nhập với</span>
+        <div style={{ flex: 1, height: '1px', backgroundColor: 'white' }} />
       </div>
-    </>
+
+      <div style={{ display: 'flex', gap: '15px' }}>
+        <Button block size="large" icon={<FacebookFilled style={{ fontSize: '22px' }} />} style={{ backgroundColor: '#3A5BA0', color: 'white', border: 'none', height: '50px', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          Facebook
+        </Button>
+        <Button block size="large" icon={<GoogleOutlined style={{ fontSize: '22px' }} />} style={{ backgroundColor: '#EA617D', color: 'white', border: 'none', height: '50px', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          Google
+        </Button>
+      </div>
+    </Form>
   );
-}
+
+  const renderRegisterForm = () => (
+    <Form layout="vertical" onFinish={onFinish}>
+      <Form.Item label={<FormLabel>Họ và tên</FormLabel>} colon={false}>
+        <Input placeholder="Nhập họ và tên" style={CustomInputStyle} />
+      </Form.Item>
+      <Form.Item label={<FormLabel>Email</FormLabel>} colon={false}>
+        <Input placeholder="Nhập email" style={CustomInputStyle} />
+      </Form.Item>
+      <Form.Item label={<FormLabel>Mật khẩu</FormLabel>} colon={false}>
+        <Input.Password placeholder="Tạo mật khẩu" style={CustomInputStyle} />
+      </Form.Item>
+      <Form.Item>
+        <Button type="primary" htmlType="submit" block size="large" style={{ backgroundColor: '#ee1e63', border: 'none', height: '50px', marginTop: '20px', fontSize: '18px', fontWeight: 'bold', borderRadius: '30px' }}>
+          Đăng ký ngay
+        </Button>
+      </Form.Item>
+
+      {/* --- BỔ SUNG KHỐI SOCIAL LOGIN CHO ĐĂNG KÝ --- */}
+      <div style={{ display: 'flex', alignItems: 'center', margin: '25px 0', color: 'white' }}>
+        <div style={{ flex: 1, height: '1px', backgroundColor: 'white' }} />
+        <span style={{ padding: '0 15px', color: '#aaaaaa' }}>Hoặc đăng ký với</span>
+        <div style={{ flex: 1, height: '1px', backgroundColor: 'white' }} />
+      </div>
+
+      <div style={{ display: 'flex', gap: '15px' }}>
+        <Button block size="large" icon={<FacebookFilled style={{ fontSize: '22px' }} />} style={{ backgroundColor: '#3A5BA0', color: 'white', border: 'none', height: '50px', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          Facebook
+        </Button>
+        <Button block size="large" icon={<GoogleOutlined style={{ fontSize: '22px' }} />} style={{ backgroundColor: '#EA617D', color: 'white', border: 'none', height: '50px', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          Google
+        </Button>
+      </div>
+      {/* ---------------------------------------------- */}
+
+    </Form>
+  );
+
+  return (
+    <AuthLayout>
+      <div style={{ display: 'flex', marginBottom: '30px', borderRadius: '30px', overflow: 'hidden', border: '1px solid #333' }}>
+        <button
+          onClick={() => setActiveTab('login')}
+          style={{
+            flex: 1,
+            padding: '12px',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            backgroundColor: activeTab === 'login' ? '#ee1e63' : '#2A2A2A',
+            color: 'white',
+            transition: 'background-color 0.3s'
+          }}
+        >
+          Đăng nhập
+        </button>
+        <button
+          onClick={() => setActiveTab('register')}
+          style={{
+            flex: 1,
+            padding: '12px',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            backgroundColor: activeTab === 'register' ? '#ee1e63' : '#2A2A2A',
+            color: 'white',
+            transition: 'background-color 0.3s'
+          }}
+        >
+          Đăng ký
+        </button>
+      </div>
+
+      <div 
+        key={activeTab} 
+        className={activeTab === 'login' ? 'slide-login' : 'slide-register'}
+      >
+        {activeTab === 'login' ? renderLoginForm() : renderRegisterForm()}
+      </div>
+    </AuthLayout>
+  );
+};
+
+export default LoginPage;

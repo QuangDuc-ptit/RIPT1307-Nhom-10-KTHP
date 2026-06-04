@@ -1,0 +1,123 @@
+:root {
+  --primary-color: #ee1e63;
+  --bg-dark: #121212;
+  --form-bg: #1e1e1e;
+  --text-main: #ffffff;
+  --border-color: #333333;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Custom lại một chút style của Antd cho hợp với nền tối */
+.ant-tabs-tab {
+  color: #aaaaaa !important;
+}
+.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--primary-color) !important;
+}
+.ant-tabs-ink-bar {
+  background: var(--primary-color) !important;
+}
+.ant-form-item-label > label {
+  color: var(--primary-color) !important;
+}
+.ant-form-item-explain-error {
+  color: white !important; 
+}
+.ant-input::placeholder {
+  color: rgb(255, 255, 255) !important; 
+}
+
+/* Dành riêng cho ô Input Password của Ant Design */
+.ant-input-password input::placeholder {
+  color: rgb(255, 255, 255) !important;
+}
+
+/* --- SỬA LỖI MÀU NỀN TỰ ĐỘNG ĐIỀN (AUTOFILL) CỦA TRÌNH DUYỆT --- */
+
+/* 1. Ép màu nền của trình duyệt khi Tự động điền về lại màu tối của form */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 50px var(--form-bg) inset !important; /* Dùng biến màu nền form */
+    -webkit-text-fill-color: var(--text-main) !important; /* Dùng biến màu chữ trắng */
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* 2. Ép ô nhập chữ bên trong Input.Password trở nên trong suốt để không bị đè màu */
+.ant-input-affix-wrapper > input.ant-input,
+.ant-input-password > input.ant-input {
+    background-color: transparent !important;
+}
+
+/* 3. Đảm bảo cái hộp bọc ngoài của Password luôn giữ màu viền và nền chuẩn */
+.ant-input-affix-wrapper {
+    background-color: var(--form-bg) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Khi người dùng click vào ô Password (focus), đổi màu viền sang màu chủ đạo (hồng) */
+.ant-input-affix-wrapper-focused {
+    border-color: var(--primary-color) !important; 
+    box-shadow: 0 0 0 2px rgba(238, 30, 99, 0.2) !important;
+}
+.ant-input-password-icon {
+  color: var(--text-main) !important; /* Màu trắng */
+  transition: color 0.3s;
+}
+.ant-input-password-icon:hover {
+  color: var(--primary-color) !important;
+}
+/* --- Hiệu ứng trượt ngang cho Form --- */
+
+/* 1. Trượt từ bên trái sang (Dành cho tab Đăng nhập) */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px); /* Bắt đầu lùi về bên trái 40px */
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+/* 1. Đảm bảo transition mượt mà cho cả độ sáng và kích thước */
+button, .ant-btn {
+  /* Tăng thời gian lên 0.25s để thấy rõ hiệu ứng zoom mượt hơn */
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important; 
+}
+
+/* 2. Hiệu ứng Hover: Sáng lên + ZOOM NHẸ 5% */
+button:hover, .ant-btn:hover {
+  filter: brightness(1.1) !important; /* Sáng lên nhẹ 10% */
+  
+  /* --- ĐOẠN CODE ZOOM NHẸ Ở ĐÂY --- */
+  /* Phóng to lên 1.05 lần (tức là 5%), đủ để thấy sự thay đổi mà không bị thô */
+  transform: scale(1.05) !important; 
+  /* ------------------------------- */
+  
+  opacity: 0.9 !important; /* Hơi mờ đi xíu cho tinh tế */
+  cursor: pointer !important;
+  /* Thêm bóng đổ nhẹ khi zoom lên nhìn nút sẽ "nổi" hơn trên nền */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+}
+
+/* 3. Hiệu ứng Active (Khi click): Vẫn giữ nguyên hiệu ứng lún xuống */
+button:active, .ant-btn:active {
+  /* Khi bấm thì thu nhỏ lại 0.95 (lún xuống so với kích thước gốc) */
+  transform: scale(0.95) !important; 
+  filter: brightness(0.9) !important; /* Tối đi một chút khi bị bấm */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5) !important; /* Bóng đổ sát hơn */
+}
+
+/* Tắt viền xanh mặc định của Ant Design */
+.ant-btn::after {
+  display: none !important; 
+}
