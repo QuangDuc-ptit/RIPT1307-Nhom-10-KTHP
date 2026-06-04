@@ -12,8 +12,9 @@ import { admin } from '@/config/firebase';
 import crypto from 'crypto';
 import { signResetToken, verifyResetToken } from '@/utils/jwt';
 import { sendResetEmail } from '@/utils/email';
+import { Role } from '@prisma/client';
 
-const toPublicUser = (u: { id: string; email: string; name: string; role: 'USER' | 'ADMIN'; avatar: string | null; createdAt: Date }) => ({
+const toPublicUser = (u: { id: string; email: string; name: string; role: Role; avatar: string | null; createdAt: Date }) => ({
   id: u.id,
   email: u.email,
   name: u.name,
@@ -22,7 +23,7 @@ const toPublicUser = (u: { id: string; email: string; name: string; role: 'USER'
   createdAt: u.createdAt.toISOString(),
 });
 
-const issueTokens = async (userId: string, role: 'USER' | 'ADMIN') => {
+const issueTokens = async (userId: string, role: Role) => {
   const accessToken = signAccessToken({ sub: userId, role });
   const refreshToken = signRefreshToken({ sub: userId, role });
   const expiresAt = new Date(Date.now() + parseDuration(env.JWT_REFRESH_EXPIRES_IN));

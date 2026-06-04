@@ -13,6 +13,7 @@ datasource db {
 enum Role {
   USER
   ADMIN
+  STAFF
 }
 
 model User {
@@ -30,6 +31,7 @@ model User {
   updatedAt    DateTime @updatedAt
   showtimeSeats ShowtimeSeat[]
   bookings     Booking[]
+  staffLogs    StaffLog[]
 
   @@unique([provider, providerId])
 }
@@ -166,11 +168,13 @@ model Booking {
   showtime    Showtime      @relation(fields: [showtimeId], references: [id])
   totalAmount Float         @default(0)
   status      BookingStatus @default(PENDING)
+  isCheckedIn Boolean       @default(false)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   
   bookingSeats BookingSeat[]
   bookingFoods BookingFood[]
+  staffLogs    StaffLog[]
 }
 
 model BookingSeat {
@@ -201,4 +205,14 @@ model BookingFood {
   food      Food    @relation(fields: [foodId], references: [id])
   quantity  Int
   price     Float
+}
+
+model StaffLog {
+  id        String   @id @default(cuid())
+  staffId   String
+  staff     User     @relation(fields: [staffId], references: [id])
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  action    String   @default("CHECK_IN")
+  createdAt DateTime @default(now())
 }
