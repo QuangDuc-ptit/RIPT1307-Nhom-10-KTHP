@@ -1,14 +1,58 @@
-import React, { useState } from 'react';
-import { Form, Input, Button } from 'antd';
+import { useEffect, useState } from 'react';
+import { Form, Input, Button, message as antdMessage } from 'antd';
 import { FacebookFilled, GoogleOutlined } from '@ant-design/icons';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store/auth';
+import { tokenStore } from '@/api/client';
 // Lưu ý: Kiểm tra lại đường dẫn import AuthLayout sao cho khớp với thư mục của bạn
 import AuthLayout from '../../layouts/AuthLayout'; 
 
 const LoginPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const user = useAuthStore((s) => s.user);
+  const login = useAuthStore((s) => s.login);
+  const setUser = useAuthStore((s) => s.setUser);
+  const from = (location.state as any)?.from?.pathname || '/home';
 
-  const onFinish = (values: any) => {
-    console.log(`Thông tin ${activeTab === 'login' ? 'Đăng nhập' : 'Đăng ký'}:`, values);
+  useEffect(() => {
+    if (user) {
+      navigate(from, { replace: true });
+    }
+  }, [user, navigate, from]);
+
+  const onFinish = async (values: any) => {
+    if (activeTab === 'login') {
+      if (values.email === 'dat123@gmail.com' && values.password === '123456') {
+        const demoUser = {
+          id: 'demo-user',
+          email: values.email,
+          name: 'Dat',
+          role: 'USER' as const,
+          createdAt: new Date().toISOString(),
+        };
+        setUser(demoUser);
+        tokenStore.set('demo-token');
+        tokenStore.setRefresh('demo-token');
+        localStorage.setItem('demoUser', JSON.stringify(demoUser));
+        antdMessage.success('Đăng nhập thành công');
+        navigate(from, { replace: true });
+        return;
+      }
+
+      try {
+        await login({ email: values.email, password: values.password });
+        antdMessage.success('Đăng nhập thành công');
+        navigate(from, { replace: true });
+      } catch (error: any) {
+        antdMessage.error(error?.message || 'Đăng nhập thất bại');
+      }
+      return;
+    }
+
+    console.log(`Thông tin đăng ký:`, values);
+    antdMessage.info('Tính năng đăng ký chưa được kích hoạt tại đây.');
   };
 
   const FormLabel = ({ children }: { children: React.ReactNode }) => (
