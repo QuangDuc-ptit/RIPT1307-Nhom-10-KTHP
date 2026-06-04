@@ -1,42 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuthStore } from '@/store/auth';
 
-// --- 1. IMPORT CÁC TRANG (PAGES) ---
-import ProfilePage from './pages/Profile'; 
-import LoginPage from './pages/auth/LoginPage'; 
-import MovieDetailPage from './pages/MovieDetail'; 
-import LandingPage from './pages/public/Landingpage/LandingPage';
-
-function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        {/* Trang chủ */}
-        <Route path="/" element={<LandingPage />} />        
-
-        {/* Nếu lỡ vào /landingpage thì tự động chuyển hướng về trang chủ / */}
-        <Route path="/landingpage" element={<Navigate to="/" replace />} />
-
-        {/* --- CÁC ROUTE CŨ VẪN ĐƯỢC GIỮ NGUYÊN --- */}
-        {/* 1. Nhóm Đăng nhập/Đăng ký */}
-        <Route path="/auth/login" element={<LoginPage />} />
-        <Route path="/auth/register" element={<LoginPage />} />
-        <Route path="/auth" element={<Navigate to="/auth/login" replace />} />
-
-        {/* 2. Trang Cá nhân */}
-        <Route path="/profile" element={<ProfilePage />} />
-        
-        {/* 3. Trang Chi tiết phim */}
-        <Route path="/movie/:id" element={<MovieDetailPage />} />
-        
-        {/* Bắt lỗi 404 */}
-        <Route path="*" element={
-          <div style={{ padding: '50px', textAlign: 'center', color: 'white', backgroundColor: '#151113', minHeight: '100vh' }}>
-            <h2>404 - Trang không tồn tại</h2>
-          </div>
-        } />
-      </Routes>
-    </BrowserRouter>
-  );
+export function render(oldRender: () => void) {
+  useAuthStore.getState().bootstrap().finally(() => oldRender());
 }
-
-export default App;

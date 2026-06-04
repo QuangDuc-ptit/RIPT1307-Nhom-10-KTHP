@@ -1,23 +1,30 @@
 import { useState } from 'react';
-import { Button, Card, Form, Input, App as AntdApp, Typography } from 'antd';
+import { Button, Form, Input, message } from 'antd';
+import { LockOutlined } from '@ant-design/icons';
+import { history } from 'umi'; // Sử dụng history từ Umi
 import { Helmet } from 'react-helmet-async';
-import { authApi } from '@/api/auth';
-
-const { Title } = Typography;
+import { useAuthStore } from '@/store/auth';
 
 export default function ChangePasswordPage() {
-  const { message } = AntdApp.useApp();
+  const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState(false);
-  const [form] = Form.useForm();
+  
+  // Đảm bảo hook được gọi ở cấp cao nhất trong component
+  const changePassword = useAuthStore((s) => s.changePassword);
 
-  const onFinish = async (values: { oldPassword: string; newPassword: string }) => {
+  const onFinish = async (values: { oldPassword: string; newPassword: string; confirm: string }) => {
     setLoading(true);
     try {
-      await authApi.changePassword(values);
-      message.success('Đổi mật khẩu thành công');
-      form.resetFields();
+      if (changePassword) {
+        await changePassword(values.oldPassword, values.newPassword);
+        messageApi.success('Đổi mật khẩu thành công');
+        // Điều hướng sau khi thành công
+        history.push('/profile');
+      } else {
+        messageApi.error('Chức năng đang phát triển');
+      }
     } catch (e: any) {
-      message.error(e.message || 'Có lỗi xảy ra');
+      messageApi.error(e.message || 'Đổi mật khẩu thất bại');
     } finally {
       setLoading(false);
     }
@@ -28,47 +35,65 @@ export default function ChangePasswordPage() {
       <Helmet>
         <title>Đổi mật khẩu</title>
       </Helmet>
-      <Title level={2}>Đổi mật khẩu</Title>
-      <Card style={{ maxWidth: 500 }}>
-        <Form form={form} layout='vertical' onFinish={onFinish}>
-          <Form.Item
-            name='oldPassword'
-            label='Mật khẩu hiện tại'
-            rules={[{ required: true, message: 'Vui lòng nhập mật khẩu hiện tại' }]}
-          >
-            <Input.Password />
-          </Form.Item>
-          <Form.Item
-            name='newPassword'
-            label='Mật khẩu mới'
-            rules={[
-              { required: true, message: 'Vui lòng nhập mật khẩu mới' },
-              { min: 6, message: 'Tối thiểu 6 ký tự' },
-            ]}
-          >
-            <Input.Password />
-          </Form.Item>
-          <Form.Item
-            name='confirm'
-            label='Xác nhận mật khẩu mới'
-            dependencies={['newPassword']}
-            rules={[
-              { required: true, message: 'Vui lòng xác nhận mật khẩu' },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue('newPassword') === value) return Promise.resolve();
-                  return Promise.reject(new Error('Mật khẩu không khớp'));
-                },
-              }),
-            ]}
-          >
-            <Input.Password />
-          </Form.Item>
-          <Button type='primary' htmlType='submit' loading={loading}>
-            Cập nhật
-          </Button>
-        </Form>
-      </Card>
+      
+      {contextHolder}
+      
+      <h2 style={{ textAlign: 'center', marginBottom: 24 }}>Đổi mật khẩu</h2>
+      
+      <Form 
+        layout="vertical" 
+        onFinish={onFinish} 
+        requiredMark={false} 
+        autoComplete="off"
+      >
+        <Form.Item 
+          name="oldPassword" 
+          label="Mật khẩu cũ" 
+          rules={[{ required: true, message: 'Vui lòng nhập mật khẩu cũ' }]}
+        >
+          <Input.Password prefix={<LockOutlined />} placeholder="••••••••" size="large" />
+        </Form.Item>
+
+        <Form.Item 
+          name="newPassword" 
+          label="Mật khẩu mới" 
+          rules={[
+            { required: true, message: 'Vui lòng nhập mật khẩu mới' }, 
+            { min: 6, message: 'Mật khẩu tối thiểu 6 ký tự' }
+          ]}
+        >
+          <Input.Password prefix={<LockOutlined />} placeholder="••••••••" size="large" />
+        </Form.Item>
+
+        <Form.Item 
+          name="confirm" 
+          label="Xác nhận mật khẩu mới" 
+          dependencies={['newPassword']} 
+          rules={[
+            { required: true, message: 'Vui lòng xác nhận mật khẩu' }, 
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || getFieldValue('newPassword') === value) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error('Mật khẩu nhập lại không khớp'));
+              },
+            })
+          ]}
+        >
+          <Input.Password prefix={<LockOutlined />} placeholder="••••••••" size="large" />
+        </Form.Item>
+
+        <Button 
+          type="primary" 
+          htmlType="submit" 
+          size="large" 
+          block 
+          loading={loading}
+        >
+          Đổi mật khẩu
+        </Button>
+      </Form>
     </>
   );
 }

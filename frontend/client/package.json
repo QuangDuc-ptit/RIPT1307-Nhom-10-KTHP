@@ -4,36 +4,36 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
+    "dev": "cross-env NODE_OPTIONS=--openssl-legacy-provider umi dev --port 8001",
+    "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider umi build",
+    "preview": "cross-env NODE_OPTIONS=--openssl-legacy-provider umi preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json,md}\""
   },
   "dependencies": {
-    "@ant-design/icons": "^5.3.7",
-    "antd": "^5.20.0",
     "axios": "^1.7.4",
     "dayjs": "^1.11.13",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-helmet-async": "^2.0.5",
-    "react-router-dom": "^6.30.3",
     "zustand": "^4.5.5"
   },
   "devDependencies": {
     "@types/node": "^20.14.15",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
+    "@types/react": "^18.3.30",
+    "@types/react-dom": "^18.3.7",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
-    "@vitejs/plugin-react": "^4.3.1",
+    "@umijs/preset-react": "^2.1.7",
+    "cross-env": "^10.1.0",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.9",
+    "less": "^4.6.4",
+    "less-loader": "^12.3.3",
     "prettier": "^3.3.3",
     "typescript": "^5.5.4",
-    "vite": "^5.4.1"
+    "umi": "^3.5.43"
   }
 }
