@@ -1,10 +1,9 @@
 import React from 'react';
-import HeroBanner from './components/HeroBanner';
-import MainContent from './components/MainContent';
-import Sidebar from './components/Sidebar';
-import AppFooter from '../../components/Footer';
-import { MovieDetailData } from './typing';
-
+import HeroBanner from './HeroBanner';
+import MainContent from './MainContent';
+import Sidebar from './Sidebar';
+import { MovieDetailData } from '@/types/movie';
+import Footer from '@/components/layout/Footer';
 
 const MovieDetailPage: React.FC = () => {
   // Mock Data chuẩn hóa theo thiết kế
@@ -55,7 +54,7 @@ const MovieDetailPage: React.FC = () => {
         <MainContent movie={mockData} />
         <Sidebar movie={mockData} />
       </div>
-      <AppFooter />
+      <Footer />
     </div>
   );
 };

@@ -11,7 +11,7 @@ import {
 import { OrderType } from './typing';
 
 // 1. IMPORT FOOTER DÙNG CHUNG VÀO ĐÂY
-import AppFooter from '../../components/Footer';
+import AppFooter from '../../components/layout/Footer';
 
 const OrderHistoryPage: React.FC = () => {
   const colors = { bg: '#151113', bgCard: '#1a1316', border: '#2d2025', primary: '#e42755', textDim: '#a3989c', textWhite: '#ffffff', success: '#52c41a' };

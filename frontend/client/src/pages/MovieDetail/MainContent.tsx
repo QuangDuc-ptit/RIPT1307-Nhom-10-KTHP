@@ -1,7 +1,9 @@
 import React from 'react';
-import { Tabs, Button, Tag } from 'antd';
+import { Tabs, Button, Tag, message } from 'antd'; // thêm message để báo lỗi nếu chưa login
 import { ClockCircleOutlined } from '@ant-design/icons';
-import { MovieDetailData } from '../typing';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store/auth';
+import { MovieDetailData } from '@/types/movie';
 
 interface Props {
   movie: MovieDetailData;
@@ -16,10 +18,35 @@ const SectionTitle: React.FC<{ title: string }> = ({ title }) => (
 
 const MainContent: React.FC<Props> = ({ movie }) => {
   const colors = { bgCard: '#1a1316', border: '#2d2025', primary: '#e42755', textDim: '#a3989c' };
+  const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const initialized = useAuthStore((s) => s.initialized);
+
+  const handleSelectSeat = (cinema: any, room: any, showtime: any) => {
+    console.log('handleSelectSeat called', { user, initialized, cinema, room, showtime });
+    if (!initialized) {
+      message.warning('Hệ thống đang khởi tạo, vui lòng chờ...');
+      return;
+    }
+    if (!user) {
+      message.error('Vui lòng đăng nhập để chọn ghế');
+      // Có thể chuyển hướng sang login
+      navigate('/auth/login', { state: { from: `/movie/${movie.id}` } });
+      return;
+    }
+    // Nếu đã login, điều hướng sang chọn ghế
+    navigate('/chon-ghe', {
+      state: {
+        movie: movie,
+        cinema: cinema,
+        room: room,
+        showtime: showtime,
+      },
+    });
+  };
 
   return (
     <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '40px' }}>
-      
       {/* Tóm tắt nội dung */}
       <div>
         <SectionTitle title="Tóm tắt nội dung" />
@@ -49,8 +76,8 @@ const MainContent: React.FC<Props> = ({ movie }) => {
           <h2 style={{ color: '#ffffff', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>Suất chiếu</h2>
         </div>
 
-        <Tabs 
-          defaultActiveKey="1" 
+        <Tabs
+          defaultActiveKey="1"
           tabBarStyle={{ borderBottom: `1px solid ${colors.border}`, marginBottom: '24px' }}
           items={[
             { key: '1', label: <span style={{ padding: '8px 16px', backgroundColor: colors.primary, borderRadius: '20px', color: '#fff', fontWeight: 'bold' }}>Hnay, 24/05</span>, children: null },
@@ -83,7 +110,11 @@ const MainContent: React.FC<Props> = ({ movie }) => {
                       </Button>
                     ))}
                   </div>
-                  <Button type="primary" style={{ backgroundColor: 'rgba(228, 39, 85, 0.1)', color: colors.primary, border: `1px solid ${colors.border}`, borderRadius: '20px', fontWeight: 'bold', fontSize: '12px' }}>
+                  <Button
+                    onClick={() => handleSelectSeat(cinema, room, room.times[0])}
+                    type="primary"
+                    style={{ backgroundColor: 'rgba(228, 39, 85, 0.1)', color: colors.primary, border: `1px solid ${colors.border}`, borderRadius: '20px', fontWeight: 'bold', fontSize: '12px' }}
+                  >
                     CHỌN GHẾ
                   </Button>
                 </div>
@@ -92,7 +123,6 @@ const MainContent: React.FC<Props> = ({ movie }) => {
           ))}
         </div>
       </div>
-
     </div>
   );
 };

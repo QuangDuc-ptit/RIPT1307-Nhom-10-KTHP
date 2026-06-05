@@ -1,7 +1,12 @@
 import React from 'react';
 import { Avatar, Button, Form, Input, Tag } from 'antd';
 import { IdcardOutlined, KeyOutlined } from '@ant-design/icons';
-import { AccountFormProps } from '../typing';
+import { UserProfile } from '../index'; // import type từ file cha
+
+// Định nghĩa props type
+interface AccountFormProps {
+  user: UserProfile;
+}
 
 const { TextArea } = Input;
 
@@ -59,7 +64,7 @@ const AccountForm: React.FC<AccountFormProps> = ({ user }) => {
         </Form>
       </div>
 
-      {/* --- BỔ SUNG: Khối 3: Cài đặt bảo mật --- */}
+      {/* Khối 3: Cài đặt bảo mật */}
       <div style={cardStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '18px', fontWeight: 'bold', marginBottom: '20px' }}>
           <KeyOutlined style={{ color: colors.primary }} /> Cài đặt bảo mật

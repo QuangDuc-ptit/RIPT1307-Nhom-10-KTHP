@@ -1,6 +1,6 @@
 import { SyntheticEvent, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import MovieCard from './components/MovieCard';
+import MovieCard from "@/components/common/MovieCard";
 import { useAuthStore } from '@/store/auth';
 import './LandingPage.css';
 
@@ -15,42 +15,25 @@ import {
 
 const { Title, Paragraph, Text } = Typography;
 
-// Import ảnh (giữ nguyên)
-import imgCucVang from "../../../assets/images/Cuc_Vang_Cua_Ngoai.jpg";
-import imgMai from "../../../assets/images/Mai.jpg";
-import imgMatBiec from "../../../assets/images/Mat_Biec.jpg";
-import imgNhaBaNu from "../../../assets/images/Nha_Ba_Nu.jpg";
-import imgUs from "../../../assets/images/Us.jpg";
-import imgYourName from "../../../assets/images/Your_Name.jpg";
-import imgTheWildRobot from "../../../assets/images/The_Wild_Robot.jpg";
-import imgTiecTrangMau from "../../../assets/images/Tiec_Trang_Mau.jpg";
-import imgLarva from "../../../assets/images/Larva.jpg";
-import imgBanGiaoHuong from "../../../assets/images/Ban_Giao_Huong.jpg";
-
-import imgSu_kien4 from "../../../assets/images/su_kien4.png";
-import imgSu_kien3 from "../../../assets/images/su_kien3.png";
-import imgSu_kien2 from "../../../assets/images/su_kien2.png";
-import imgSu_kien from "../../../assets/images/su_kien1.png";
-
-/* ================= MOCK DATA ================= */
+/* ================= MOCK DATA CHUẨN ================= */
 const MOCK_MOVIES = [
-  { id: 1, title: "Cục Vàng Của Ngoại", category: "dang-chieu", genre: "tinh-cam", image: imgCucVang, rating: "9.2", age: "P" },
-  { id: 2, title: "Phim: Mai", category: "dang-chieu", genre: "tinh-cam", image: imgMai, rating: "9.5", age: "T18" },
-  { id: 3, title: "Mắt Biếc", category: "sap-chieu", genre: "tinh-cam", image: imgMatBiec, rating: "Chưa chiếu", age: "T16" },
-  { id: 4, title: "Nhà Bà Nữ", category: "sap-chieu", genre: "tinh-cam", image: imgNhaBaNu, rating: "Chưa chiếu", age: "T16" },
-  { id: 5, title: "Us", category: "dang-chieu", genre: "kinh-di", image: imgUs, rating: "8.8", age: "T16" },
-  { id: 6, title: "Your Name", category: "sap-chieu", genre: "hoat-hinh", image: imgYourName, rating: "Chưa chiếu", age: "P" },
-  { id: 7, title: "The Wild Robot", category: "dang-chieu", genre: "hoat-hinh", image: imgTheWildRobot, rating: "8.8", age: "T16" },
-  { id: 8, title: "Tiệc Trăng Máu", category: "sap-chieu", genre: "hanh-dong", image: imgTiecTrangMau, rating: "Chưa chiếu", age: "P" },
-  { id: 9, title: "Larva", category: "dang-chieu", genre: "hoat-hinh", image: imgLarva, rating: "8.8", age: "T16" },
-  { id: 10, title: "Doremon Bản Giao Hưởng Địa Cầu", category: "sap-chieu", genre: "hoat-hinh", image: imgBanGiaoHuong, rating: "Chưa chiếu", age: "P" },
+  { id: 1, title: "Cục Vàng Của Ngoại", category: "dang-chieu", genre: "tinh-cam", image: "/movies/Cuc_Vang_Cua_Ngoai.jpg", rating: "9.2", age: "P" },
+  { id: 2, title: "Phim: Mai", category: "dang-chieu", genre: "tinh-cam", image: "/movies/Mai.jpg", rating: "9.5", age: "T18" },
+  { id: 3, title: "Mắt Biếc", category: "sap-chieu", genre: "tinh-cam", image: "/movies/Mat_Biec.jpg", rating: "Chưa chiếu", age: "T16" },
+  { id: 4, title: "Nhà Bà Nữ", category: "sap-chieu", genre: "tinh-cam", image: "/movies/Nha_Ba_Nu.jpg", rating: "Chưa chiếu", age: "T16" },
+  { id: 5, title: "Us", category: "dang-chieu", genre: "kinh-di", image: "/movies/Us.jpg", rating: "8.8", age: "T16" },
+  { id: 6, title: "Your Name", category: "sap-chieu", genre: "hoat-hinh", image: "/movies/Your_Name.jpg", rating: "Chưa chiếu", age: "P" },
+  { id: 7, title: "The Wild Robot", category: "dang-chieu", genre: "hoat-hinh", image: "/movies/The_Wild_Robot.jpg", rating: "8.8", age: "T16" },
+  { id: 8, title: "Tiệc Trăng Máu", category: "sap-chieu", genre: "hanh-dong", image: "/movies/Tiec_Trang_Mau.jpg", rating: "Chưa chiếu", age: "P" },
+  { id: 9, title: "Larva", category: "dang-chieu", genre: "hoat-hinh", image: "/movies/Larva.jpg", rating: "8.8", age: "T16" },
+  { id: 10, title: "Doremon Bản Giao Hưởng Địa Cầu", category: "sap-chieu", genre: "hoat-hinh", image: "/movies/Ban_Giao_Huong.jpg", rating: "Chưa chiếu", age: "P" },
 ];
 
 const MOCK_BLOGS = [
-  { id: 1, title: "Top 10 phim được mong chờ nhất hè này", date: "26/05/2026", summary: "Khám phá những bom tấn điện ảnh hot nhất sắp ra mắt tại KSTAR.", image: imgSu_kien },
-  { id: 2, title: "Đồng giá vé chỉ từ 50K", date: "25/05/2026", summary: "Ưu đãi cực sốc dành riêng cho Thứ Tư vui vẻ.", image: imgSu_kien2 },
-  { id: 3, title: "IMAX có gì đặc biệt?", date: "24/05/2026", summary: "Trải nghiệm công nghệ hình ảnh và âm thanh sống động nhất.", image: imgSu_kien3 },
-  { id: 4, title: "Cú đêm săn vé", date: "23/05/2026", summary: "Đi 4 tính tiền 2 cho tất cả suất chiếu sau 22h.", image: imgSu_kien4 },
+  { id: 1, title: "Top 10 phim được mong chờ nhất hè này", date: "26/05/2026", summary: "Khám phá những bom tấn điện ảnh hot nhất sắp ra mắt tại KSTAR.", image: "/banners/Su_kien1.png" },
+  { id: 2, title: "Đồng giá vé chỉ từ 50K", date: "25/05/2026", summary: "Ưu đãi cực sốc dành riêng cho Thứ Tư vui vẻ.", image: "/banners/Su_kien2.png" },
+  { id: 3, title: "IMAX có gì đặc biệt?", date: "24/05/2026", summary: "Trải nghiệm công nghệ hình ảnh và âm thanh sống động nhất.", image: "/banners/Su_kien3.png" },
+  { id: 4, title: "Cú đêm săn vé", date: "23/05/2026", summary: "Đi 4 tính tiền 2 cho tất cả suất chiếu sau 22h.", image: "/banners/Su_kien4.png" },
 ];
 
 const HERO_SLIDES = [
@@ -183,7 +166,6 @@ const LandingPage = () => {
         >
           Đăng nhập
         </button>
-
       </header>
 
       {/* Marquee */}
@@ -210,7 +192,7 @@ const LandingPage = () => {
         >
           <div className="hero-overlay"></div>
           <div className="hero-content">
-            <span className="hero-tag">🎬 CHÀO MỪNG ĐẾN VỚI</span>
+            <span className="hero-tag">CHÀO MỪNG ĐẾN VỚI</span>
             <h1 className="hero-title">{HERO_SLIDES[currentSlide].title}</h1>
             <p className="hero-description">{HERO_SLIDES[currentSlide].subtitle}</p>
             <div className="hero-buttons">
@@ -296,8 +278,8 @@ const LandingPage = () => {
             <div className="contact-info">
               <h2>Liên hệ</h2>
               <ul>
-                <li>📍 <strong>Địa chỉ:</strong> Tầng 5, Tòa nhà KSTAR, Hà Nội</li>
-                <li>📞 <strong>Hotline:</strong> 1900 xxxx (8:00 - 22:00)</li>
+                <li><strong>Địa chỉ:</strong> Tầng 5, Tòa nhà KSTAR, Hà Nội</li>
+                <li><strong>Hotline:</strong> 1900 xxxx (8:00 - 22:00)</li>
               </ul>
             </div>
             <div className="contact-form-box">
