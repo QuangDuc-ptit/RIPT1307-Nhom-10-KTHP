@@ -26,9 +26,15 @@ const LoginPage: React.FC = () => {
   const onFinish = async (values: any) => {
     if (activeTab === 'login') {
       try {
-        await login({ email: values.email, password: values.password });
+        const result = await login({ email: values.email, password: values.password });
         antdMessage.success('Đăng nhập thành công');
-        navigate(from, { replace: true });
+        
+        // Kiểm tra quyền: Nếu là ADMIN thì tự động chuyển sang trang Quản trị (cổng 5175)
+        if (result?.user && (result.user as any).role === 'ADMIN') {
+          window.location.href = `http://localhost:5175/auth/login?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
+        } else {
+          navigate(from, { replace: true });
+        }
       } catch (error: any) {
         antdMessage.error(error?.response?.data?.message || error?.message || 'Đăng nhập thất bại');
       }

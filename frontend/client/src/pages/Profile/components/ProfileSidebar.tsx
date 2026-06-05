@@ -2,9 +2,13 @@ import React from 'react';
 import { Avatar } from 'antd';
 import { UserOutlined, SettingOutlined, SafetyCertificateOutlined, BellOutlined, LockOutlined } from '@ant-design/icons';
 import { SidebarProps } from '../typing';
+import { useAuthStore } from '@/store/auth';
+import { useNavigate } from 'react-router-dom';
 
 const ProfileSidebar: React.FC<SidebarProps> = ({ activeMenu, setActiveMenu, user }) => {
   const colors = { bgCard: '#1d171a', border: '#3b2a31', primary: '#e42755', textDim: '#a3989c' };
+  const logout = useAuthStore((s) => s.logout);
+  const navigate = useNavigate();
 
   const menuItems = [
     { key: 'hoso', icon: <UserOutlined />, label: 'Hồ sơ' },
@@ -52,7 +56,13 @@ const ProfileSidebar: React.FC<SidebarProps> = ({ activeMenu, setActiveMenu, use
       </div>
 
       {/* Nút Đăng Xuất */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', cursor: 'pointer', color: colors.primary, fontWeight: 'bold' }}>
+      <div 
+        onClick={async () => {
+          await logout();
+          navigate('/auth/login');
+        }}
+        style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', cursor: 'pointer', color: colors.primary, fontWeight: 'bold' }}
+      >
         
         {/* ĐÂY LÀ ĐOẠN MÃ SVG BẠN VỪA THÊM VÀO */}
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">

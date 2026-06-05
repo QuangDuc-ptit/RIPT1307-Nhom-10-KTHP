@@ -7,7 +7,7 @@ interface AuthState {
   user: User | null;
   loading: boolean;
   initialized: boolean;
-  login: (payload: LoginPayload) => Promise<void>;
+  login: (payload: LoginPayload) => Promise<any>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
   bootstrap: () => Promise<void>;
@@ -45,6 +45,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     tokenStore.set(accessToken);
     tokenStore.setRefresh(refreshToken);
     set({ user, initialized: true });
+    return { user, accessToken, refreshToken };
   },
 
   register: async (payload) => {
