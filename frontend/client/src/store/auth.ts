@@ -5,7 +5,7 @@ import type { User } from '@/types';
 
 interface AuthState {
   user: User | null;
-  loading: boolean; // loading khi bootstrap (load lại app)
+  loading: boolean;
   initialized: boolean;
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
@@ -14,19 +14,14 @@ interface AuthState {
   setUser: (user: User | null) => void;
 }
 
-/**
- * Auth store. Lý do dùng Zustand thay vì Context:
- *  - không re-render toàn cây khi state đổi
- *  - dễ access từ ngoài React (ví dụ trong axios interceptor)
- *
- * Chỉ lưu `user` ở memory, token lưu ở localStorage (qua tokenStore).
- */
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   loading: false,
   initialized: false,
 
-  setUser: (user) => set({ user }),
+  setUser: (user) => {
+    set({ user, initialized: true });
+  },
 
   bootstrap: async () => {
     const token = tokenStore.get();
@@ -38,7 +33,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const user = await authApi.me();
       set({ user, initialized: true, loading: false });
-    } catch {
+    } catch (error) {
+      console.error('Bootstrap failed:', error);
       tokenStore.clearAll();
       set({ user: null, initialized: true, loading: false });
     }
@@ -48,24 +44,24 @@ export const useAuthStore = create<AuthState>((set) => ({
     const { accessToken, refreshToken, user } = await authApi.login(payload);
     tokenStore.set(accessToken);
     tokenStore.setRefresh(refreshToken);
-    set({ user });
+    set({ user, initialized: true });
   },
 
   register: async (payload) => {
     const { accessToken, refreshToken, user } = await authApi.register(payload);
     tokenStore.set(accessToken);
     tokenStore.setRefresh(refreshToken);
-    set({ user });
+    set({ user, initialized: true });
   },
 
   logout: async () => {
     try {
       await authApi.logout();
-    } catch {
-      // bỏ qua lỗi logout
+    } catch (error) {
+      console.error('Logout error:', error);
     } finally {
       tokenStore.clearAll();
-      set({ user: null });
+      set({ user: null, initialized: true });
     }
   },
 }));

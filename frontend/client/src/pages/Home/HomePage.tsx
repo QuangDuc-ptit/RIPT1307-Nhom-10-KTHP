@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { env } from '@/config/env';
-import './HomePage.css'; 
+import './HomePage.css';
 import {
   Layout,
   Button,
@@ -37,7 +38,6 @@ const { Header, Footer, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 
-// ---------- Dữ liệu ----------
 interface Movie {
   id: number;
   title: string;
@@ -70,7 +70,6 @@ const comingSoonMovies = [
 const footerCustomerLinks = ['FAQs', 'Terms of Service', 'Privacy Policy', 'Contact Us'];
 const footerAboutLinks = ['About Us', 'Careers', 'Membership', 'Cinemas'];
 
-// Các màu sắc vẫn cần dùng inline cho thư viện Ant Design
 const colors = {
   surface: '#200e0c',
   primaryRed: '#E50914',
@@ -81,6 +80,8 @@ const colors = {
 };
 
 export default function HomePage() {
+  const navigate = useNavigate();
+
   const headerRef = useRef<HTMLElement>(null);
   const heroContentRef = useRef<HTMLDivElement>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -152,10 +153,17 @@ export default function HomePage() {
     </Col>
   );
 
+  // Hàm xử lý đặt vé: chuyển đến trang chi tiết phim
+  const handleBookMovie = (movieId: number) => {
+    navigate(`/movie/${movieId}`);
+  };
+
   return (
     <Layout style={{ background: colors.surface, minHeight: '100vh' }}>
+      <Helmet>
+        <title>KSTAR Cinema - Trang chủ</title>
+      </Helmet>
 
-      {/* Header */}
       <Header
         ref={headerRef as any}
         style={{
@@ -181,14 +189,18 @@ export default function HomePage() {
             <Badge dot offset={[2, 0]}>
               <BellOutlined style={{ fontSize: 22, color: colors.onSurfaceVariant, cursor: 'pointer', transition: 'transform 0.3s ease' }} />
             </Badge>
-            <Avatar src="https://lh3.googleusercontent.com/aida-public/AB6AXuCs1hn6nDRgKqiNDwmEKBKHUjkw4Idae_YTNR6hF_Hz2VtFL1dIgaTw0lE_v6mBr2Wq-oIeiahjrVQ2KTCnAFu5Y_b9l05sZA4FA9bLEDBzoXl16aZiR40jis_t0XpX8E1tmlwUd3mtKTDYKIZPUnyeDaWbVV7K38FN1DvhkkOdhre-qNgWkobUaGgIss0U30Bs_XBVdfbtyY1qr7txJah7MnZNmhc9jJOS3u0cTYRTH9LdSeqwiXPnzbIpExYqscFtqVH6LPvFmhQ" style={{ border: `2px solid ${colors.primaryRed}`, cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.4)', transition: 'transform 0.3s ease' }} />
+            <Avatar 
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCs1hn6nDRgKqiNDwmEKBKHUjkw4Idae_YTNR6hF_Hz2VtFL1dIgaTw0lE_v6mBr2Wq-oIeiahjrVQ2KTCnAFu5Y_b9l05sZA4FA9bLEDBzoXl16aZiR40jis_t0XpX8E1tmlwUd3mtKTDYKIZPUnyeDaWbVV7K38FN1DvhkkOdhre-qNgWkobUaGgIss0U30Bs_XBVdfbtyY1qr7txJah7MnZNmhc9jJOS3u0cTYRTH9LdSeqwiXPnzbIpExYqscFtqVH6LPvFmhQ" 
+              style={{ border: `2px solid ${colors.primaryRed}`, cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.4)', transition: 'transform 0.3s ease' }} 
+              onClick={() => navigate('/profile')}
+            />
           </Space>
         </div>
       </Header>
 
       {/* Hero Section */}
       <div style={{ position: 'relative', height: '100vh', width: '100%', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1974&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center', transform: 'scale(1.02)', transition: 'transform 10s ease-out' }} />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://lh3.googleusercontent.com/aida-public/AB6AXuBlCtflLWk3fLSCug8wAaXWQUoiJ4Lk1o7gXal4ssufHcNJ1Y0AHpB-csPZpxgnIyGvhQUbTX6qQ44onQPqZHg4bKR0k6V7hmbgJoOAJvKXPOjE6o0vyyjEZrS0SFHWCN7WNbs6XRtDcniEKQkoIQQom6fLjhIrE8FbHy3hdNqLC3BpwFaGh-CNFhmM20wtqXDbm_Hkxt_mZ34HGdvG36-UPI2Iti2rMwWzrwC66YmwHpHZIOlv7Wv6GpnG3v4R84JLhIO3InBRRXg)', backgroundSize: 'cover', backgroundPosition: 'center', transform: 'scale(1.02)', transition: 'transform 10s ease-out' }} />
         <div className="hero-gradient" style={{ position: 'absolute', inset: 0, zIndex: 1 }} />
         
         <div ref={heroContentRef} style={{ position: 'relative', zIndex: 2, maxWidth: 1280, margin: '0 auto', padding: '0 48px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 100, transition: 'transform 0.3s ease-out' }}>
@@ -204,7 +216,13 @@ export default function HomePage() {
             </Paragraph>
             
             <Space size="middle" style={{ marginTop: 40 }}>
-              <Button type="primary" size="large" icon={<PlayCircleOutlined />} style={{ background: colors.primaryRed, borderColor: colors.primaryRed, borderRadius: 48, fontWeight: 'bold', padding: '0 40px', height: 56, fontSize: '16px', boxShadow: '0 8px 25px rgba(229, 9, 20, 0.4)', transition: 'all 0.3s ease' }}>
+              <Button 
+                type="primary" 
+                size="large" 
+                icon={<PlayCircleOutlined />} 
+                style={{ background: colors.primaryRed, borderColor: colors.primaryRed, borderRadius: 48, fontWeight: 'bold', padding: '0 40px', height: 56, fontSize: '16px', boxShadow: '0 8px 25px rgba(229, 9, 20, 0.4)', transition: 'all 0.3s ease' }}
+                onClick={() => handleBookMovie(1)}  // Dune: Part Two có id = 1 (giả định)
+              >
                 Đặt vé
               </Button>
               <Button size="large" icon={<PlayCircleOutlined />} style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: 48, color: 'white', padding: '0 40px', height: 56, fontSize: '16px', boxShadow: '0 8px 25px rgba(0, 0, 0, 0.2)', transition: 'all 0.3s ease' }}>
@@ -237,7 +255,14 @@ export default function HomePage() {
               </Select>
             ))}
             <Col xs={24} md={6}>
-              <Button type="primary" block style={{ background: colors.primaryRed, borderColor: colors.primaryRed, height: 48, fontWeight: 'bold', borderRadius: 40 }}>Mua vé nhanh</Button>
+              <Button 
+                type="primary" 
+                block 
+                style={{ background: colors.primaryRed, borderColor: colors.primaryRed, height: 48, fontWeight: 'bold', borderRadius: 40 }}
+                onClick={() => handleBookMovie(1)}  // Chuyển đến phim đang chọn (ví dụ Dune)
+              >
+                Mua vé nhanh
+              </Button>
             </Col>
           </Row>
         </Card>
@@ -245,8 +270,6 @@ export default function HomePage() {
 
       {/* Now Showing Section */}
       <Content style={{ padding: '80px 48px 0', maxWidth: 1280, margin: '0 auto', width: '100%' }}>
-        
-        {/* Header Section */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 }}>
           <Title level={2} style={{ 
             color: colors.onSurface, 
@@ -256,19 +279,21 @@ export default function HomePage() {
             paddingLeft: 20,
             letterSpacing: '0.5px'
           }}>
-            {/* Thanh viền đỏ bo góc sang trọng hơn */}
             <span style={{ position: 'absolute', left: 0, top: '10%', height: '80%', width: 5, background: colors.primaryRed, borderRadius: 10 }}></span>
             Phim Đang Chiếu
           </Title>
           
-          <Button type="text" className="view-all-btn" style={{ color: colors.onSurfaceVariant, fontSize: '15px', fontWeight: 600 }}>
+          <Button 
+            type="text" 
+            className="view-all-btn" 
+            style={{ color: colors.onSurfaceVariant, fontSize: '15px', fontWeight: 600 }}
+            onClick={() => navigate('/movies')}
+          >
             Xem tất cả <ArrowRightOutlined className="view-all-arrow" />
           </Button>
         </div>
 
-        {/* Carousel Container */}
         <div className="carousel-container" style={{ position: 'relative', margin: '0 -20px', padding: '0 20px' }}>
-          
           <button ref={prevBtnRef} className="carousel-nav-btn prev-btn">
             <LeftOutlined style={{ fontSize: 18 }} />
           </button>
@@ -276,7 +301,6 @@ export default function HomePage() {
             <RightOutlined style={{ fontSize: 18 }} />
           </button>
           
-          {/* ĐÃ SỬA: Đường dẫn ảnh phim đang chiếu (/movies/) */}
           <div ref={sliderRef} className="movie-slider" style={{ display: 'flex', overflowX: 'auto', scrollBehavior: 'smooth', gap: 28, paddingBottom: 40, paddingTop: 16, scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {nowShowingMovies.map((movie) => (
               <div key={movie.id} className="movie-card" style={{ flex: '0 0 auto', width: 'calc(20% - 22.4px)', minWidth: 220 }}>
@@ -290,18 +314,23 @@ export default function HomePage() {
                     </div>
                     
                     <div className="movie-overlay">
-                      <Button type="primary" shape="round" size="large" style={{ 
-                        background: colors.primaryRed, 
-                        borderColor: colors.primaryRed, 
-                        fontWeight: 'bold',
-                        boxShadow: '0 8px 20px rgba(229, 9, 20, 0.4)' 
-                      }}>
+                      <Button 
+                        type="primary" 
+                        shape="round" 
+                        size="large" 
+                        style={{ 
+                          background: colors.primaryRed, 
+                          borderColor: colors.primaryRed, 
+                          fontWeight: 'bold',
+                          boxShadow: '0 8px 20px rgba(229, 9, 20, 0.4)' 
+                        }}
+                        onClick={() => handleBookMovie(movie.id)}
+                      >
                         Đặt vé
                       </Button>
                     </div>
                   </div>
                   
-                  {/* Căn chỉnh lại text bên dưới poster cho thoáng */}
                   <div style={{ paddingTop: 16, paddingLeft: 4 }}>
                     <h3 className="movie-title">{movie.title}</h3>
                     <p className="movie-meta">{movie.genre} • {movie.duration}</p>
@@ -324,14 +353,13 @@ export default function HomePage() {
             <Col xs={24} sm={12} md={6} key={movie.id}>
               <div className="coming-card">
                 <div className="coming-img-wrapper">
-                  {/* ĐÃ SỬA: Đường dẫn ảnh sắp chiếu (/banners/) */}
                   <img src={`/banners/${movie.image}`} alt={movie.title} className="coming-img" />
                   <div className="coming-date">{movie.date}</div>
                 </div>
                 <div className="coming-content">
                   <h4 className="coming-title">{movie.title}</h4>
                   <p className="coming-desc">{movie.desc}</p>
-                  <div className="coming-link">
+                  <div className="coming-link" onClick={() => handleBookMovie(movie.id)}>
                     Thông tin chi tiết <ArrowRightOutlined />
                   </div>
                 </div>

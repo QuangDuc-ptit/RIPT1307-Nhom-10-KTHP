@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import AppRoutes from './routes/AppRoutes'; // Import cái mớ Routes bạn vừa tách
 import { useAuthStore } from '@/store/auth';
+import AppRoutes from '@/routes/AppRoutes';
 
 function App() {
-  const bootstrap = useAuthStore((s) => s.bootstrap);
+  const bootstrap = useAuthStore((state) => state.bootstrap);
 
   useEffect(() => {
     bootstrap();
@@ -12,7 +12,6 @@ function App() {
 
   return (
     <BrowserRouter>
-      {/* Gọi toàn bộ cấu hình Route ở đây */}
       <AppRoutes />
     </BrowserRouter>
   );

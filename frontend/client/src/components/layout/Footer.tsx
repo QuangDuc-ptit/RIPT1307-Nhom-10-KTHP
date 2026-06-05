@@ -1,90 +1,257 @@
 import React from 'react';
-import { Button } from 'antd';
-import { 
-  GlobalOutlined, 
-  DribbbleOutlined, 
+import {
+  Button,
+  Row,
+  Col,
+  Typography,
+  Space,
+  Divider,
+} from 'antd';
+import {
+  GlobalOutlined,
+  DribbbleOutlined,
   MailOutlined,
   AppleFilled,
   AndroidFilled,
-  VideoCameraOutlined
+  VideoCameraOutlined,
 } from '@ant-design/icons';
 
+const { Title, Paragraph, Text } = Typography;
+
 const AppFooter: React.FC = () => {
-  const colors = {
-    bg: '#120e10',
-    primary: '#e42755',
-    textDim: '#a3989c',
-    textWhite: '#ffffff',
-    border: '#2d2025'
+  // Màu sắc theo phong cách mẫu mới
+  const footerStyles = {
+    primary: '#e42755',          // màu đỏ đặc trưng
+    primaryRed: '#e42755',
+    onSurfaceVariant: '#a3989c', // màu chữ mờ
+    surfaceVariant: '#212836',   // nền button
   };
 
-  const colStyle = { display: 'flex', flexDirection: 'column' as const, gap: '16px' };
-  const headingStyle = { color: colors.textWhite, fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' };
-  const linkStyle = { color: colors.textDim, fontSize: '14px', cursor: 'pointer', transition: 'color 0.3s' };
-
   return (
-    <div style={{ backgroundColor: colors.bg, paddingTop: '60px', paddingBottom: '24px', borderTop: `1px solid ${colors.border}` }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 5%', display: 'flex', flexWrap: 'wrap', gap: '40px', justifyContent: 'space-between' }}>
-        
-        <div style={{ ...colStyle, flex: '2', minWidth: '250px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: colors.primary, fontSize: '24px', fontWeight: '900' }}>
-            <VideoCameraOutlined /> KSTAR
-          </div>
-          <p style={{ color: colors.textDim, fontSize: '14px', lineHeight: '1.6', maxWidth: '300px', margin: 0 }}>
-            Điểm đến lý tưởng dành cho những người yêu điện ảnh. Trải nghiệm chất lượng rạp chiếu tốt nhất và đặt vé dễ dàng chỉ với vài thao tác.
-          </p>
-          <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
-            <GlobalOutlined style={{ color: colors.textDim, fontSize: '20px', cursor: 'pointer' }} />
-            <DribbbleOutlined style={{ color: colors.textDim, fontSize: '20px', cursor: 'pointer' }} />
-            <MailOutlined style={{ color: colors.textDim, fontSize: '20px', cursor: 'pointer' }} />
-          </div>
-        </div>
+    <footer
+      style={{
+        background: '#110706',
+        borderTop: '1px solid rgba(255,255,255,0.05)',
+        padding: '56px 48px 32px',
+      }}
+    >
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+        <Row gutter={[48, 32]}>
+          {/* Cột 1: Logo + mô tả + social icons */}
+          <Col xs={24} md={6}>
+            <Title
+              level={4}
+              style={{
+                color: footerStyles.primary,
+                marginBottom: 20,
+                fontWeight: 800,
+                fontSize: '24px',
+              }}
+            >
+              <VideoCameraOutlined /> KSTAR
+            </Title>
+            <Paragraph
+              style={{
+                color: footerStyles.onSurfaceVariant,
+                fontSize: 14,
+                lineHeight: 1.6,
+              }}
+            >
+              Điểm đến lý tưởng dành cho những người yêu điện ảnh.
+              Trải nghiệm chất lượng rạp chiếu tốt nhất và đặt vé dễ dàng chỉ với vài thao tác.
+            </Paragraph>
+            <Space size="middle">
+              <Button
+                shape="circle"
+                icon={<GlobalOutlined />}
+                style={{
+                  background: footerStyles.surfaceVariant,
+                  border: 'none',
+                  color: footerStyles.onSurfaceVariant,
+                }}
+              />
+              <Button
+                shape="circle"
+                icon={<DribbbleOutlined />}
+                style={{
+                  background: footerStyles.surfaceVariant,
+                  border: 'none',
+                  color: footerStyles.onSurfaceVariant,
+                }}
+              />
+              <Button
+                shape="circle"
+                icon={<MailOutlined />}
+                style={{
+                  background: footerStyles.surfaceVariant,
+                  border: 'none',
+                  color: footerStyles.onSurfaceVariant,
+                }}
+              />
+            </Space>
+          </Col>
 
-        <div style={{ ...colStyle, flex: '1', minWidth: '150px' }}>
-          <h3 style={headingStyle}>Quick Links</h3>
-          <div style={linkStyle} className="footer-hover">Tất cả phim</div>
-          <div style={linkStyle} className="footer-hover">Hệ thống rạp</div>
-          <div style={linkStyle} className="footer-hover">Khuyến mãi</div>
-          <div style={linkStyle} className="footer-hover">Ưu đãi</div>
-        </div>
+          {/* Cột 2: Quick Links (tất cả phim, hệ thống rạp, khuyến mãi, ưu đãi) */}
+          <Col xs={24} md={6}>
+            <Title
+              level={5}
+              style={{
+                color: footerStyles.primary,
+                marginBottom: 20,
+                fontWeight: 600,
+              }}
+            >
+              Khám phá
+            </Title>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: 12 }}>
+                <a href="#" style={{ color: footerStyles.onSurfaceVariant }}>
+                  Tất cả phim
+                </a>
+              </li>
+              <li style={{ marginBottom: 12 }}>
+                <a href="#" style={{ color: footerStyles.onSurfaceVariant }}>
+                  Hệ thống rạp
+                </a>
+              </li>
+              <li style={{ marginBottom: 12 }}>
+                <a href="#" style={{ color: footerStyles.onSurfaceVariant }}>
+                  Khuyến mãi
+                </a>
+              </li>
+              <li style={{ marginBottom: 12 }}>
+                <a href="#" style={{ color: footerStyles.onSurfaceVariant }}>
+                  Ưu đãi
+                </a>
+              </li>
+            </ul>
+          </Col>
 
-        <div style={{ ...colStyle, flex: '1', minWidth: '150px' }}>
-          <h3 style={headingStyle}>Chăm sóc khách hàng</h3>
-          <div style={linkStyle} className="footer-hover">Trung tâm trợ giúp</div>
-          <div style={linkStyle} className="footer-hover">Chính sách bảo mật</div>
-          <div style={linkStyle} className="footer-hover">Điều khoản dịch vụ</div>
-          <div style={linkStyle} className="footer-hover">Chính sách hoàn tiền</div>
-        </div>
+          {/* Cột 3: Chăm sóc khách hàng */}
+          <Col xs={24} md={6}>
+            <Title
+              level={5}
+              style={{
+                color: footerStyles.primary,
+                marginBottom: 20,
+                fontWeight: 600,
+              }}
+            >
+              Chăm sóc khách hàng
+            </Title>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: 12 }}>
+                <a href="#" style={{ color: footerStyles.onSurfaceVariant }}>
+                  Trung tâm trợ giúp
+                </a>
+              </li>
+              <li style={{ marginBottom: 12 }}>
+                <a href="#" style={{ color: footerStyles.onSurfaceVariant }}>
+                  Chính sách bảo mật
+                </a>
+              </li>
+              <li style={{ marginBottom: 12 }}>
+                <a href="#" style={{ color: footerStyles.onSurfaceVariant }}>
+                  Điều khoản dịch vụ
+                </a>
+              </li>
+              <li style={{ marginBottom: 12 }}>
+                <a href="#" style={{ color: footerStyles.onSurfaceVariant }}>
+                  Chính sách hoàn tiền
+                </a>
+              </li>
+            </ul>
+          </Col>
 
-        <div style={{ ...colStyle, flex: '1.5', minWidth: '200px' }}>
-          <h3 style={headingStyle}>Tải ứng dụng</h3>
-          <Button 
-            style={{ backgroundColor: '#212836', border: 'none', height: 'auto', padding: '10px 20px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'flex-start' }}
-          >
-            <AndroidFilled style={{ fontSize: '24px', color: colors.textWhite }} />
-            <div style={{ textAlign: 'left', lineHeight: '1.2' }}>
-              <div style={{ fontSize: '10px', color: colors.textDim, textTransform: 'uppercase' }}>Tải trên</div>
-              <div style={{ fontSize: '14px', color: colors.textWhite, fontWeight: 'bold' }}>Google Play</div>
-            </div>
-          </Button>
-          <Button 
-            style={{ backgroundColor: '#212836', border: 'none', height: 'auto', padding: '10px 20px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'flex-start', marginTop: '4px' }}
-          >
-            <AppleFilled style={{ fontSize: '24px', color: colors.textWhite }} />
-            <div style={{ textAlign: 'left', lineHeight: '1.2' }}>
-              <div style={{ fontSize: '10px', color: colors.textDim, textTransform: 'uppercase' }}>Tải trên</div>
-              <div style={{ fontSize: '14px', color: colors.textWhite, fontWeight: 'bold' }}>App Store</div>
-            </div>
-          </Button>
-        </div>
+          {/* Cột 4: Tải ứng dụng */}
+          <Col xs={24} md={6}>
+            <Title
+              level={5}
+              style={{
+                color: footerStyles.primary,
+                marginBottom: 20,
+                fontWeight: 600,
+              }}
+            >
+              Tải ứng dụng
+            </Title>
+            <Button
+              style={{
+                backgroundColor: footerStyles.surfaceVariant,
+                border: 'none',
+                height: 'auto',
+                padding: '10px 20px',
+                borderRadius: 12,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                justifyContent: 'flex-start',
+                marginBottom: 12,
+                width: '100%',
+              }}
+            >
+              <AndroidFilled style={{ fontSize: 24, color: '#fff' }} />
+              <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: footerStyles.onSurfaceVariant,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Tải trên
+                </div>
+                <div style={{ fontSize: 14, color: '#fff', fontWeight: 'bold' }}>
+                  Google Play
+                </div>
+              </div>
+            </Button>
+            <Button
+              style={{
+                backgroundColor: footerStyles.surfaceVariant,
+                border: 'none',
+                height: 'auto',
+                padding: '10px 20px',
+                borderRadius: 12,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                justifyContent: 'flex-start',
+                width: '100%',
+              }}
+            >
+              <AppleFilled style={{ fontSize: 24, color: '#fff' }} />
+              <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: footerStyles.onSurfaceVariant,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Tải trên
+                </div>
+                <div style={{ fontSize: 14, color: '#fff', fontWeight: 'bold' }}>
+                  App Store
+                </div>
+              </div>
+            </Button>
+          </Col>
+        </Row>
+
+        <Divider style={{ background: 'rgba(255,255,255,0.05)', margin: '40px 0 24px' }} />
+        <Text
+          style={{
+            color: footerStyles.onSurfaceVariant,
+            display: 'block',
+            textAlign: 'center',
+            fontSize: '13px',
+          }}
+        >
+          © 2024 KSTAR Cinema. All Rights Reserved.
+        </Text>
       </div>
-
-      <div style={{ maxWidth: '1200px', margin: '40px auto 0', padding: '24px 5% 0', borderTop: `1px solid ${colors.border}`, textAlign: 'center' }}>
-        <p style={{ color: colors.textDim, fontSize: '12px', margin: 0 }}>
-          © 2024 KStar Cinema. Mọi quyền được bảo lưu.
-        </p>
-      </div>
-    </div>
+    </footer>
   );
 };
 
