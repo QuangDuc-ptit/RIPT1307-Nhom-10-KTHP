@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store/auth';
 import { env } from '@/config/env';
 import {
   Layout,
@@ -17,6 +19,7 @@ import {
   Form,
   Menu,
   Card,
+  Dropdown,
 } from 'antd';
 import {
   SearchOutlined,
@@ -73,6 +76,10 @@ export default function HomePage() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const prevBtnRef = useRef<HTMLButtonElement>(null);
   const nextBtnRef = useRef<HTMLButtonElement>(null);
+
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const navigate = useNavigate();
 
   // Navbar scroll effect
   useEffect(() => {
@@ -197,10 +204,20 @@ export default function HomePage() {
             <Badge dot offset={[2, 0]}>
               <BellOutlined style={{ fontSize: 22, color: styles.onSurfaceVariant, cursor: 'pointer' }} />
             </Badge>
-            <Avatar
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCs1hn6nDRgKqiNDwmEKBKHUjkw4Idae_YTNR6hF_Hz2VtFL1dIgaTw0lE_v6mBr2Wq-oIeiahjrVQ2KTCnAFu5Y_b9l05sZA4FA9bLEDBzoXl16aZiR40jis_t0XpX8E1tmlwUd3mtKTDYKIZPUnyeDaWbVV7K38FN1DvhkkOdhre-qNgWkobUaGgIss0U30Bs_XBVdfbtyY1qr7txJah7MnZNmhc9jJOS3u0cTYRTH9LdSeqwiXPnzbIpExYqscFtqVH6LPvFmhQ"
-              style={{ border: `2px solid ${styles.primaryRed}`, cursor: 'pointer' }}
-            />
+            <Dropdown 
+              menu={{
+                items: [
+                  { key: 'profile', label: 'Thông tin tài khoản', onClick: () => navigate('/profile') },
+                  { key: 'logout', label: 'Đăng xuất', danger: true, onClick: async () => { await logout(); navigate('/auth/login'); } }
+                ]
+              }} 
+              placement="bottomRight"
+            >
+              <Avatar
+                src={user?.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCs1hn6nDRgKqiNDwmEKBKHUjkw4Idae_YTNR6hF_Hz2VtFL1dIgaTw0lE_v6mBr2Wq-oIeiahjrVQ2KTCnAFu5Y_b9l05sZA4FA9bLEDBzoXl16aZiR40jis_t0XpX8E1tmlwUd3mtKTDYKIZPUnyeDaWbVV7K38FN1DvhkkOdhre-qNgWkobUaGgIss0U30Bs_XBVdfbtyY1qr7txJah7MnZNmhc9jJOS3u0cTYRTH9LdSeqwiXPnzbIpExYqscFtqVH6LPvFmhQ"}
+                style={{ border: `2px solid ${styles.primaryRed}`, cursor: 'pointer' }}
+              />
+            </Dropdown>
           </Space>
         </div>
       </Header>

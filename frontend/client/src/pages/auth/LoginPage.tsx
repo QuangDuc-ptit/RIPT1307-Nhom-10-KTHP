@@ -13,6 +13,7 @@ const LoginPage: React.FC = () => {
   const location = useLocation();
   const user = useAuthStore((s) => s.user);
   const login = useAuthStore((s) => s.login);
+  const register = useAuthStore((s) => s.register);
   const setUser = useAuthStore((s) => s.setUser);
   const from = (location.state as any)?.from?.pathname || '/home';
 
@@ -24,35 +25,31 @@ const LoginPage: React.FC = () => {
 
   const onFinish = async (values: any) => {
     if (activeTab === 'login') {
-      if (values.email === 'dat123@gmail.com' && values.password === '123456') {
-        const demoUser = {
-          id: 'demo-user',
-          email: values.email,
-          name: 'Dat',
-          role: 'USER' as const,
-          createdAt: new Date().toISOString(),
-        };
-        setUser(demoUser);
-        tokenStore.set('demo-token');
-        tokenStore.setRefresh('demo-token');
-        localStorage.setItem('demoUser', JSON.stringify(demoUser));
-        antdMessage.success('Đăng nhập thành công');
-        navigate(from, { replace: true });
-        return;
-      }
-
       try {
         await login({ email: values.email, password: values.password });
         antdMessage.success('Đăng nhập thành công');
         navigate(from, { replace: true });
       } catch (error: any) {
-        antdMessage.error(error?.message || 'Đăng nhập thất bại');
+        antdMessage.error(error?.response?.data?.message || error?.message || 'Đăng nhập thất bại');
       }
       return;
     }
 
-    console.log(`Thông tin đăng ký:`, values);
-    antdMessage.info('Tính năng đăng ký chưa được kích hoạt tại đây.');
+    if (activeTab === 'register') {
+      try {
+        // Tên mặc định nếu form không truyền, hoặc lấy từ form (values.name)
+        await register({ 
+          email: values.email, 
+          password: values.password, 
+          name: values.name || 'Người dùng mới' 
+        });
+        antdMessage.success('Đăng ký thành công');
+        navigate(from, { replace: true });
+      } catch (error: any) {
+        antdMessage.error(error?.response?.data?.message || error?.message || 'Đăng ký thất bại');
+      }
+      return;
+    }
   };
 
   const FormLabel = ({ children }: { children: React.ReactNode }) => (
@@ -123,13 +120,13 @@ const LoginPage: React.FC = () => {
 
   const renderRegisterForm = () => (
     <Form layout="vertical" onFinish={onFinish}>
-      <Form.Item label={<FormLabel>Họ và tên</FormLabel>} colon={false}>
+      <Form.Item label={<FormLabel>Họ và tên</FormLabel>} name="name" colon={false} rules={[{ required: true, message: 'Vui lòng nhập họ tên!' }]}>
         <Input placeholder="Nhập họ và tên" style={CustomInputStyle} />
       </Form.Item>
-      <Form.Item label={<FormLabel>Email</FormLabel>} colon={false}>
+      <Form.Item label={<FormLabel>Email</FormLabel>} name="email" colon={false} rules={[{ required: true, message: 'Vui lòng nhập email!' }, { type: 'email', message: 'Email không đúng định dạng!' }]}>
         <Input placeholder="Nhập email" style={CustomInputStyle} />
       </Form.Item>
-      <Form.Item label={<FormLabel>Mật khẩu</FormLabel>} colon={false}>
+      <Form.Item label={<FormLabel>Mật khẩu</FormLabel>} name="password" colon={false} rules={[{ required: true, message: 'Vui lòng tạo mật khẩu!' }]}>
         <Input.Password placeholder="Tạo mật khẩu" style={CustomInputStyle} />
       </Form.Item>
       <Form.Item>
