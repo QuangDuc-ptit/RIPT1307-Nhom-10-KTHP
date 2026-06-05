@@ -26,7 +26,7 @@ interface GridState {
 export default function TheatersPage() {
   const [selectedScreen, setSelectedScreen] = useState<string | null>(null);
 
-  // Khởi tạo data từ localStorage, nếu chưa có dữ liệu cũ thì nạp giá trị mặc định ban đầu
+  // Khởi tạo data từ localStorage, nếu chưa có dữ liệu cũ thì nạp giá trị mặc định ban đầu bằng VND
   const [theaterConfigs, setTheaterConfigs] = useState<Record<string, ScreenConfig>>(() => {
     const savedConfigs = localStorage.getItem('global_theater_configs');
     if (savedConfigs) {
@@ -36,13 +36,14 @@ export default function TheatersPage() {
         // Phòng hờ dữ liệu bị lỗi format JSON
       }
     }
+    // Giá vé mặc định ban đầu theo đơn vị VND (80k - 120k - 160k)
     return {
-      'Screen 1 - IMAX': { rows: 10, cols: 10, priceStandard: 10, priceVip: 25, priceCouple: 18 },
-      'Screen 2 - IMAX': { rows: 12, cols: 12, priceStandard: 12, priceVip: 28, priceCouple: 20 },
-      'Screen 3 - IMAX': { rows: 10, cols: 10, priceStandard: 10, priceVip: 25, priceCouple: 18 },
-      'Screen 4 - IMAX': { rows: 10, cols: 10, priceStandard: 10, priceVip: 25, priceCouple: 18 },
-      'Screen 5 - IMAX': { rows: 10, cols: 10, priceStandard: 10, priceVip: 25, priceCouple: 18 },
-      'Screen 6 - IMAX': { rows: 10, cols: 10, priceStandard: 10, priceVip: 25, priceCouple: 18 },
+      'Screen 1 - IMAX': { rows: 11, cols: 13, priceStandard: 80000, priceVip: 120000, priceCouple: 160000 },
+      'Screen 2 - IMAX': { rows: 12, cols: 12, priceStandard: 80000, priceVip: 120000, priceCouple: 160000 },
+      'Screen 3 - IMAX': { rows: 10, cols: 10, priceStandard: 80000, priceVip: 120000, priceCouple: 160000 },
+      'Screen 4 - IMAX': { rows: 10, cols: 10, priceStandard: 80000, priceVip: 120000, priceCouple: 160000 },
+      'Screen 5 - IMAX': { rows: 10, cols: 10, priceStandard: 80000, priceVip: 120000, priceCouple: 160000 },
+      'Screen 6 - IMAX': { rows: 10, cols: 10, priceStandard: 80000, priceVip: 120000, priceCouple: 160000 },
     };
   });
 
@@ -53,7 +54,7 @@ export default function TheatersPage() {
 
   // Lấy ra cấu hình hiện tại của phòng đang chọn (nếu chưa chọn thì lấy tạm mặc định)
   const currentConfig = useMemo(() => {
-    if (!selectedScreen) return { rows: 10, cols: 10, priceStandard: 10, priceVip: 25, priceCouple: 18 };
+    if (!selectedScreen) return { rows: 10, cols: 10, priceStandard: 80000, priceVip: 120000, priceCouple: 160000 };
     return theaterConfigs[selectedScreen];
   }, [selectedScreen, theaterConfigs]);
 
@@ -220,7 +221,7 @@ export default function TheatersPage() {
             <Space size={32}>
               {/* Kích thước */}
               <Space direction="vertical" size={4}>
-                <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700 }}>KÍCH THƯỚC</span>
+                <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700 }}>KÍCH THƯRICH</span>
                 <Space>
                   <span style={{ fontSize: '13px' }}>Hàng:</span>
                   <InputNumber min={10} max={20} value={currentConfig.rows} onChange={(val) => updateGridSize(val || 10, currentConfig.cols)} size="small" style={{ width: 55 }} />
@@ -236,17 +237,47 @@ export default function TheatersPage() {
                   <Space size={4}>
                     <span style={{ background: '#93c5fd', color: '#1d4ed8', width: 12, height: 12, borderRadius: 2, display: 'inline-block' }} />
                     <span style={{ fontSize: '12px', color: '#1d4ed8', fontWeight: 600 }}>Standard:</span>
-                    <InputNumber min={0} value={currentConfig.priceStandard} onChange={(val) => updateCurrentConfig({ priceStandard: val || 0 })} size="small" style={{ width: 75 }} addonBefore="$" />
+                    <InputNumber 
+                      min={0} 
+                      step={5000}
+                      formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                      parser={(value) => value ? value.replace(/[^\d]/g, '') : ''}
+                      value={currentConfig.priceStandard} 
+                      onChange={(val) => updateCurrentConfig({ priceStandard: val || 0 })} 
+                      size="small" 
+                      style={{ width: 110 }} 
+                      addonAfter="đ" 
+                    />
                   </Space>
                   <Space size={4}>
                     <span style={{ background: '#fef08a', color: '#a16207', width: 12, height: 12, borderRadius: 2, display: 'inline-block' }} />
                     <span style={{ fontSize: '12px', color: '#a16207', fontWeight: 600 }}>VIP:</span>
-                    <InputNumber min={0} value={currentConfig.priceVip} onChange={(val) => updateCurrentConfig({ priceVip: val || 0 })} size="small" style={{ width: 75 }} addonBefore="$" />
+                    <InputNumber 
+                      min={0} 
+                      step={5000}
+                      formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                      parser={(value) => value ? value.replace(/[^\d]/g, '') : ''}
+                      value={currentConfig.priceVip} 
+                      onChange={(val) => updateCurrentConfig({ priceVip: val || 0 })} 
+                      size="small" 
+                      style={{ width: 110 }} 
+                      addonAfter="đ" 
+                    />
                   </Space>
                   <Space size={4}>
                     <span style={{ background: '#fbcfe8', color: '#db2777', width: 12, height: 12, borderRadius: 2, display: 'inline-block' }} />
                     <span style={{ fontSize: '12px', color: '#db2777', fontWeight: 600 }}>Couple:</span>
-                    <InputNumber min={0} value={currentConfig.priceCouple} onChange={(val) => updateCurrentConfig({ priceCouple: val || 0 })} size="small" style={{ width: 75 }} addonBefore="$" />
+                    <InputNumber 
+                      min={0} 
+                      step={5000}
+                      formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                      parser={(value) => value ? value.replace(/[^\d]/g, '') : ''}
+                      value={currentConfig.priceCouple} 
+                      onChange={(val) => updateCurrentConfig({ priceCouple: val || 0 })} 
+                      size="small" 
+                      style={{ width: 110 }} 
+                      addonAfter="đ" 
+                    />
                   </Space>
                 </Space>
               </Space>
