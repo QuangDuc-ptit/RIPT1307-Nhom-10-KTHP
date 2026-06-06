@@ -241,7 +241,7 @@ export default function TheatersPage() {
                       min={0} 
                       step={5000}
                       formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                      parser={(value) => value ? value.replace(/[^\d]/g, '') : ''}
+                      parser={(value) => value ? Number(value.replace(/[^\d]/g, '')) : 0}
                       value={currentConfig.priceStandard} 
                       onChange={(val) => updateCurrentConfig({ priceStandard: val || 0 })} 
                       size="small" 
@@ -256,7 +256,7 @@ export default function TheatersPage() {
                       min={0} 
                       step={5000}
                       formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                      parser={(value) => value ? value.replace(/[^\d]/g, '') : ''}
+                      parser={(value) => value ? Number(value.replace(/[^\d]/g, '')) : 0}
                       value={currentConfig.priceVip} 
                       onChange={(val) => updateCurrentConfig({ priceVip: val || 0 })} 
                       size="small" 
@@ -271,7 +271,7 @@ export default function TheatersPage() {
                       min={0} 
                       step={5000}
                       formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                      parser={(value) => value ? value.replace(/[^\d]/g, '') : ''}
+                      parser={(value) => value ? Number(value.replace(/[^\d]/g, '')) : 0}
                       value={currentConfig.priceCouple} 
                       onChange={(val) => updateCurrentConfig({ priceCouple: val || 0 })} 
                       size="small" 
