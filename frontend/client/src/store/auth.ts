@@ -8,6 +8,7 @@ interface AuthState {
   loading: boolean;
   initialized: boolean;
   login: (payload: LoginPayload) => Promise<any>;
+  socialLogin: (payload: { provider: string; idToken: string }) => Promise<any>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
   bootstrap: () => Promise<void>;
@@ -42,6 +43,14 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: async (payload) => {
     const { accessToken, refreshToken, user } = await authApi.login(payload);
+    tokenStore.set(accessToken);
+    tokenStore.setRefresh(refreshToken);
+    set({ user, initialized: true });
+    return { user, accessToken, refreshToken };
+  },
+
+  socialLogin: async (payload) => {
+    const { accessToken, refreshToken, user } = await authApi.socialLogin(payload);
     tokenStore.set(accessToken);
     tokenStore.setRefresh(refreshToken);
     set({ user, initialized: true });

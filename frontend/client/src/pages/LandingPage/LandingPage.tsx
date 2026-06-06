@@ -5,12 +5,14 @@ import { useAuthStore } from '@/store/auth';
 import './LandingPage.css';
 
 import {
-  Row, Col, Typography, Space, Button, Input, Form, Divider, Modal
+  Row, Col, Typography, Space, Button, Input, Form, Divider, Modal, Layout, Menu, Badge, Avatar, Dropdown
 } from 'antd';
 import {
   GlobalOutlined,
   VideoCameraOutlined,
   ShareAltOutlined,
+  SearchOutlined,
+  BellOutlined,
 } from '@ant-design/icons';
 
 const { Title, Paragraph, Text } = Typography;
@@ -56,6 +58,8 @@ const HERO_SLIDES = [
     image: "https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?q=80&w=2070&auto=format&fit=crop",
   },
 ];
+
+const { Header } = Layout;
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -114,59 +118,87 @@ const LandingPage = () => {
     surfaceVariant: '#462f2c',
     onSurfaceVariant: '#e9bcb6',
     primary: '#ff1e00',
-    primaryRed: '#E50914'
+    primaryRed: '#E50914',
+    surface: '#200e0c',
+    onSurface: '#ffdad5'
   };
+
+  const menuItems = [
+    { key: 'home', label: <span style={{ fontSize: '15px', transition: 'color 0.3s', color: '#fff', fontWeight: 600 }}>Trang chủ</span>, onClick: () => scrollToSection('home') },
+    { key: 'movies', label: <span style={{ fontSize: '15px', transition: 'color 0.3s', color: footerStyles.onSurfaceVariant }}>Phim</span>, onClick: () => scrollToSection('movies') },
+    { key: 'blog', label: <span style={{ fontSize: '15px', transition: 'color 0.3s', color: footerStyles.onSurfaceVariant }}>Tin tức</span>, onClick: () => scrollToSection('blog') },
+    { key: 'contact', label: <span style={{ fontSize: '15px', transition: 'color 0.3s', color: footerStyles.onSurfaceVariant }}>Liên hệ</span>, onClick: () => scrollToSection('contact') },
+  ];
 
   return (
     <>
       {/* Header */}
-      <header className="header">
-        <div className="logo" onClick={() => scrollToSection("home")}>
-          <h2>KSTAR</h2>
+      <Header
+        style={{
+          position: 'sticky', top: 0, zIndex: 1000,
+          background: 'rgba(24, 10, 8, 0.75)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
+          padding: '1rem 48px', height: 'auto', lineHeight: 'normal', transition: 'all 0.3s ease',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1280, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 48 }}>
+            <Title level={3} onClick={() => scrollToSection("home")} style={{ margin: 0, color: footerStyles.primary, fontWeight: 800, letterSpacing: '-0.02em', fontSize: '28px', textShadow: '0 2px 10px rgba(0,0,0,0.3)', cursor: 'pointer' }}>
+              KSTAR
+            </Title>
+            <Menu mode="horizontal" selectedKeys={['home']} style={{ background: 'transparent', border: 'none', minWidth: 360, lineHeight: 'normal' }} items={menuItems} />
+          </div>
+          
+          <Space size="large">
+            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: 40, padding: '6px 20px', width: 260, boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.2)', transition: 'all 0.3s ease' }}>
+              <SearchOutlined style={{ color: footerStyles.onSurfaceVariant, fontSize: 18 }} />
+              <Input placeholder="Tìm phim..." bordered={false} style={{ background: 'transparent', color: footerStyles.onSurface, marginLeft: 8 }} />
+            </div>
+            
+            {isLoggedIn ? (
+              <>
+                <Badge dot offset={[2, 0]}>
+                  <BellOutlined style={{ fontSize: 22, color: footerStyles.onSurfaceVariant, cursor: 'pointer', transition: 'transform 0.3s ease' }} />
+                </Badge>
+                <Avatar 
+                  src={user?.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCs1hn6nDRgKqiNDwmEKBKHUjkw4Idae_YTNR6hF_Hz2VtFL1dIgaTw0lE_v6mBr2Wq-oIeiahjrVQ2KTCnAFu5Y_b9l05sZA4FA9bLEDBzoXl16aZiR40jis_t0XpX8E1tmlwUd3mtKTDYKIZPUnyeDaWbVV7K38FN1DvhkkOdhre-qNgWkobUaGgIss0U30Bs_XBVdfbtyY1qr7txJah7MnZNmhc9jJOS3u0cTYRTH9LdSeqwiXPnzbIpExYqscFtqVH6LPvFmhQ"} 
+                  style={{ border: `2px solid ${footerStyles.primaryRed}`, cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.4)', transition: 'transform 0.3s ease' }} 
+                  onClick={() => navigate('/profile')}
+                />
+              </>
+            ) : (
+              <button
+                onClick={() => navigate('/auth/login')}
+                style={{
+                  background: 'linear-gradient(135deg, #E50914 0%, #b2070f 100%)',
+                  border: 'none',
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: '0.95rem',
+                  padding: '8px 24px',
+                  borderRadius: '40px',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s ease',
+                  boxShadow: '0 4px 12px rgba(229, 9, 20, 0.3)',
+                  letterSpacing: '0.5px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #ff1e2e 0%, #d40a14 100%)';
+                  e.currentTarget.style.transform = 'scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(229, 9, 20, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #E50914 0%, #b2070f 100%)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(229, 9, 20, 0.3)';
+                }}
+              >
+                Đăng nhập
+              </button>
+            )}
+          </Space>
         </div>
-        <nav className="navbar">
-          <button onClick={() => scrollToSection("home")} className="nav-btn">Trang chủ</button>
-          <button onClick={() => scrollToSection("movies")} className="nav-btn">Phim</button>
-          <button onClick={() => scrollToSection("blog")} className="nav-btn">Tin tức</button>
-          <button onClick={() => scrollToSection("contact")} className="nav-btn">Liên hệ</button>
-          <Link
-            to="/profile"
-            className="nav-link-custom"
-            onClick={(e) => handleProtectedAction(e, () => navigate("/profile"))}
-          >
-            Cá nhân
-          </Link>
-        </nav>
-        <button
-          onClick={() => navigate('/auth/login')}
-          style={{
-            background: 'linear-gradient(135deg, #E50914 0%, #b2070f 100%)',
-            border: 'none',
-            color: 'white',
-            fontWeight: 600,
-            fontSize: '0.95rem',
-            padding: '8px 24px',
-            borderRadius: '40px',
-            cursor: 'pointer',
-            transition: 'all 0.25s ease',
-            boxShadow: '0 4px 12px rgba(229, 9, 20, 0.3)',
-            letterSpacing: '0.5px',
-            marginLeft: '16px',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'linear-gradient(135deg, #ff1e2e 0%, #d40a14 100%)';
-            e.currentTarget.style.transform = 'scale(1.02)';
-            e.currentTarget.style.boxShadow = '0 6px 16px rgba(229, 9, 20, 0.5)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'linear-gradient(135deg, #E50914 0%, #b2070f 100%)';
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(229, 9, 20, 0.3)';
-          }}
-        >
-          Đăng nhập
-        </button>
-      </header>
+      </Header>
 
       {/* Marquee */}
       <div className="cinema-marquee">

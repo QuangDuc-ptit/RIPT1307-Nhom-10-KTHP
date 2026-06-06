@@ -44,7 +44,7 @@ const AppHeader: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) => 
               menu={{
                 items: [
                   { key: 'profile', label: 'Thông tin tài khoản', onClick: () => navigate('/profile') },
-                  ...(user?.role === 'ADMIN' ? [{ key: 'admin', label: 'Vào trang Admin', onClick: () => window.location.href = 'http://localhost:5175' }] : []),
+                  ...(user?.role === 'ADMIN' ? [{ key: 'admin', label: 'Vào trang Admin', onClick: () => window.location.href = 'http://localhost:5174' }] : []),
                   { key: 'logout', label: 'Đăng xuất', danger: true, onClick: async () => { await logout(); navigate('/auth/login'); } }
                 ]
               }} 

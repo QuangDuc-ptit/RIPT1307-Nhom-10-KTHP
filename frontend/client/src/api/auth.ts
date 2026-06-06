@@ -23,6 +23,15 @@ export const authApi = {
   register: (payload: RegisterPayload) =>
     apiClient.post<LoginResponse>('/auth/register', payload).then((r) => r.data),
 
+  socialLogin: (payload: { provider: string; idToken: string }) =>
+    apiClient.post<LoginResponse>('/auth/social-login', payload).then((r) => r.data),
+
+  forgotPassword: (payload: { email: string }) =>
+    apiClient.post('/auth/quen-mat-khau', payload).then((r) => r.data),
+
+  resetPassword: (payload: { token: string; newPassword: string }) =>
+    apiClient.post('/auth/dat-lai-mat-khau', payload).then((r) => r.data),
+
   me: () => apiClient.get<User>('/auth/me').then((r) => r.data),
 
   logout: () => apiClient.post('/auth/logout').then((r) => r.data),

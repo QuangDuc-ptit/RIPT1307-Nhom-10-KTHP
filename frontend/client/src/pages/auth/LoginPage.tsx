@@ -6,13 +6,18 @@ import { useAuthStore } from '@/store/auth';
 import { tokenStore } from '@/api/client';
 // Lưu ý: Kiểm tra lại đường dẫn import AuthLayout sao cho khớp với thư mục của bạn
 import AuthLayout from '../../layouts/AuthLayout'; 
+import ForgotPasswordModal from './components/ForgotPasswordModal';
+import { auth, googleProvider, facebookProvider } from '@/config/firebase';
+import { signInWithPopup } from 'firebase/auth';
 
 const LoginPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAuthStore((s) => s.user);
   const login = useAuthStore((s) => s.login);
+  const socialLogin = useAuthStore((s) => s.socialLogin);
   const register = useAuthStore((s) => s.register);
   const setUser = useAuthStore((s) => s.setUser);
   const from = (location.state as any)?.from?.pathname || '/home';
@@ -29,9 +34,10 @@ const LoginPage: React.FC = () => {
         const result = await login({ email: values.email, password: values.password });
         antdMessage.success('Đăng nhập thành công');
         
-        // Kiểm tra quyền: Nếu là ADMIN thì tự động chuyển sang trang Quản trị (cổng 5175)
-        if (result?.user && (result.user as any).role === 'ADMIN') {
-          window.location.href = `http://localhost:5175/auth/login?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
+        // Kiểm tra quyền và điều hướng
+        if (result && result.user && (result.user as any).role === 'ADMIN') {
+          // Gắn token vào URL để truyền sang bên admin
+          window.location.href = `http://localhost:5174/auth/login?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
         } else {
           navigate(from, { replace: true });
         }
@@ -55,6 +61,26 @@ const LoginPage: React.FC = () => {
         antdMessage.error(error?.response?.data?.message || error?.message || 'Đăng ký thất bại');
       }
       return;
+    }
+  };
+
+  const handleSocialLogin = async (providerName: 'google' | 'facebook') => {
+    try {
+      const provider = providerName === 'google' ? googleProvider : facebookProvider;
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      
+      const res = await socialLogin({ provider: providerName, idToken });
+      antdMessage.success('Đăng nhập thành công');
+      
+      if (res && res.user && (res.user as any).role === 'ADMIN') {
+        window.location.href = `http://localhost:5174/auth/login?accessToken=${res.accessToken}&refreshToken=${res.refreshToken}`;
+      } else {
+        navigate(from, { replace: true });
+      }
+    } catch (error: any) {
+      console.error("Social login error", error);
+      antdMessage.error('Đăng nhập mạng xã hội thất bại');
     }
   };
 
@@ -96,7 +122,11 @@ const LoginPage: React.FC = () => {
       </Form.Item>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
-        <Button type="link" style={{ color: '#ee1e63', padding: 0, height: 'auto', fontWeight: 'bold' }}>
+        <Button 
+          type="link" 
+          onClick={() => setIsForgotModalOpen(true)}
+          style={{ color: '#ee1e63', padding: 0, height: 'auto', fontWeight: 'bold' }}
+        >
           Quên mật khẩu?
         </Button>
       </div>
@@ -114,10 +144,10 @@ const LoginPage: React.FC = () => {
       </div>
 
       <div style={{ display: 'flex', gap: '15px' }}>
-        <Button block size="large" icon={<FacebookFilled style={{ fontSize: '22px' }} />} style={{ backgroundColor: '#3A5BA0', color: 'white', border: 'none', height: '50px', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Button onClick={() => handleSocialLogin('facebook')} block size="large" icon={<FacebookFilled style={{ fontSize: '22px' }} />} style={{ backgroundColor: '#3A5BA0', color: 'white', border: 'none', height: '50px', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           Facebook
         </Button>
-        <Button block size="large" icon={<GoogleOutlined style={{ fontSize: '22px' }} />} style={{ backgroundColor: '#EA617D', color: 'white', border: 'none', height: '50px', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Button onClick={() => handleSocialLogin('google')} block size="large" icon={<GoogleOutlined style={{ fontSize: '22px' }} />} style={{ backgroundColor: '#EA617D', color: 'white', border: 'none', height: '50px', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           Google
         </Button>
       </div>
@@ -149,10 +179,10 @@ const LoginPage: React.FC = () => {
       </div>
 
       <div style={{ display: 'flex', gap: '15px' }}>
-        <Button block size="large" icon={<FacebookFilled style={{ fontSize: '22px' }} />} style={{ backgroundColor: '#3A5BA0', color: 'white', border: 'none', height: '50px', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Button onClick={() => handleSocialLogin('facebook')} block size="large" icon={<FacebookFilled style={{ fontSize: '22px' }} />} style={{ backgroundColor: '#3A5BA0', color: 'white', border: 'none', height: '50px', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           Facebook
         </Button>
-        <Button block size="large" icon={<GoogleOutlined style={{ fontSize: '22px' }} />} style={{ backgroundColor: '#EA617D', color: 'white', border: 'none', height: '50px', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Button onClick={() => handleSocialLogin('google')} block size="large" icon={<GoogleOutlined style={{ fontSize: '22px' }} />} style={{ backgroundColor: '#EA617D', color: 'white', border: 'none', height: '50px', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           Google
         </Button>
       </div>
@@ -204,6 +234,11 @@ const LoginPage: React.FC = () => {
       >
         {activeTab === 'login' ? renderLoginForm() : renderRegisterForm()}
       </div>
+      
+      <ForgotPasswordModal 
+        open={isForgotModalOpen} 
+        onCancel={() => setIsForgotModalOpen(false)} 
+      />
     </AuthLayout>
   );
 };

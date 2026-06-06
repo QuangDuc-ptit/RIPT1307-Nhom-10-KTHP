@@ -12,6 +12,7 @@ import MovieDetailPage from '../pages/MovieDetail';
 import ProfilePage from '../pages/Profile';
 import OrderHistoryPage from '../pages/OrderHistory';
 import CheckoutPage from '../pages/Checkout';
+import ResetPasswordPage from '../pages/auth/ResetPasswordPage';
 import ChonGhe from '../pages/ChonGhe/chon-ghe';
 import FoodDrinkPage from '../pages/ChonGhe/food-drink/food-drink'; // <- import mới
 import NotFoundPage from '../pages/Static/NotFoundPage';
@@ -25,6 +26,7 @@ export default function AppRoutes() {
       <Route path="/auth" element={<Navigate to="/auth/login" replace />} />
       <Route path="/auth/login" element={<LoginPage />} />
       <Route path="/auth/register" element={<RegisterPage />} />
+      <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
       <Route path="/home-debug" element={<HomePage />} />
       
       {/* Route chọn ghế và đồ ăn */}
