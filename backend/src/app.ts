@@ -33,6 +33,8 @@ export const buildApp = () => {
         // Cho phép request không có origin (Postman, curl)
         if (!origin) return cb(null, true);
         if (env.corsOrigins.includes(origin)) return cb(null, true);
+        // Tự động cho phép các tên miền từ Netlify (client & admin)
+        if (origin.endsWith('netlify.app')) return cb(null, true);
         return cb(new Error(`CORS blocked: ${origin}`));
       },
       credentials: true,
