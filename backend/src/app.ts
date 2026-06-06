@@ -11,8 +11,12 @@ import usersRoutes, { adminUsersRouter } from './modules/nguoi-dung/routes/nguoi
 import postsRoutes, { adminPostsRouter } from './modules/bai-viet/routes/bai-viet.route';
 import rapChieuRoutes from './modules/rap-chieu/routes/rap-chieu.route';
 import phongChieuRoutes from './modules/phong-chieu/routes/phong-chieu.route';
+import phimRoutes, { adminPhimRouter } from './modules/phim/routes/phim.route';
+import theLoaiRoutes, { adminTheLoaiRouter } from './modules/the-loai/routes/the-loai.route';
 import datVeRoutes from './modules/dat-ve/routes/dat-ve.route';
 import soatVeRoutes from './modules/soat-ve/routes/soat-ve.route';
+import suatChieuRoutes from './modules/suat-chieu/routes/suat-chieu.route';
+import thanhToanRoutes from './modules/thanh-toan/routes/thanh-toan.route';
 import { startCronJobs } from './jobs/cron';
 
 export const buildApp = () => {
@@ -45,12 +49,18 @@ export const buildApp = () => {
   app.use('/api/users', usersRoutes);
   app.use('/api/posts', postsRoutes);
   app.use('/api/dat-ve', datVeRoutes);
+  app.use('/api/payments', thanhToanRoutes);
   app.use('/api/staff', soatVeRoutes);
 
   app.use('/api/admin/users', adminUsersRouter);
   app.use('/api/admin/posts', adminPostsRouter);
   app.use('/api/admin/rap-chieu', rapChieuRoutes);
   app.use('/api/admin/phong-chieu', phongChieuRoutes);
+  app.use('/api/admin/suat-chieu', suatChieuRoutes);
+  app.use('/api/movies', phimRoutes);
+  app.use('/api/admin/movies', adminPhimRouter);
+  app.use('/api/genres', theLoaiRoutes);
+  app.use('/api/admin/genres', adminTheLoaiRouter);
 
   /* ---------- 404 + Error handler (đặt CUỐI) ---------- */
   app.use(notFoundHandler);

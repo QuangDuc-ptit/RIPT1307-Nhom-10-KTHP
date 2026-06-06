@@ -106,11 +106,57 @@ model Seat {
 }
 
 model Movie {
-  id        String     @id @default(cuid())
+  id        String      @id @default(cuid())
   title     String
-  showtimes Showtime[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  poster    String?
+  backdrop  String?
+  overview  String?
+  duration  Int?        // minutes
+  releaseDate DateTime?
+  status    MovieStatus @default(DRAFT)
+  isActive  Boolean     @default(true)
+  translations MovieTranslation[]
+  genres     MovieGenre[]
+  showtimes  Showtime[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+enum MovieStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model MovieTranslation {
+  id        String   @id @default(cuid())
+  movieId   String
+  movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  locale    String             // 'vi' | 'en'
+  title     String
+  overview  String?
+
+  @@unique([movieId, locale])
+  @@index([locale])
+}
+
+model Genre {
+  id        String      @id @default(cuid())
+  name      String      @unique
+  slug      String      @unique
+  movies    MovieGenre[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model MovieGenre {
+  id       String  @id @default(cuid())
+  movieId  String
+  movie    Movie   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  genreId  String
+  genre    Genre   @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@unique([movieId, genreId])
 }
 
 model Showtime {
@@ -160,6 +206,17 @@ enum BookingStatus {
   CANCELLED
 }
 
+enum PaymentProvider {
+  VNPAY
+  MOMO
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
 model Booking {
   id          String        @id @default(cuid())
   userId      String
@@ -175,6 +232,8 @@ model Booking {
   bookingSeats BookingSeat[]
   bookingFoods BookingFood[]
   staffLogs    StaffLog[]
+  payments     Payment[]
+  invoices     Invoice[]
 }
 
 model BookingSeat {
@@ -205,6 +264,43 @@ model BookingFood {
   food      Food    @relation(fields: [foodId], references: [id])
   quantity  Int
   price     Float
+}
+
+model Payment {
+  id                 String          @id @default(cuid())
+  bookingId          String
+  booking            Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  provider           PaymentProvider
+  status             PaymentStatus   @default(PENDING)
+  amount             Float
+  providerRef        String?         @unique
+  requestId          String          @unique
+  paymentUrl         String?
+  redirectPayload    Json?
+  responseCode       String?
+  paidAt             DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  invoice            Invoice?
+
+  @@index([bookingId])
+  @@index([provider, status])
+}
+
+model Invoice {
+  id             String   @id @default(cuid())
+  bookingId      String
+  booking        Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  paymentId      String   @unique
+  payment        Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  invoiceNumber  String   @unique
+  amount         Float
+  issuedAt       DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([bookingId])
 }
 
 model StaffLog {
