@@ -1,0 +1,6 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "ignoreDeprecations": "5.0"
+  }
+}

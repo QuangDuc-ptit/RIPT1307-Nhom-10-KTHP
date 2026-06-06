@@ -17,6 +17,7 @@ import datVeRoutes from './modules/dat-ve/routes/dat-ve.route';
 import soatVeRoutes from './modules/soat-ve/routes/soat-ve.route';
 import suatChieuRoutes from './modules/suat-chieu/routes/suat-chieu.route';
 import thanhToanRoutes from './modules/thanh-toan/routes/thanh-toan.route';
+import dashboardRoutes from './modules/dashboard/routes/dashboard.route';
 import { startCronJobs } from './jobs/cron';
 
 export const buildApp = () => {
@@ -63,6 +64,7 @@ export const buildApp = () => {
   app.use('/api/admin/movies', adminPhimRouter);
   app.use('/api/genres', theLoaiRoutes);
   app.use('/api/admin/genres', adminTheLoaiRouter);
+  app.use('/api/admin/dashboard', dashboardRoutes);
 
   /* ---------- 404 + Error handler (đặt CUỐI) ---------- */
   app.use(notFoundHandler);

@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var express_1 = require("express");
+var thanh_toan_controller_1 = require("../controllers/thanh-toan.controller");
+var thanh_toan_schema_1 = require("../schemas/thanh-toan.schema");
+var validate_1 = require("@/middlewares/validate");
+var auth_1 = require("@/middlewares/auth");
+var async_1 = require("@/utils/async");
+var router = (0, express_1.Router)();
+router.post('/', auth_1.requireAuth, (0, validate_1.validate)({ body: thanh_toan_schema_1.createPaymentSchema }), (0, async_1.asyncHandler)(thanh_toan_controller_1.thanhToanController.createPayment));
+router.post('/ipn', (0, validate_1.validate)({ body: thanh_toan_schema_1.paymentIpnSchema }), (0, async_1.asyncHandler)(thanh_toan_controller_1.thanhToanController.handleIpn));
+router.get('/ipn', (0, validate_1.validate)({ query: thanh_toan_schema_1.paymentIpnSchema }), (0, async_1.asyncHandler)(thanh_toan_controller_1.thanhToanController.handleIpn));
+exports.default = router;

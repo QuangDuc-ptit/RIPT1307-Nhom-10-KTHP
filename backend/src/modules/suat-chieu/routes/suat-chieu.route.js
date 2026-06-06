@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var express_1 = require("express");
+var suat_chieu_controller_1 = require("../controllers/suat-chieu.controller");
+var suat_chieu_schema_1 = require("../schemas/suat-chieu.schema");
+var validate_1 = require("@/middlewares/validate");
+var auth_1 = require("@/middlewares/auth");
+var async_1 = require("@/utils/async");
+var router = (0, express_1.Router)();
+router.use(auth_1.requireAuth, (0, auth_1.requireRole)('ADMIN'));
+router.get('/', (0, validate_1.validate)({ query: suat_chieu_schema_1.listShowtimeQuerySchema }), (0, async_1.asyncHandler)(suat_chieu_controller_1.suatChieuController.list));
+router.post('/', (0, validate_1.validate)({ body: suat_chieu_schema_1.createShowtimeSchema }), (0, async_1.asyncHandler)(suat_chieu_controller_1.suatChieuController.create));
+router.get('/:id', (0, validate_1.validate)({ params: suat_chieu_schema_1.idParamSchema }), (0, async_1.asyncHandler)(suat_chieu_controller_1.suatChieuController.detail));
+router.patch('/:id', (0, validate_1.validate)({ params: suat_chieu_schema_1.idParamSchema, body: suat_chieu_schema_1.updateShowtimeSchema }), (0, async_1.asyncHandler)(suat_chieu_controller_1.suatChieuController.update));
+router.delete('/:id', (0, validate_1.validate)({ params: suat_chieu_schema_1.idParamSchema }), (0, async_1.asyncHandler)(suat_chieu_controller_1.suatChieuController.remove));
+exports.default = router;
