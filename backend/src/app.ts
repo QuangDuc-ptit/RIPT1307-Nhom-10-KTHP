@@ -15,6 +15,7 @@ import phimRoutes, { adminPhimRouter } from './modules/phim/routes/phim.route';
 import theLoaiRoutes, { adminTheLoaiRouter } from './modules/the-loai/routes/the-loai.route';
 import datVeRoutes from './modules/dat-ve/routes/dat-ve.route';
 import soatVeRoutes from './modules/soat-ve/routes/soat-ve.route';
+import suatChieuRoutes from './modules/suat-chieu/routes/suat-chieu.route';
 import { startCronJobs } from './jobs/cron';
 
 export const buildApp = () => {
@@ -53,6 +54,7 @@ export const buildApp = () => {
   app.use('/api/admin/posts', adminPostsRouter);
   app.use('/api/admin/rap-chieu', rapChieuRoutes);
   app.use('/api/admin/phong-chieu', phongChieuRoutes);
+  app.use('/api/admin/suat-chieu', suatChieuRoutes);
   app.use('/api/movies', phimRoutes);
   app.use('/api/admin/movies', adminPhimRouter);
   app.use('/api/genres', theLoaiRoutes);
