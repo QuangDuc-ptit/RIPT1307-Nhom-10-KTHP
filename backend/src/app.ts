@@ -11,6 +11,8 @@ import usersRoutes, { adminUsersRouter } from './modules/nguoi-dung/routes/nguoi
 import postsRoutes, { adminPostsRouter } from './modules/bai-viet/routes/bai-viet.route';
 import rapChieuRoutes from './modules/rap-chieu/routes/rap-chieu.route';
 import phongChieuRoutes from './modules/phong-chieu/routes/phong-chieu.route';
+import phimRoutes, { adminPhimRouter } from './modules/phim/routes/phim.route';
+import theLoaiRoutes, { adminTheLoaiRouter } from './modules/the-loai/routes/the-loai.route';
 import datVeRoutes from './modules/dat-ve/routes/dat-ve.route';
 import soatVeRoutes from './modules/soat-ve/routes/soat-ve.route';
 import { startCronJobs } from './jobs/cron';
@@ -51,6 +53,10 @@ export const buildApp = () => {
   app.use('/api/admin/posts', adminPostsRouter);
   app.use('/api/admin/rap-chieu', rapChieuRoutes);
   app.use('/api/admin/phong-chieu', phongChieuRoutes);
+  app.use('/api/movies', phimRoutes);
+  app.use('/api/admin/movies', adminPhimRouter);
+  app.use('/api/genres', theLoaiRoutes);
+  app.use('/api/admin/genres', adminTheLoaiRouter);
 
   /* ---------- 404 + Error handler (đặt CUỐI) ---------- */
   app.use(notFoundHandler);
