@@ -2,9 +2,10 @@ import crypto from 'crypto';
 import { prisma } from '@/config/db';
 import { env } from '@/config/env';
 import { badRequest, conflict, notFound } from '@/utils/errors';
-import type { PaymentProvider } from '@prisma/client';
+import { soatVeService } from '@/modules/soat-ve/services/soat-ve.service';
 
 const PAYMENT_HOLD_MINUTES = 10;
+type PaymentProvider = 'VNPAY' | 'MOMO';
 
 function generateRequestId(provider: PaymentProvider) {
   return `${provider}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
@@ -91,7 +92,7 @@ export const thanhToanService = {
         data: { expiresAt },
       });
 
-      return tx.payment.create({
+      return (tx as any).payment.create({
         data: {
           bookingId: booking.id,
           provider: data.provider,
@@ -134,7 +135,7 @@ export const thanhToanService = {
     amount?: number;
     success?: boolean;
   }) {
-    const payment = await prisma.payment.findUnique({
+    const payment = await (prisma as any).payment.findUnique({
       where: { requestId: payload.requestId },
       include: {
         booking: {
@@ -167,7 +168,7 @@ export const thanhToanService = {
     }
 
     if (!isSuccess) {
-      const failed = await prisma.payment.update({
+      const failed = await (prisma as any).payment.update({
         where: { id: payment.id },
         data: {
           status: 'FAILED',
@@ -185,7 +186,7 @@ export const thanhToanService = {
     }
 
     const result = await prisma.$transaction(async (tx) => {
-      const updatedPayment = await tx.payment.update({
+      const updatedPayment = await (tx as any).payment.update({
         where: { id: payment.id },
         data: {
           status: 'SUCCESS',
@@ -201,7 +202,7 @@ export const thanhToanService = {
       });
 
       await tx.showtimeSeat.updateMany({
-        where: { id: { in: payment.booking.bookingSeats.map((item) => item.showtimeSeatId) } },
+        where: { id: { in: payment.booking.bookingSeats.map((item: { showtimeSeatId: string }) => item.showtimeSeatId) } },
         data: {
           status: 'BOOKED',
           expiresAt: null,
@@ -210,7 +211,7 @@ export const thanhToanService = {
 
       const invoice = payment.invoice
         ? payment.invoice
-        : await tx.invoice.create({
+        : await (tx as any).invoice.create({
             data: {
               bookingId: payment.bookingId,
               paymentId: updatedPayment.id,
@@ -223,11 +224,14 @@ export const thanhToanService = {
       return { updatedPayment, updatedBooking, invoice };
     });
 
+    const ticketToken = await soatVeService.generateTicketToken(result.updatedBooking.id);
+
     return {
       message: 'Xử lý IPN thành công',
       booking: {
         id: result.updatedBooking.id,
         status: result.updatedBooking.status,
+        ticketToken,
       },
       payment: {
         id: result.updatedPayment.id,

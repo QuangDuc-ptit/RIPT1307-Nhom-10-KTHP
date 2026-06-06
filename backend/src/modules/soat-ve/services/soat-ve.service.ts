@@ -1,21 +1,80 @@
+import crypto from 'crypto';
 import { prisma } from '@/config/db';
 import { badRequest, conflict } from '@/utils/errors';
-import jwt from 'jsonwebtoken';
+import { signTicketToken, verifyTicketToken } from '@/utils/jwt';
 
-const TICKET_SECRET = process.env.TICKET_SECRET || 'secret-ticket-key-123';
+function buildTicketFingerprint(input: {
+  bookingId: string;
+  userId: string;
+  showtimeId: string;
+  seatIds: string[];
+  totalAmount: number;
+}) {
+  return crypto
+    .createHash('sha256')
+    .update(
+      [
+        input.bookingId,
+        input.userId,
+        input.showtimeId,
+        [...input.seatIds].sort().join(','),
+        String(input.totalAmount),
+      ].join('|'),
+    )
+    .digest('hex');
+}
+
+async function generateTicketToken(bookingId: string) {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: {
+      bookingSeats: {
+        select: {
+          showtimeSeatId: true,
+        },
+      },
+    },
+  });
+
+  if (!booking) {
+    throw badRequest('Không tìm thấy đơn hàng để tạo mã vé.');
+  }
+
+  if (booking.status !== 'SUCCESS') {
+    throw conflict('Chỉ có thể tạo mã vé khi đơn hàng đã thanh toán thành công.');
+  }
+
+  const seatIds = booking.bookingSeats.map((item) => item.showtimeSeatId);
+  const fingerprint = buildTicketFingerprint({
+    bookingId: booking.id,
+    userId: booking.userId,
+    showtimeId: booking.showtimeId,
+    seatIds,
+    totalAmount: booking.totalAmount,
+  });
+
+  return signTicketToken({
+    bookingId: booking.id,
+    userId: booking.userId,
+    showtimeId: booking.showtimeId,
+    seatIds,
+    totalAmount: booking.totalAmount,
+    status: 'SUCCESS',
+    isCheckedIn: booking.isCheckedIn,
+    issuedAtMs: Date.now(),
+    fingerprint,
+    jti: crypto.randomUUID(),
+  });
+}
 
 export const soatVeService = {
-  // Service phụ: Mã hóa bookingId thành token JWT (Sẽ dùng lúc sinh QR Code cho Khách hàng)
-  generateTicketToken: (bookingId: string) => {
-    return jwt.sign({ bookingId }, TICKET_SECRET, { expiresIn: '7d' });
-  },
+  generateTicketToken,
 
-  // Service chính: Giải mã và quét vé
   scanTicket: async (staffId: string, token: string) => {
     let payload;
     try {
-      payload = jwt.verify(token, TICKET_SECRET) as { bookingId: string };
-    } catch (error) {
+      payload = verifyTicketToken(token);
+    } catch {
       throw badRequest('Mã vé không hợp lệ hoặc đã hết hạn.');
     }
 
@@ -23,7 +82,14 @@ export const soatVeService = {
 
     return await prisma.$transaction(async (tx) => {
       const booking = await tx.booking.findUnique({
-        where: { id: bookingId }
+        where: { id: bookingId },
+        include: {
+          bookingSeats: {
+            select: {
+              showtimeSeatId: true,
+            },
+          },
+        },
       });
 
       if (!booking) {
@@ -38,22 +104,45 @@ export const soatVeService = {
         throw conflict('Vé này đã được sử dụng qua cổng trước đó!');
       }
 
-      // Cập nhật trạng thái
-      const updatedBooking = await tx.booking.update({
-        where: { id: bookingId },
-        data: { isCheckedIn: true }
+      const actualSeatIds = booking.bookingSeats.map((item) => item.showtimeSeatId);
+      const expectedFingerprint = buildTicketFingerprint({
+        bookingId: booking.id,
+        userId: booking.userId,
+        showtimeId: booking.showtimeId,
+        seatIds: actualSeatIds,
+        totalAmount: booking.totalAmount,
       });
 
-      // Ghi log
+      const hasSeatMismatch =
+        actualSeatIds.length !== payload.seatIds.length ||
+        [...actualSeatIds].sort().join(',') !== [...payload.seatIds].sort().join(',');
+
+      if (
+        payload.userId !== booking.userId ||
+        payload.showtimeId !== booking.showtimeId ||
+        payload.totalAmount !== booking.totalAmount ||
+        payload.status !== 'SUCCESS' ||
+        payload.isCheckedIn !== false ||
+        hasSeatMismatch ||
+        payload.fingerprint !== expectedFingerprint
+      ) {
+        throw badRequest('Mã vé không hợp lệ hoặc đã bị thay đổi dữ liệu bảo mật.');
+      }
+
+      const updatedBooking = await tx.booking.update({
+        where: { id: bookingId },
+        data: { isCheckedIn: true },
+      });
+
       await tx.staffLog.create({
         data: {
           staffId,
           bookingId,
-          action: 'CHECK_IN'
-        }
+          action: 'CHECK_IN',
+        },
       });
 
       return updatedBooking;
     });
-  }
+  },
 };

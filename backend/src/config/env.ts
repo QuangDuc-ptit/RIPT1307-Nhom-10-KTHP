@@ -15,6 +15,8 @@ const schema = z.object({
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   JWT_RESET_SECRET: z.string().min(32).optional(),
   JWT_RESET_EXPIRES_IN: z.string().default('1h'),
+  TICKET_SECRET: z.string().min(32, 'TICKET_SECRET phải >= 32 ký tự').default('ticket-secret-key-minimum-32-characters'),
+  TICKET_EXPIRES_IN: z.string().default('2h'),
   FRONTEND_URL: z.string().default('http://localhost:5173'),
   FIREBASE_SERVICE_ACCOUNT: z.string().optional(),
   SMTP_HOST: z.string().optional(),
