@@ -1,19 +1,41 @@
 import { useState } from 'react';
 import { Button, Form, Input, App as AntdApp } from 'antd';
 import { LockOutlined, MailOutlined } from '@ant-design/icons';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuthStore } from '@/store/auth';
+import { tokenStore } from '@/api/client';
 import type { LoginPayload } from '@/api/auth';
+import { useEffect } from 'react';
 
 export default function LoginPage() {
   const { message } = AntdApp.useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const login = useAuthStore((s) => s.login);
+  const bootstrap = useAuthStore((s) => s.bootstrap);
   const [loading, setLoading] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const from = (location.state as any)?.from?.pathname || '/dashboard';
+
+  useEffect(() => {
+    const accessToken = searchParams.get('accessToken');
+    const refreshToken = searchParams.get('refreshToken');
+    if (accessToken) {
+      tokenStore.set(accessToken);
+      if (refreshToken) tokenStore.setRefresh(refreshToken);
+      // Xóa params khỏi URL để đẹp hơn
+      searchParams.delete('accessToken');
+      searchParams.delete('refreshToken');
+      setSearchParams(searchParams, { replace: true });
+      
+      // Gọi bootstrap để lấy user profile và vào dashboard
+      bootstrap().then(() => {
+        navigate(from, { replace: true });
+      });
+    }
+  }, [searchParams, setSearchParams, bootstrap, navigate, from]);
 
   const onFinish = async (values: LoginPayload) => {
     setLoading(true);
