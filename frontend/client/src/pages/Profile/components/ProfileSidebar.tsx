@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { Avatar } from 'antd';
 import { UserOutlined, SettingOutlined, SafetyCertificateOutlined, BellOutlined, LockOutlined, ArrowLeftOutlined } from '@ant-design/icons'; // 🟢 Thêm ArrowLeftOutlined
-import { SidebarProps } from '../typing'; 
+export interface SidebarProps {
+  activeMenu: string;
+  setActiveMenu: (menu: string) => void;
+  user: any;
+}
 import { useAuthStore } from '@/store/auth';
 import { useNavigate } from 'react-router-dom';
 

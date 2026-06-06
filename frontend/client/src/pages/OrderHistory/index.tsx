@@ -8,7 +8,18 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined
 } from '@ant-design/icons';
-import { OrderType } from './typing';
+export interface OrderType {
+  orderId: string;
+  movieTitle: string;
+  poster: string;
+  cinemaName: string;
+  room: string;
+  showtime: string;
+  seats: string[];
+  totalPrice: number;
+  status: 'completed' | 'cancelled';
+  purchaseDate: string;
+}
 
 // 1. IMPORT FOOTER DÙNG CHUNG VÀO ĐÂY
 import AppFooter from '../../components/layout/Footer';

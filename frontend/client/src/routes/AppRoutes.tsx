@@ -6,8 +6,8 @@ import ProtectedRoute from './ProtectedRoute';
 // Import Pages
 import LandingPage from "../pages/LandingPage/LandingPage";
 import HomePage from '../pages/Home/HomePage';
-import LoginPage from '../pages/Auth/LoginPage';
-import RegisterPage from '../pages/Auth/RegisterPage';
+import LoginPage from '../pages/auth/LoginPage';
+import RegisterPage from '../pages/auth/RegisterPage';
 import MovieDetailPage from '../pages/MovieDetail';
 import ProfilePage from '../pages/Profile';
 import OrderHistoryPage from '../pages/OrderHistory';
