@@ -129,8 +129,9 @@ const FoodDrinkPage: React.FC = () => {
     };
   }, []);
 
+  // MÀU SẮC ĐỒNG BỘ VỚI ChonGhe
   const colors = {
-    surface: '#131313',
+    surface: '#0a0a0a',
     onSurface: '#e5e2e1',
     onSurfaceVariant: '#e9bcb6',
     primaryContainer: '#e50914',
@@ -140,7 +141,7 @@ const FoodDrinkPage: React.FC = () => {
 
   const glassStyle: React.CSSProperties = {
     background: 'rgba(255,255,255,0.05)',
-    backdropFilter: 'blur(20px)',
+    backdropFilter: 'blur(12px)',
     border: `1px solid ${colors.border}`,
   };
 
@@ -156,23 +157,25 @@ const FoodDrinkPage: React.FC = () => {
           </button>
         </div>
 
+        {/* THANH TIẾN TRÌNH - BƯỚC 2 ĐANG ACTIVE */}
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginBottom: '40px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.5 }}>
-            <div style={{ width: '24px', height: '24px', borderRadius: '9999px', border: `1px solid ${colors.onSurface}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold' }}>1</div>
+            <div style={{ width: '28px', height: '28px', borderRadius: '9999px', border: `1px solid ${colors.onSurface}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>1</div>
             <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px' }}>CHỌN GHẾ</span>
           </div>
-          <div style={{ width: '32px', height: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }}></div>
+          <div style={{ width: '40px', height: '1px', backgroundColor: colors.border }}></div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '24px', height: '24px', borderRadius: '9999px', backgroundColor: colors.primaryContainer, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: 'white' }}>2</div>
+            <div style={{ width: '28px', height: '28px', borderRadius: '9999px', backgroundColor: colors.primaryContainer, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: 'white' }}>2</div>
             <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px', color: colors.primary }}>CHỌN COMBO</span>
           </div>
-          <div style={{ width: '32px', height: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }}></div>
+          <div style={{ width: '40px', height: '1px', backgroundColor: colors.border }}></div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.5 }}>
-            <div style={{ width: '24px', height: '24px', borderRadius: '9999px', border: `1px solid ${colors.onSurface}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold' }}>3</div>
+            <div style={{ width: '28px', height: '28px', borderRadius: '9999px', border: `1px solid ${colors.onSurface}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>3</div>
             <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px' }}>THANH TOÁN</span>
           </div>
         </div>
 
+        {/* Combo Phổ Biến */}
         <section style={{ marginBottom: '40px' }}>
           <div style={{ marginBottom: '24px' }}>
             <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px', color: colors.primary, display: 'block', marginBottom: '4px' }}>BÁN CHẠY NHẤT</span>
@@ -180,8 +183,8 @@ const FoodDrinkPage: React.FC = () => {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
             {productsData.filter(p => p.category === 'combo').map(combo => (
-              <div key={combo.id} style={{ ...glassStyle, borderRadius: '12px', padding: '16px' }}>
-                <div style={{ position: 'relative', height: '160px', marginBottom: '16px', overflow: 'hidden', borderRadius: '8px' }}>
+              <div key={combo.id} style={{ ...glassStyle, borderRadius: '16px', padding: '16px' }}>
+                <div style={{ position: 'relative', height: '160px', marginBottom: '16px', overflow: 'hidden', borderRadius: '12px' }}>
                   <img src={combo.image} alt={combo.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }}></div>
                   {combo.badge && <div style={{ position: 'absolute', bottom: '12px', left: '12px', backgroundColor: colors.primaryContainer, color: 'white', padding: '2px 8px', borderRadius: '9999px', fontSize: '10px', fontWeight: 'bold' }}>{combo.badge}</div>}
@@ -208,6 +211,7 @@ const FoodDrinkPage: React.FC = () => {
           </div>
         </section>
 
+        {/* Sản Phẩm Kèm Theo */}
         <section>
           <div style={{ marginBottom: '24px' }}>
             <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px', color: colors.onSurfaceVariant, display: 'block', marginBottom: '4px' }}>THÊM HƯƠNG VỊ</span>
@@ -215,15 +219,15 @@ const FoodDrinkPage: React.FC = () => {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
             {productsData.filter(p => p.category === 'addon').map(addon => (
-              <div key={addon.id} style={{ ...glassStyle, borderRadius: '12px', padding: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '64px', height: '64px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
+              <div key={addon.id} style={{ ...glassStyle, borderRadius: '16px', padding: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '10px', overflow: 'hidden', flexShrink: 0 }}>
                   <img src={addon.image} alt={addon.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <h4 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0 }}>{addon.name}</h4>
                   <p style={{ fontSize: '14px', fontWeight: 'bold', color: colors.primary, margin: '4px 0 0' }}>{addon.price.toLocaleString('vi-VN')}đ</p>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', ...glassStyle, borderRadius: '8px', padding: '4px 8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', ...glassStyle, borderRadius: '10px', padding: '4px 8px' }}>
                   <button onClick={() => increment(addon.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
                     <span className="material-symbols-outlined" style={{ color: colors.primary, fontSize: '18px' }}>add</span>
                   </button>
@@ -238,6 +242,7 @@ const FoodDrinkPage: React.FC = () => {
         </section>
       </main>
 
+      {/* Bottom Bar */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40, ...glassStyle, borderTop: `1px solid ${colors.border}`, padding: '16px 20px' }}>
         <div style={{ maxWidth: '1440px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'center', width: '100%', justifyContent: 'center' }}>

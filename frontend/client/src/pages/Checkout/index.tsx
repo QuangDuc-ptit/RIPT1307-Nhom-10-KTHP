@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Button, Input, Radio, message } from 'antd';
-import { 
+import React, { useState, useMemo, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Radio, message } from 'antd';
+import {
   CloseOutlined,
-  CreditCardOutlined, 
+  CreditCardOutlined,
   WalletOutlined,
   BankOutlined,
   SafetyCertificateOutlined,
@@ -11,45 +12,95 @@ import {
   FileTextOutlined,
   LockOutlined,
   CheckCircleOutlined,
-  SafetyOutlined // <-- Đã đổi ShieldOutlined thành SafetyOutlined ở đây
+  SafetyOutlined,
 } from '@ant-design/icons';
-import { OrderSummaryType, VoucherType } from './typing';
+
+interface Seat {
+  id: string;
+  row: string;
+  number: number;
+  price: number;
+  type: 'regular' | 'vip';
+}
+
+interface CoupleSeat {
+  id: string;
+  label: string;
+  price: number;
+}
+
+interface FoodItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
 
 const CheckoutPage: React.FC = () => {
-  const colors = { 
-    bg: '#1a1416',        
-    panelBg: '#22171a',   
-    cardBg: '#2a1a20',    
-    inputBg: '#342127',   
-    primary: '#e42755',   
-    textWhite: '#ffffff', 
-    textDim: '#a3989c', 
-    border: '#3b2a31'     
-  };
+  const location = useLocation();
+  const navigate = useNavigate();
+  const state = location.state as any;
 
-  const [order] = useState<OrderSummaryType & { bookingFee: number }>({
-    movieName: 'Dune: Part Two',
-    poster: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=300&auto=format&fit=crop',
-    cinemaName: 'Rạp 4',
-    room: 'Phòng IMAX',
-    showtime: 'T6, 24/11 • 20:00',
-    seats: ['Hàng B - Ghế B3, B4'],
-    ticketPrice: 240000,
-    comboPrice: 65000, 
-    bookingFee: 15000 
-  });
+  // --- Dữ liệu nhận từ các bước trước ---
+  const selectedSeats: Seat[] = state?.selectedSeats || [];
+  const selectedCouples: CoupleSeat[] = state?.selectedCouples || [];
+  const foodItems: FoodItem[] = state?.foodItems || [];
+  const bookingInfo = state?.bookingInfo || {};
 
+  const movieTitle = bookingInfo?.movie?.title || 'Interstellar: Trải nghiệm IMAX';
+  const cinemaName = bookingInfo?.cinema?.name || 'Grand Cinema';
+  const roomName = bookingInfo?.room?.roomName || 'Phòng chiếu 4';
+  const showDate = bookingInfo?.showtime?.date || 'Hôm nay';
+  const showTime = bookingInfo?.showtime?.time || '20:30';
+
+  // Thêm Google Fonts và Material Icons (giống ChonGhe)
+  useEffect(() => {
+    const link1 = document.createElement('link');
+    link1.rel = 'stylesheet';
+    link1.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap';
+    const link2 = document.createElement('link');
+    link2.rel = 'stylesheet';
+    link2.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1';
+    document.head.appendChild(link1);
+    document.head.appendChild(link2);
+    return () => {
+      document.head.removeChild(link1);
+      document.head.removeChild(link2);
+    };
+  }, []);
+
+  // Tính tổng tiền
+  const seatsTotal = selectedSeats.reduce((sum, s) => sum + s.price, 0) + selectedCouples.reduce((sum, c) => sum + c.price, 0);
+  const comboTotal = foodItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const bookingFee = 25000;
+  const taxRate = 0.10;
+  const subtotal = seatsTotal + comboTotal + bookingFee;
+  const tax = subtotal * taxRate;
+  const grandTotal = subtotal + tax;
+
+  // Format VND
+  const formatVND = (amount: number) => amount.toLocaleString('vi-VN') + 'đ';
+
+  // Hiển thị danh sách ghế
+  const seatDisplay = useMemo(() => {
+    const regSeats = selectedSeats.filter(s => s.type === 'regular').map(s => s.id).join(', ');
+    const vipSeats = selectedSeats.filter(s => s.type === 'vip').map(s => `${s.id}(VIP)`).join(', ');
+    const coupleSeats = selectedCouples.map(c => c.label).join(', ');
+    return [regSeats, vipSeats, coupleSeats].filter(Boolean).join(' · ') || 'Chưa chọn ghế';
+  }, [selectedSeats, selectedCouples]);
+
+  const comboDisplay = useMemo(() => {
+    if (foodItems.length === 0) return 'Chưa chọn combo';
+    return foodItems.map(item => `${item.quantity}x ${item.name}`).join(', ');
+  }, [foodItems]);
+
+  // --- Payment logic ---
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [voucherInput, setVoucherInput] = useState('');
-  const [appliedVoucher, setAppliedVoucher] = useState<VoucherType | null>(null);
+  const [appliedVoucher, setAppliedVoucher] = useState<{ code: string; discountValue: number } | null>(null);
 
-  const subTotal = order.ticketPrice + order.comboPrice + order.bookingFee;
   const discountAmount = appliedVoucher ? appliedVoucher.discountValue : 0;
-  const finalTotal = subTotal - discountAmount;
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-  };
+  const finalTotal = grandTotal - discountAmount;
 
   const handleApplyVoucher = () => {
     if (!voucherInput.trim()) {
@@ -57,7 +108,7 @@ const CheckoutPage: React.FC = () => {
       return;
     }
     if (voucherInput.toUpperCase() === 'KSTAR50') {
-      setAppliedVoucher({ code: 'KSTAR50', discountValue: 50000, description: 'Giảm 50K' });
+      setAppliedVoucher({ code: 'KSTAR50', discountValue: 50000 });
       message.success('Áp dụng thành công!');
     } else {
       message.error('Mã không hợp lệ!');
@@ -68,188 +119,266 @@ const CheckoutPage: React.FC = () => {
     message.loading({ content: 'Đang xử lý thanh toán bảo mật...', key: 'checkout' });
     setTimeout(() => {
       message.success({ content: 'Thanh toán thành công!', key: 'checkout', duration: 3 });
+      setTimeout(() => navigate('/'), 2000);
     }, 2000);
   };
 
+  // --- Style đồng bộ với FoodDrinkPage ---
+  const colors = {
+    surface: '#0a0a0a',
+    onSurface: '#e5e2e1',
+    onSurfaceVariant: '#e9bcb6',
+    primaryContainer: '#e50914',
+    primary: '#ffb4aa',
+    border: 'rgba(255,255,255,0.1)',
+  };
+
+  const glassStyle: React.CSSProperties = {
+    background: 'rgba(255,255,255,0.05)',
+    backdropFilter: 'blur(12px)',
+    border: `1px solid ${colors.border}`,
+  };
+
   return (
-    <div style={{ backgroundColor: colors.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'sans-serif', color: colors.textWhite }}>
-      
-      <div style={{ maxWidth: '1000px', margin: '0 auto', width: '100%', padding: '24px 5%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: 'bold' }}>
-          <div style={{ width: '16px', height: '16px', backgroundColor: colors.primary, borderRadius: '4px' }}></div>
-          CinemaPay
-        </div>
-        <Button 
-          type="text" 
-          icon={<CloseOutlined />} 
-          style={{ backgroundColor: colors.inputBg, color: colors.textWhite, border: 'none', width: '40px', height: '40px', borderRadius: '50%' }} 
-        />
-      </div>
-
-      <div style={{ maxWidth: '1000px', margin: '0 auto', width: '100%', padding: '20px 5% 60px', flex: 1 }}>
-        <div style={{ display: 'flex', gap: '40px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-          
-          <div style={{ flex: '1 1 500px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>Tóm tắt hóa đơn</h1>
-
-            <div style={{ backgroundColor: colors.cardBg, borderRadius: '20px', padding: '24px', display: 'flex', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
-                <div style={{ color: colors.primary, fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                  <SafetyCertificateOutlined /> PREMIUM EXPERIENCE
-                </div>
-                <h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 4px 0' }}>{order.movieName}</h2>
-                <div style={{ color: colors.textDim, fontSize: '14px' }}>{order.cinemaName} • {order.room}</div>
-                <div style={{ color: colors.textDim, fontSize: '14px', marginBottom: '16px' }}>{order.showtime}</div>
-                <Button style={{ backgroundColor: colors.inputBg, color: colors.textWhite, border: 'none', borderRadius: '20px', padding: '0 24px', fontWeight: 'bold' }}>
-                  Đổi ghế
-                </Button>
-              </div>
-              <img src={order.poster} alt={order.movieName} style={{ width: '100px', height: '140px', objectFit: 'cover', borderRadius: '12px', boxShadow: '0 10px 20px rgba(0,0,0,0.5)' }} />
+    <div style={{ backgroundColor: colors.surface, color: colors.onSurface, fontFamily: 'Montserrat, sans-serif', minHeight: '100vh' }}>
+      {/* Header */}
+      <header style={{ padding: '32px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '1440px', margin: '0 auto', flexWrap: 'wrap', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+          <button onClick={() => navigate(-1)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <span className="material-symbols-outlined" style={{ color: colors.onSurface }}>arrow_back</span>
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <div style={{ width: '40px', height: '40px', backgroundColor: colors.primaryContainer, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span className="material-symbols-outlined" style={{ color: 'white' }}>receipt</span>
             </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '0 8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                  <div style={{ backgroundColor: colors.inputBg, color: colors.primary, width: '40px', height: '40px', borderRadius: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><DesktopOutlined /></div>
-                  <div>
-                    <div style={{ color: colors.textDim, fontSize: '12px', textTransform: 'uppercase' }}>Ghế đã chọn</div>
-                    <div style={{ fontWeight: 'bold', fontSize: '15px' }}>{order.seats.join(', ')}</div>
-                  </div>
-                </div>
-                <div style={{ fontWeight: 'bold', fontSize: '16px' }}>{formatCurrency(order.ticketPrice)}</div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                  <div style={{ backgroundColor: colors.inputBg, color: colors.primary, width: '40px', height: '40px', borderRadius: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><CoffeeOutlined /></div>
-                  <div>
-                    <div style={{ color: colors.textDim, fontSize: '12px', textTransform: 'uppercase' }}>Đồ ăn & Đồ uống</div>
-                    <div style={{ fontWeight: 'bold', fontSize: '15px' }}>Combo bắp nước</div>
-                  </div>
-                </div>
-                <div style={{ fontWeight: 'bold', fontSize: '16px' }}>{formatCurrency(order.comboPrice)}</div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                  <div style={{ backgroundColor: colors.inputBg, color: colors.primary, width: '40px', height: '40px', borderRadius: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><FileTextOutlined /></div>
-                  <div>
-                    <div style={{ color: colors.textDim, fontSize: '12px', textTransform: 'uppercase' }}>Phí đặt vé</div>
-                    <div style={{ fontWeight: 'bold', fontSize: '15px' }}>Phí xử lý trực tuyến</div>
-                  </div>
-                </div>
-                <div style={{ fontWeight: 'bold', fontSize: '16px' }}>{formatCurrency(order.bookingFee)}</div>
-              </div>
-            </div>
-
             <div>
-              <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px' }}>Mã khuyến mãi</h3>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <Input 
-                  placeholder="Nhập mã" 
-                  value={voucherInput}
-                  onChange={(e) => setVoucherInput(e.target.value)}
-                  style={{ flex: 1, backgroundColor: colors.cardBg, borderColor: colors.cardBg, color: '#fff', height: '45px', borderRadius: '25px', paddingLeft: '20px' }}
-                />
-                <Button type="primary" onClick={handleApplyVoucher} style={{ backgroundColor: colors.primary, border: 'none', height: '45px', borderRadius: '25px', padding: '0 24px', fontWeight: 'bold' }}>
-                  Áp dụng
-                </Button>
+              <h1 style={{ fontSize: 'clamp(16px, 5vw, 20px)', fontWeight: 'bold', color: 'white', margin: 0 }}>Thanh toán</h1>
+              <p style={{ fontSize: 'clamp(10px, 3vw, 12px)', color: `${colors.onSurfaceVariant}99`, margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>{cinemaName} • {roomName} • {showDate}, {showTime}</p>
+            </div>
+          </div>
+        </div>
+        <button onClick={() => navigate('/')} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer' }}>
+          <span className="material-symbols-outlined" style={{ color: colors.onSurfaceVariant }}>close</span>
+        </button>
+      </header>
+
+      {/* Phần còn lại giữ nguyên... */}
+      <main style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 20px', paddingBottom: '48px' }}>
+        {/* Thanh tiến trình - bước 3 active */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginBottom: '40px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.5 }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '9999px', border: `1px solid ${colors.onSurface}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>1</div>
+            <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px' }}>CHỌN GHẾ</span>
+          </div>
+          <div style={{ width: '40px', height: '1px', backgroundColor: colors.border }}></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.5 }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '9999px', border: `1px solid ${colors.onSurface}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>2</div>
+            <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px' }}>CHỌN COMBO</span>
+          </div>
+          <div style={{ width: '40px', height: '1px', backgroundColor: colors.border }}></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '9999px', backgroundColor: colors.primaryContainer, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: 'white' }}>3</div>
+            <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px', color: colors.primary }}>THANH TOÁN</span>
+          </div>
+        </div>
+
+        {/* Layout 2 cột */}
+        <div className="two-column-layout" style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 'clamp(24px, 5vw, 48px)' }}>
+          {/* Cột trái - Tóm tắt đơn hàng */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ ...glassStyle, borderRadius: '24px', padding: 'clamp(24px, 4vw, 32px)', marginBottom: '32px' }}>
+              <h2 style={{ fontSize: 'clamp(20px, 4vw, 24px)', fontWeight: 'bold', marginBottom: '24px' }}>Tóm tắt đơn hàng</h2>
+
+              {/* Thông tin phim */}
+              <div style={{ display: 'flex', gap: '20px', marginBottom: '32px', flexWrap: 'wrap' }}>
+                <div style={{ width: '80px', height: '112px', backgroundColor: '#1a1a1a', borderRadius: '12px', overflow: 'hidden' }}>
+                  <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=300&auto=format&fit=crop" alt={movieTitle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 4px' }}>{movieTitle}</h3>
+                  <p style={{ fontSize: '14px', color: colors.onSurfaceVariant, margin: 0 }}>{cinemaName} • {roomName}</p>
+                  <p style={{ fontSize: '14px', color: colors.onSurfaceVariant, margin: '4px 0' }}>{showDate}, {showTime}</p>
+                </div>
               </div>
-              {appliedVoucher && (
-                <div style={{ marginTop: '12px', color: colors.primary, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CheckCircleOutlined /> Đã áp dụng mã {appliedVoucher.code} (-{formatCurrency(appliedVoucher.discountValue)})
+
+              {/* Ghế đã chọn */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: `1px solid ${colors.border}` }}>
+                <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(229,9,20,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <DesktopOutlined style={{ color: colors.primaryContainer, fontSize: '20px' }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px', color: colors.onSurfaceVariant }}>GHẾ ĐÃ CHỌN</div>
+                    <div style={{ fontWeight: 'bold' }}>{seatDisplay}</div>
+                  </div>
+                </div>
+                <div style={{ fontWeight: 'bold', fontSize: '18px', color: colors.primary }}>{formatVND(seatsTotal)}</div>
+              </div>
+
+              {/* Combo đã chọn */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: `1px solid ${colors.border}` }}>
+                <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(229,9,20,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <CoffeeOutlined style={{ color: colors.primaryContainer, fontSize: '20px' }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px', color: colors.onSurfaceVariant }}>COMBO & ĐỒ ĂN</div>
+                    <div style={{ fontWeight: 'bold' }}>{comboDisplay}</div>
+                  </div>
+                </div>
+                <div style={{ fontWeight: 'bold', fontSize: '18px', color: colors.primary }}>{formatVND(comboTotal)}</div>
+              </div>
+
+              {/* Phí đặt vé */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: `1px solid ${colors.border}` }}>
+                <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(229,9,20,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <FileTextOutlined style={{ color: colors.primaryContainer, fontSize: '20px' }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px', color: colors.onSurfaceVariant }}>PHÍ ĐẶT VÉ</div>
+                    <div style={{ fontSize: '13px', color: colors.onSurfaceVariant }}>Phí xử lý trực tuyến</div>
+                  </div>
+                </div>
+                <div style={{ fontWeight: 'bold', fontSize: '18px', color: colors.primary }}>{formatVND(bookingFee)}</div>
+              </div>
+
+              {/* Mã khuyến mãi */}
+              <div style={{ marginTop: '24px' }}>
+                <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px' }}>Mã khuyến mãi</div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <input
+                    type="text"
+                    placeholder="Nhập mã"
+                    value={voucherInput}
+                    onChange={(e) => setVoucherInput(e.target.value)}
+                    style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, borderRadius: '30px', padding: '12px 20px', color: colors.onSurface, outline: 'none' }}
+                  />
+                  <button
+                    onClick={handleApplyVoucher}
+                    style={{ background: colors.primaryContainer, border: 'none', borderRadius: '30px', padding: '0 24px', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
+                  >
+                    Áp dụng
+                  </button>
+                </div>
+                {appliedVoucher && (
+                  <div style={{ marginTop: '12px', color: colors.primary, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <CheckCircleOutlined /> Đã áp dụng mã {appliedVoucher.code} (-{formatVND(appliedVoucher.discountValue)})
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Cột phải - Thanh toán */}
+          <aside style={{ width: 'clamp(320px, 35vw, 400px)', flexShrink: 0, position: 'sticky', top: '32px' }}>
+            <div style={{ ...glassStyle, borderRadius: '24px', padding: 'clamp(24px, 4vw, 32px)' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '24px' }}>Phương thức thanh toán</h2>
+
+              <Radio.Group onChange={(e) => setPaymentMethod(e.target.value)} value={paymentMethod} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+                {/* Thẻ */}
+                <div style={{ border: `1px solid ${paymentMethod === 'card' ? colors.primaryContainer : colors.border}`, borderRadius: '16px', padding: '16px', cursor: 'pointer', backgroundColor: 'rgba(255,255,255,0.02)' }} onClick={() => setPaymentMethod('card')}>
+                  <Radio value="card">
+                    <div style={{ fontWeight: 'bold' }}>Thẻ tín dụng / ghi nợ</div>
+                    <div style={{ fontSize: '12px', color: colors.onSurfaceVariant }}>Visa, Mastercard, Amex</div>
+                  </Radio>
+                </div>
+                {/* Ví điện tử */}
+                <div style={{ border: `1px solid ${paymentMethod === 'ewallet' ? colors.primaryContainer : colors.border}`, borderRadius: '16px', padding: '16px', cursor: 'pointer', backgroundColor: 'rgba(255,255,255,0.02)' }} onClick={() => setPaymentMethod('ewallet')}>
+                  <Radio value="ewallet">
+                    <div style={{ fontWeight: 'bold' }}>Ví điện tử</div>
+                    <div style={{ fontSize: '12px', color: colors.onSurfaceVariant }}>MoMo, ZaloPay, VNPay</div>
+                  </Radio>
+                </div>
+                {/* Chuyển khoản */}
+                <div style={{ border: `1px solid ${paymentMethod === 'bank' ? colors.primaryContainer : colors.border}`, borderRadius: '16px', padding: '16px', cursor: 'pointer', backgroundColor: 'rgba(255,255,255,0.02)' }} onClick={() => setPaymentMethod('bank')}>
+                  <Radio value="bank">
+                    <div style={{ fontWeight: 'bold' }}>Chuyển khoản ngân hàng</div>
+                    <div style={{ fontSize: '12px', color: colors.onSurfaceVariant }}>Thanh toán trực tiếp</div>
+                  </Radio>
+                </div>
+              </Radio.Group>
+
+              {paymentMethod === 'card' && (
+                <div style={{ marginBottom: '32px' }}>
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px', marginBottom: '8px' }}>Số thẻ</div>
+                    <input type="text" placeholder="**** **** **** 4242" style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 16px', color: colors.onSurface }} />
+                  </div>
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px', marginBottom: '8px' }}>Ngày hết hạn</div>
+                      <input type="text" placeholder="MM/YY" style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 16px', color: colors.onSurface }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px', marginBottom: '8px' }}>CVV</div>
+                      <input type="password" placeholder="***" style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 16px', color: colors.onSurface }} />
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
-          </div>
 
-          <div style={{ flex: '1 1 350px', backgroundColor: colors.panelBg, borderRadius: '24px', padding: '32px', border: `1px solid ${colors.border}` }}>
-            <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '24px' }}>Phương thức thanh toán</h2>
-            
-            <Radio.Group onChange={(e) => setPaymentMethod(e.target.value)} value={paymentMethod} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-              
-              <div style={{ border: `1px solid ${paymentMethod === 'card' ? colors.primary : colors.border}`, backgroundColor: colors.bg, padding: '16px 20px', borderRadius: '12px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => setPaymentMethod('card')}>
-                <Radio value="card" style={{ color: colors.textWhite }}>
-                  <div>
-                    <div style={{ fontWeight: 'bold', fontSize: '15px' }}>Thẻ tín dụng / ghi nợ</div>
-                    <div style={{ color: colors.textDim, fontSize: '12px' }}>Visa, Mastercard, Amex</div>
-                  </div>
-                </Radio>
-                <CreditCardOutlined style={{ color: colors.textDim, fontSize: '20px' }} />
+              {/* Tổng cộng */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '16px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 'bold', letterSpacing: '1px' }}>Tạm tính</span>
+                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>{formatVND(grandTotal)}</span>
               </div>
-
-              <div style={{ border: `1px solid ${paymentMethod === 'ewallet' ? colors.primary : colors.border}`, backgroundColor: colors.bg, padding: '16px 20px', borderRadius: '12px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => setPaymentMethod('ewallet')}>
-                <Radio value="ewallet" style={{ color: colors.textWhite }}>
-                  <div>
-                    <div style={{ fontWeight: 'bold', fontSize: '15px' }}>Ví điện tử</div>
-                    <div style={{ color: colors.textDim, fontSize: '12px' }}>MoMo, ZaloPay, VNPay</div>
-                  </div>
-                </Radio>
-                <WalletOutlined style={{ color: colors.textDim, fontSize: '20px' }} />
-              </div>
-
-              <div style={{ border: `1px solid ${paymentMethod === 'bank' ? colors.primary : colors.border}`, backgroundColor: colors.bg, padding: '16px 20px', borderRadius: '12px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => setPaymentMethod('bank')}>
-                <Radio value="bank" style={{ color: colors.textWhite }}>
-                  <div>
-                    <div style={{ fontWeight: 'bold', fontSize: '15px' }}>Chuyển khoản ngân hàng</div>
-                    <div style={{ color: colors.textDim, fontSize: '12px' }}>Direct instant transfer</div>
-                  </div>
-                </Radio>
-                <BankOutlined style={{ color: colors.textDim, fontSize: '20px' }} />
-              </div>
-            </Radio.Group>
-
-            {paymentMethod === 'card' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-                <div>
-                  <div style={{ color: colors.textDim, fontSize: '11px', textTransform: 'uppercase', marginBottom: '8px' }}>Số thẻ</div>
-                  <Input 
-                    placeholder="**** **** **** 4242" 
-                    suffix={<LockOutlined style={{ color: colors.textDim }} />}
-                    style={{ backgroundColor: colors.inputBg, border: 'none', color: '#fff', height: '45px', borderRadius: '10px' }} 
-                  />
+              {appliedVoucher && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', color: colors.primary }}>
+                  <span>Giảm giá</span>
+                  <span>-{formatVND(discountAmount)}</span>
                 </div>
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ color: colors.textDim, fontSize: '11px', textTransform: 'uppercase', marginBottom: '8px' }}>Ngày hết hạn</div>
-                    <Input placeholder="MM/YY" style={{ backgroundColor: colors.inputBg, border: 'none', color: '#fff', height: '45px', borderRadius: '10px' }} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ color: colors.textDim, fontSize: '11px', textTransform: 'uppercase', marginBottom: '8px' }}>Mã CVV</div>
-                    <Input placeholder="***" type="password" style={{ backgroundColor: colors.inputBg, border: 'none', color: '#fff', height: '45px', borderRadius: '10px' }} />
-                  </div>
-                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '24px', borderTop: `1px solid ${colors.border}`, paddingTop: '16px' }}>
+                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Tổng thanh toán</span>
+                <span style={{ fontSize: '28px', fontWeight: '900', color: colors.primaryContainer }}>{formatVND(finalTotal)}</span>
               </div>
-            )}
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderTop: `1px solid ${colors.border}`, paddingTop: '24px' }}>
-              <span style={{ color: colors.textDim, fontSize: '14px', textTransform: 'uppercase' }}>Tổng thanh toán</span>
-              <span style={{ color: colors.primary, fontSize: '28px', fontWeight: '900' }}>{formatCurrency(finalTotal)}</span>
+              <button
+                onClick={handleCheckout}
+                style={{ width: '100%', background: colors.primaryContainer, border: 'none', borderRadius: '30px', padding: '16px', color: 'white', fontWeight: 'bold', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', cursor: 'pointer', boxShadow: '0 8px 20px rgba(229,9,20,0.3)' }}
+              >
+                <SafetyOutlined /> Hoàn tất thanh toán
+              </button>
+
+              <div style={{ textAlign: 'center', fontSize: '10px', color: `${colors.onSurfaceVariant}66`, marginTop: '20px', letterSpacing: '1px' }}>
+                THANH TOÁN BẢO MẬT VỚI MÃ HÓA SSL<br />BỞI CINEMAPAY
+              </div>
             </div>
-
-            {/* <-- Đã đổi ShieldOutlined thành SafetyOutlined ở đây */}
-            <Button block type="primary" onClick={handleCheckout} icon={<SafetyOutlined />} style={{ backgroundColor: colors.primary, border: 'none', height: '56px', fontSize: '18px', fontWeight: 'bold', borderRadius: '28px', marginBottom: '16px' }}>
-              Hoàn tất thanh toán
-            </Button>
-            
-            <div style={{ textAlign: 'center', color: colors.textDim, fontSize: '11px', lineHeight: '1.5' }}>
-              THANH TOÁN BẢO MẬT VỚI MÃ HÓA AN TOÀN<br/>BỞI GIAO THỨC CINEMAPAY.
-            </div>
-          </div>
-
+          </aside>
         </div>
-      </div>
+      </main>
 
-      <div style={{ textAlign: 'center', padding: '24px', color: colors.textDim, fontSize: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '12px', fontSize: '20px' }}>
-          <SafetyCertificateOutlined />
-          {/* <-- Đã đổi ShieldOutlined thành SafetyOutlined ở đây */}
-          <SafetyOutlined />
-          <LockOutlined />
-        </div>
-        © 2024 KStar Cinema. Mọi quyền được bảo lưu. Bảo mật SSL 256-bit.
-      </div>
+      <footer style={{ borderTop: `1px solid ${colors.border}`, padding: '32px 20px', textAlign: 'center', marginTop: '48px' }}>
+        <div style={{ fontSize: '11px', color: `${colors.onSurfaceVariant}66`, letterSpacing: '1px' }}>© 2025 KSTAR Cinema. Bảo lưu mọi quyền.</div>
+      </footer>
 
+      <style>{`
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        button, .ant-radio-wrapper {
+          transition: all 0.2s;
+        }
+        button:hover {
+          transform: scale(1.02);
+        }
+        button:active {
+          transform: scale(0.98);
+        }
+        @media (max-width: 900px) {
+          .two-column-layout {
+            flex-direction: column !important;
+            align-items: center !important;
+          }
+          .two-column-layout aside {
+            width: 100% !important;
+            max-width: 500px !important;
+            position: static !important;
+            margin-top: 32px;
+          }
+        }
+      `}</style>
     </div>
   );
 };
