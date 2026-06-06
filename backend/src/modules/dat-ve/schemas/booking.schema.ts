@@ -10,3 +10,7 @@ export const createBookingSchema = z.object({
     })
   ).optional().default([])
 });
+
+export const paymentProviderSchema = z.object({
+  provider: z.enum(['VNPAY', 'MOMO'], 'Cổng thanh toán không hợp lệ')
+});

@@ -206,6 +206,17 @@ enum BookingStatus {
   CANCELLED
 }
 
+enum PaymentProvider {
+  VNPAY
+  MOMO
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
 model Booking {
   id          String        @id @default(cuid())
   userId      String
@@ -221,6 +232,8 @@ model Booking {
   bookingSeats BookingSeat[]
   bookingFoods BookingFood[]
   staffLogs    StaffLog[]
+  payments     Payment[]
+  invoices     Invoice[]
 }
 
 model BookingSeat {
@@ -251,6 +264,43 @@ model BookingFood {
   food      Food    @relation(fields: [foodId], references: [id])
   quantity  Int
   price     Float
+}
+
+model Payment {
+  id                 String          @id @default(cuid())
+  bookingId          String
+  booking            Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  provider           PaymentProvider
+  status             PaymentStatus   @default(PENDING)
+  amount             Float
+  providerRef        String?         @unique
+  requestId          String          @unique
+  paymentUrl         String?
+  redirectPayload    Json?
+  responseCode       String?
+  paidAt             DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  invoice            Invoice?
+
+  @@index([bookingId])
+  @@index([provider, status])
+}
+
+model Invoice {
+  id             String   @id @default(cuid())
+  bookingId      String
+  booking        Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  paymentId      String   @unique
+  payment        Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  invoiceNumber  String   @unique
+  amount         Float
+  issuedAt       DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([bookingId])
 }
 
 model StaffLog {

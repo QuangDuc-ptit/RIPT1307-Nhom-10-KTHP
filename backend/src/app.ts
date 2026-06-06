@@ -16,6 +16,7 @@ import theLoaiRoutes, { adminTheLoaiRouter } from './modules/the-loai/routes/the
 import datVeRoutes from './modules/dat-ve/routes/dat-ve.route';
 import soatVeRoutes from './modules/soat-ve/routes/soat-ve.route';
 import suatChieuRoutes from './modules/suat-chieu/routes/suat-chieu.route';
+import thanhToanRoutes from './modules/thanh-toan/routes/thanh-toan.route';
 import { startCronJobs } from './jobs/cron';
 
 export const buildApp = () => {
@@ -48,6 +49,7 @@ export const buildApp = () => {
   app.use('/api/users', usersRoutes);
   app.use('/api/posts', postsRoutes);
   app.use('/api/dat-ve', datVeRoutes);
+  app.use('/api/payments', thanhToanRoutes);
   app.use('/api/staff', soatVeRoutes);
 
   app.use('/api/admin/users', adminUsersRouter);

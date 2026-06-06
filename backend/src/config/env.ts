@@ -23,6 +23,15 @@ const schema = z.object({
   SMTP_PASS: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
   CORS_ORIGINS: z.string().default('http://localhost:5173,http://localhost:5174'),
+  PAYMENT_RETURN_URL: z.string().default('http://localhost:5173/payment/result'),
+  PAYMENT_IPN_URL: z.string().default('http://localhost:4000/api/payments/ipn'),
+  VNPAY_TMN_CODE: z.string().optional(),
+  VNPAY_HASH_SECRET: z.string().optional(),
+  VNPAY_BASE_URL: z.string().default('https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'),
+  MOMO_PARTNER_CODE: z.string().optional(),
+  MOMO_ACCESS_KEY: z.string().optional(),
+  MOMO_SECRET_KEY: z.string().optional(),
+  MOMO_BASE_URL: z.string().default('https://test-payment.momo.vn/v2/gateway/api/create'),
 });
 
 const parsed = schema.safeParse(process.env);
