@@ -1,13 +1,16 @@
 import React from 'react';
 import { Button, Tag } from 'antd';
-import { PlayCircleFilled, TagsOutlined } from '@ant-design/icons';
-import { MovieDetailData } from '../typing';
+import { PlayCircleFilled, TagsOutlined, LeftOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import { MovieDetailData } from '../../types/movie';
 
 interface Props {
   movie: MovieDetailData;
 }
 
 const HeroBanner: React.FC<Props> = ({ movie }) => {
+  const navigate = useNavigate();
+
   return (
     <div style={{ 
       position: 'relative',
@@ -20,6 +23,29 @@ const HeroBanner: React.FC<Props> = ({ movie }) => {
       justifyContent: 'center',
       padding: '0 5%'
     }}>
+      {/* Nút Quay lại (Góc trên trái) */}
+      <Button 
+        type="text"
+        icon={<LeftOutlined style={{ fontSize: '20px' }} />}
+        onClick={() => navigate(-1)}
+        style={{ 
+          position: 'absolute', 
+          top: '20px', 
+          left: '20px', 
+          color: '#ffffff',
+          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          backdropFilter: 'blur(5px)',
+          borderRadius: '50%',
+          width: '45px',
+          height: '45px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10,
+          border: 'none'
+        }}
+      />
+
       {/* Nút Play ở giữa */}
       <div style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%, -50%)', cursor: 'pointer' }}>
         <PlayCircleFilled style={{ fontSize: '64px', color: '#e42755', opacity: 0.9 }} />
@@ -44,7 +70,7 @@ const HeroBanner: React.FC<Props> = ({ movie }) => {
               {movie.rating} <span style={{ fontSize: '12px', color: '#a3989c', fontWeight: 'normal' }}>/ 5 KSTAR</span>
             </div>
             <p style={{ color: '#a3989c', maxWidth: '400px', margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
-              {movie.description.substring(0, 100)}...
+              {movie.description?.substring(0, 100)}...
             </p>
           </div>
         </div>

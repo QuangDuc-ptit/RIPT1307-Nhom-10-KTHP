@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Avatar, Button, Form, Input, Tag, message, Upload, Modal } from 'antd'; // 🟢 Thêm Modal ở đây
-import { IdcardOutlined, KeyOutlined, UploadOutlined, ExclamationCircleFilled } from '@ant-design/icons'; // 🟢 Thêm icon cảnh báo
+import { Avatar, Button, Form, Input, Tag, message, Upload, Modal } from 'antd';
+import { IdcardOutlined, KeyOutlined, UploadOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import type { RcFile } from 'antd/es/upload/interface';
+
+// Import Store để cập nhật dữ liệu ảnh ra ngoài ngay lập tức
 import { useAuthStore } from '@/store/auth';
 
 export interface UserProfile {
@@ -19,7 +21,7 @@ interface AccountFormProps {
 }
 
 const { TextArea } = Input;
-const { confirm } = Modal; // 🟢 Lấy hàm confirm từ Modal
+const { confirm } = Modal;
 
 const AccountForm: React.FC<AccountFormProps> = ({ user }) => {
   const [profileForm] = Form.useForm();
@@ -47,10 +49,35 @@ const AccountForm: React.FC<AccountFormProps> = ({ user }) => {
   const cardStyle: React.CSSProperties = { backgroundColor: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px', border: `1px solid ${colors.border}`, boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)', transition: 'transform 0.3s ease, box-shadow 0.3s ease' };
   const inputStyle = { backgroundColor: colors.bgInput, borderColor: colors.border, color: colors.textMain, height: '45px', borderRadius: '8px' };
 
+  // 🚀 CÁCH 1: Cập nhật ảnh đại diện thẳng vào Store tổng khi vừa chọn file
   const handleBeforeUpload = (file: RcFile) => {
+    const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+    if (!isJpgOrPng) {
+      message.error('Bạn chỉ có thể tải lên file JPG/PNG!');
+      return false;
+    }
+    const isLt2M = file.size / 1024 / 1024 < 2;
+    if (!isLt2M) {
+      message.error('Kích thước ảnh phải nhỏ hơn 2MB!');
+      return false;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
-      setAvatarUrl(e.target?.result as string);
+      const base64Image = e.target?.result as string;
+      
+      // Đổi ở giao diện hiện tại
+      setAvatarUrl(base64Image);
+      
+      // Đổi ở kho lưu trữ tổng Zustand để các tab khác không làm mất ảnh
+      useAuthStore.setState((prev: any) => ({
+        user: {
+          ...prev.user,
+          avatar: base64Image
+        }
+      }));
+      
+      message.success('Đã cập nhật ảnh đại diện hệ thống!');
     };
     reader.readAsDataURL(file);
     return false; 
@@ -67,20 +94,16 @@ const AccountForm: React.FC<AccountFormProps> = ({ user }) => {
           firstName: values.firstName,
           lastName: values.lastName,
           bio: values.bio,
-          avatar: avatarUrl || prev.user?.avatar
         }
       }));
     }, 1000);
   };
 
   const handleUpdatePassword = (values: any) => {
-    // 💡 LƯU Ý CHO BẠN: Chỗ này bạn phải gọi API gửi values.newPassword lên Backend nhé!
-    console.log('Dữ liệu mật khẩu cần gửi lên API:', values);
     message.success('Đổi mật khẩu thành công! (Test UI)');
     passwordForm.resetFields();
   };
 
-  // 🚀 NÂNG CẤP: Hàm xử lý hiển thị Popup cảnh báo trước khi xóa
   const showDeleteConfirm = () => {
     confirm({
       title: 'Bạn có chắc chắn muốn xóa tài khoản này?',
@@ -92,21 +115,11 @@ const AccountForm: React.FC<AccountFormProps> = ({ user }) => {
       centered: true,
       maskClosable: true,
       onOk() {
-        // 💡 LƯU Ý CHO BẠN: Gọi API xóa tài khoản ở đây
-        console.log('Đang gửi request xóa tài khoản lên Backend...');
-        
-        // Hiện thông báo loading (giả lập API)
         const hide = message.loading('Đang xử lý xóa tài khoản...', 0);
         setTimeout(() => {
           hide();
           message.success('Tài khoản đã được xóa!');
-          // Xóa xong thì gọi hàm logout() của Zustand và chuyển hướng về trang chủ
-          // useAuthStore.getState().logout();
-          // window.location.href = '/login';
         }, 1500);
-      },
-      onCancel() {
-        console.log('Đã hủy thao tác xóa.');
       },
     });
   };
@@ -177,12 +190,7 @@ const AccountForm: React.FC<AccountFormProps> = ({ user }) => {
         <p style={{ color: colors.textDim, marginBottom: '20px' }}>
           Việc xóa tài khoản sẽ xóa vĩnh viễn toàn bộ dữ liệu. Hành động này không thể hoàn tác.
         </p>
-        <Button 
-          onClick={showDeleteConfirm} // 🟢 Gắn sự kiện gọi Popup vào nút này
-          danger 
-          ghost 
-          style={{ borderRadius: '30px', borderColor: colors.primary, color: colors.primary, fontWeight: 'bold', height: '40px', padding: '0 24px' }}
-        >
+        <Button onClick={showDeleteConfirm} danger ghost style={{ borderRadius: '30px', borderColor: colors.primary, color: colors.primary, fontWeight: 'bold', height: '40px', padding: '0 24px' }}>
           Xóa tài khoản
         </Button>
       </div>

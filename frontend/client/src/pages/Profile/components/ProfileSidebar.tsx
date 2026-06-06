@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Avatar } from 'antd';
-import { UserOutlined, SettingOutlined, SafetyCertificateOutlined, BellOutlined, LockOutlined } from '@ant-design/icons';
+import { UserOutlined, SettingOutlined, SafetyCertificateOutlined, BellOutlined, LockOutlined, ArrowLeftOutlined } from '@ant-design/icons'; // 🟢 Thêm ArrowLeftOutlined
 import { SidebarProps } from '../typing'; 
 import { useAuthStore } from '@/store/auth';
 import { useNavigate } from 'react-router-dom';
@@ -21,16 +21,48 @@ const ProfileSidebar: React.FC<SidebarProps> = ({ activeMenu, setActiveMenu, use
 
   if (!user) return <div style={{ width: '280px', padding: '24px', color: 'white' }}>Đang tải...</div>;
 
-  // Ép kiểu để lấy avatar an toàn không sợ TypeScript đỏ màn hình
   const avatarImg = (user as any).avatar;
 
   return (
     <div style={{ width: '280px', borderRight: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', padding: '24px' }}>
       
+      {/* 🚀 NÚT ICON BACK VỀ TRANG CHỦ (Sang trọng, có hiệu ứng) */}
+      <div 
+        onClick={() => navigate('/')}
+        title="Về trang chủ"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '40px',
+          height: '40px',
+          borderRadius: '50%',
+          backgroundColor: colors.bgCard,
+          border: `1px solid ${colors.border}`,
+          cursor: 'pointer',
+          color: colors.textDim,
+          marginBottom: '24px',
+          transition: 'all 0.3s ease',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.color = colors.primary;
+          e.currentTarget.style.borderColor = colors.primary;
+          e.currentTarget.style.transform = 'scale(1.1)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(228, 39, 85, 0.2)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.color = colors.textDim;
+          e.currentTarget.style.borderColor = colors.border;
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.boxShadow = 'none';
+        }}
+      >
+        <ArrowLeftOutlined style={{ fontSize: '18px' }} />
+      </div>
+
       <div 
         style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', backgroundColor: colors.bgCard, borderRadius: '16px', marginBottom: '32px', border: `1px solid ${colors.border}` }}
       >
-        {/* 🟢 Render ảnh đại diện ở Sidebar */}
         <Avatar src={avatarImg} size={48} style={{ backgroundColor: '#fcdfd5', color: colors.primary, fontWeight: 'bold', fontSize: '20px' }}>
           {!avatarImg && (user.firstName ? user.firstName.charAt(0).toUpperCase() : 'U')}
         </Avatar>

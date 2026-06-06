@@ -2,79 +2,125 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 // --- Types ---
-type SeatStatus = 'available' | 'vip' | 'booked' | 'locked';
-type SeatType = 'regular' | 'vip';
+type SeatType = "REGULAR" | "VIP";
+type SeatStatus = "AVAILABLE" | "BOOKED" | "LOCKED";
 
 interface Seat {
   id: string;
   row: string;
   number: number;
-  status: SeatStatus;
   type: SeatType;
-  price: number;
-}
-
-interface CoupleSeat {
-  id: string;
-  label: string;
+  status: SeatStatus;
+  isCenterZone: boolean;
   price: number;
 }
 
 // --- Constants ---
-const REGULAR_PRICE = 12;
-const VIP_PRICE = 18;
-const COUPLE_PRICE = 24;
-const BOOKING_FEE = 2.5;
-const TAX_RATE = 0.10;
+const REGULAR_PRICE = 120000;
+const VIP_PRICE = 180000;
+const CENTER_BONUS = 20000;
+const BOOKING_FEE = 25000;
 
-// --- Seat Data Definition ---
-const rows = ['A', 'B', 'C', 'D', 'E'];
-const seatsPerRow = 8;
+// --- Cấu hình ghế: 14 hàng (A → N), mỗi hàng 15 cột ---
+const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'];
+const seatsPerRow = 15;
+const vipRows = ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'];
 
-const seatStatusMap: Record<string, Record<number, SeatStatus>> = {
-  A: { 1: 'booked', 2: 'booked', 3: 'available', 4: 'available', 5: 'available', 6: 'booked', 7: 'booked', 8: 'booked' },
-  B: { 1: 'available', 2: 'available', 3: 'available', 4: 'available', 5: 'available', 6: 'available', 7: 'available', 8: 'available' },
-  C: { 1: 'locked', 2: 'locked', 3: 'available', 4: 'available', 5: 'available', 6: 'available', 7: 'available', 8: 'available' },
-  D: { 1: 'booked', 2: 'vip', 3: 'vip', 4: 'vip', 5: 'booked', 6: 'vip', 7: 'vip', 8: 'vip' },
-  E: { 1: 'vip', 2: 'vip', 3: 'vip', 4: 'vip', 5: 'vip', 6: 'vip', 7: 'vip', 8: 'vip' }
+// --- Cấu hình vùng trung tâm (động) ---
+// Các hàng thuộc vùng trung tâm (có thể mở rộng thêm)
+const centerRows = ['F', 'G', 'H', 'I', 'J', 'K'];
+// Số ghế mở rộng mỗi bên của tâm (0 = 2 trái + 2 phải, 1 = 3 trái + 3 phải, ...)
+const CENTER_HORIZONTAL_EXPAND = 1;
+
+/**
+ * Tính danh sách các số cột thuộc vùng trung tâm dựa trên tổng số ghế của hàng.
+ * @param totalSeats - tổng số ghế mỗi hàng (ví dụ 15)
+ * @param expand - số lượng ghế mở rộng thêm mỗi bên
+ * @returns mảng số cột (ví dụ [6,7,8,9,10] nếu totalSeats=15, expand=1)
+ */
+function getCenterSeats(totalSeats: number, expand: number = CENTER_HORIZONTAL_EXPAND): number[] {
+  const centerLeft = Math.floor(totalSeats / 2);
+  const centerRight = centerLeft + 1;
+  const sideCount = 2 + expand; // số ghế mỗi bên tính từ tâm (2 ghế gốc + mở rộng)
+  const start = centerLeft - (sideCount - 1);
+  const end = centerRight + (sideCount - 1);
+  const seats: number[] = [];
+  for (let i = start; i <= end; i++) {
+    if (i >= 1 && i <= totalSeats) seats.push(i);
+  }
+  return seats;
+}
+
+// --- Dữ liệu mẫu ghế đặt/khóa (giữ nguyên) ---
+const bookedSeats = [
+  'A1', 'A2', 'A15',
+  'B5', 'B6', 'B10',
+  'C3', 'C4', 'C8', 'C12',
+  'D1', 'D15',
+  'E5', 'E6', 'E11',
+  'F4', 'F7', 'F9',
+  'G2', 'G9', 'G14',
+  'H8', 'H9', 'H13',
+  'I3', 'I4', 'I10',
+  'J1', 'J15',
+  'K5', 'K6', 'K12',
+  'L2', 'L9', 'L11',
+  'M7', 'M8', 'M14',
+  'N4', 'N5', 'N10'
+];
+const lockedSeats = [
+  'C1', 'C2', 'I1', 'I2', 'J2', 'J3', 'K1', 'K2', 'L3', 'L4', 'M1', 'M2', 'N1', 'N2'
+];
+
+// --- Hàm xác định vùng trung tâm (động) ---
+function isCenterZone(row: string, seatNumber: number, totalSeats: number): boolean {
+  if (!centerRows.includes(row)) return false;
+  const centerSeats = getCenterSeats(totalSeats);
+  return centerSeats.includes(seatNumber);
+}
+
+// --- Tạo ghế đơn ---
+const generateSingleSeat = (row: string, number: number, totalSeats: number): Seat => {
+  const isCenter = isCenterZone(row, number, totalSeats);
+  let type: SeatType = "REGULAR";
+  if (vipRows.includes(row)) type = "VIP";
+
+  let price = type === "VIP" ? VIP_PRICE : REGULAR_PRICE;
+  if (isCenter && type === "VIP") price += CENTER_BONUS;
+
+  let status: SeatStatus = "AVAILABLE";
+  const seatId = `${row}${number}`;
+  if (bookedSeats.includes(seatId)) status = "BOOKED";
+  if (lockedSeats.includes(seatId)) status = "LOCKED";
+
+  return {
+    id: seatId,
+    row,
+    number,
+    type,
+    status,
+    isCenterZone: isCenter,
+    price,
+  };
 };
 
 const generateSeats = (): Seat[] => {
   const seats: Seat[] = [];
   for (const row of rows) {
     for (let i = 1; i <= seatsPerRow; i++) {
-      const status = seatStatusMap[row]?.[i] || 'available';
-      const type: SeatType = status === 'vip' ? 'vip' : 'regular';
-      const price = type === 'vip' ? VIP_PRICE : REGULAR_PRICE;
-      seats.push({
-        id: `${row}${i}`,
-        row,
-        number: i,
-        status: status === 'vip' ? 'available' : status,
-        type,
-        price
-      });
+      seats.push(generateSingleSeat(row, i, seatsPerRow));
     }
   }
   return seats;
 };
 
-const coupleSeatsData: CoupleSeat[] = [
-  { id: 'cp1', label: 'CP1', price: COUPLE_PRICE },
-  { id: 'cp2', label: 'CP2', price: COUPLE_PRICE },
-  { id: 'cp3', label: 'CP3', price: COUPLE_PRICE },
-  { id: 'cp4', label: 'CP4', price: COUPLE_PRICE },
-  { id: 'cp5', label: 'CP5', price: COUPLE_PRICE },
-];
+const isSeatSelectable = (seat: Seat): boolean => seat.status === "AVAILABLE";
 
-const INITIAL_SELECTED_SEATS = ['B3', 'B4'];
-
-// --- Helper ---
-const isSeatSelectable = (seat: Seat): boolean => {
-  return seat.status === 'available' || seat.status === 'vip';
+// Format tiền đẹp hơn (thêm dấu phân cách, font chữ rõ)
+const formatVND = (amount: number) => {
+  return amount.toLocaleString('vi-VN') + ' ₫';
 };
 
-// --- Component ---
 const ChonGhe: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -86,21 +132,13 @@ const ChonGhe: React.FC = () => {
   const showDate = bookingInfo?.showtime?.date || 'Hôm nay';
   const showTime = bookingInfo?.showtime?.time || '20:30';
 
-  const [selectedSeatIds, setSelectedSeatIds] = useState<Set<string>>(() => {
-    const initialSet = new Set<string>();
-    INITIAL_SELECTED_SEATS.forEach(id => initialSet.add(id));
-    return initialSet;
-  });
-  const [selectedCoupleIds, setSelectedCoupleIds] = useState<Set<string>>(new Set());
+  const [selectedSeatIds, setSelectedSeatIds] = useState<Set<string>>(new Set());
   const [timeLeft, setTimeLeft] = useState<number>(594);
 
   const allSeats = useMemo(() => generateSeats(), []);
-  const seatMap = useMemo(() => {
-    const map = new Map<string, Seat>();
-    allSeats.forEach(seat => map.set(seat.id, seat));
-    return map;
-  }, [allSeats]);
+  const seatMap = useMemo(() => new Map(allSeats.map(seat => [seat.id, seat])), [allSeats]);
 
+  // Fonts & timer
   useEffect(() => {
     const link1 = document.createElement('link');
     link1.rel = 'stylesheet';
@@ -132,6 +170,7 @@ const ChonGhe: React.FC = () => {
   const handleSeatClick = (seatId: string) => {
     const seat = seatMap.get(seatId);
     if (!seat || !isSeatSelectable(seat)) return;
+
     setSelectedSeatIds(prev => {
       const newSet = new Set(prev);
       if (newSet.has(seatId)) newSet.delete(seatId);
@@ -140,101 +179,81 @@ const ChonGhe: React.FC = () => {
     });
   };
 
-  const handleCoupleClick = (coupleId: string) => {
-    setSelectedCoupleIds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(coupleId)) newSet.delete(coupleId);
-      else newSet.add(coupleId);
-      return newSet;
-    });
-  };
-
   const selectedSeats = useMemo(() => allSeats.filter(seat => selectedSeatIds.has(seat.id)), [allSeats, selectedSeatIds]);
-  const selectedCouples = useMemo(() => coupleSeatsData.filter(c => selectedCoupleIds.has(c.id)), [selectedCoupleIds]);
 
-  const seatsSubtotal = selectedSeats.reduce((sum, s) => sum + s.price, 0);
-  const couplesSubtotal = selectedCouples.reduce((sum, c) => sum + c.price, 0);
-  const subtotal = seatsSubtotal + couplesSubtotal;
-  const totalWithFee = subtotal + BOOKING_FEE;
-  const tax = totalWithFee * TAX_RATE;
-  const total = totalWithFee + tax;
+  const subtotal = selectedSeats.reduce((sum, s) => sum + s.price, 0);
+  const hasTickets = selectedSeats.length > 0;
+  const total = hasTickets ? subtotal + BOOKING_FEE : 0;
+  const ticketCount = selectedSeats.length;
 
-  const selectedSeatsDisplay = useMemo(() => {
-    const regularSeats = selectedSeats.filter(s => s.type === 'regular');
-    const vipSeats = selectedSeats.filter(s => s.type === 'vip');
-    const regularText = regularSeats.map(s => s.id).join(', ');
-    const vipText = vipSeats.map(s => `${s.id}(VIP)`).join(', ');
-    const coupleText = selectedCouples.map(c => c.label).join(', ');
-    const parts = [];
-    if (regularText) parts.push(regularText);
-    if (vipText) parts.push(vipText);
-    if (coupleText) parts.push(coupleText);
-    return parts.length > 0 ? parts.join(' · ') : 'Chưa có ghế nào';
-  }, [selectedSeats, selectedCouples]);
+  const previewSeats = selectedSeats.map(s => s.id);
+  const displayedSeats = previewSeats.slice(0, 6);
 
   const seatsByRow = useMemo(() => {
     const grouped: Record<string, Seat[]> = {};
-    rows.forEach(row => {
-      grouped[row] = allSeats.filter(seat => seat.row === row);
-    });
+    rows.forEach(row => { grouped[row] = allSeats.filter(seat => seat.row === row); });
     return grouped;
   }, [allSeats]);
 
-  const handleConfirm = () => {
-    navigate('/checkout', { state: { selectedSeats, selectedCouples, total, bookingInfo } });
-  };
+  const handleConfirm = () => navigate('/checkout', { state: { selectedSeats, total, bookingInfo } });
+  const handleFoodDrink = () => navigate('/food-drink', { state: { selectedSeats, totalSeatsPrice: subtotal, bookingInfo } });
 
-  // Thêm handler cho nút Đồ ăn
-  const handleFoodDrink = () => {
-    navigate('/food-drink', {
-      state: {
-        selectedSeats,
-        selectedCouples,
-        totalSeatsPrice: subtotal,
-        bookingInfo,
-      }
-    });
-  };
-
-  const getSeatStyle = (seat: Seat, isSelected: boolean): React.CSSProperties => {
-    const base = {
-      width: '24px',
-      height: '24px',
-      borderRadius: '4px',
-      border: 'none',
-      cursor: 'pointer',
-      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    };
-    if (isSelected) return { ...base, backgroundColor: '#e50914', boxShadow: '0 0 15px rgba(229,9,20,0.9)' };
-    if (seat.status === 'booked') return { ...base, backgroundColor: '#3b5998', cursor: 'not-allowed' };
-    if (seat.status === 'locked') return { ...base, backgroundColor: '#252525', cursor: 'not-allowed' };
-    if (seat.type === 'vip') return { ...base, backgroundColor: '#f59e0b' };
-    return { ...base, backgroundColor: 'rgba(255,255,255,0.1)' };
-  };
-
+  // Màu sắc
   const colors = {
     bg: '#0a0a0a',
     surface: '#0a0a0a',
     onSurface: '#e5e2e1',
     onSurfaceVariant: '#e9bcb6',
     primaryContainer: '#e50914',
-    primary: '#ff0000',
+    primary: '#ffb4aa',
+    border: 'rgba(255,255,255,0.1)',
+  };
+  const glassStyle: React.CSSProperties = {
+    background: 'rgba(255,255,255,0.05)',
+    backdropFilter: 'blur(12px)',
+    border: `1px solid ${colors.border}`,
+  };
+
+  const getSeatStyle = (seat: Seat, isSelected: boolean): React.CSSProperties => {
+    const base = {
+      width: 'clamp(18px, 4vw, 28px)',
+      height: 'clamp(18px, 4vw, 28px)',
+      borderRadius: '6px',
+      border: 'none',
+      cursor: 'pointer',
+      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+    };
+    if (isSelected) {
+      return {
+        ...base,
+        backgroundColor: '#ff0000',
+        transform: 'scale(1.08)',
+        boxShadow: '0 0 12px rgba(229,9,20,0.8)',
+      };
+    }
+    if (seat.status === "BOOKED") return { ...base, backgroundColor: '#5b57c7', cursor: 'not-allowed' };
+    if (seat.status === "LOCKED") return { ...base, backgroundColor: '#222222', cursor: 'not-allowed' };
+    if (seat.type === "VIP") {
+      if (seat.isCenterZone) return { ...base, backgroundColor: '#00c853' };
+      return { ...base, backgroundColor: '#f5b000' };
+    }
+    return { ...base, backgroundColor: '#444444' };
   };
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.onSurface, fontFamily: 'Montserrat, sans-serif' }}>
-      <header style={{ padding: '32px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '1440px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+      <header style={{ padding: '32px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '1440px', margin: '0 auto', flexWrap: 'wrap', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
           <button onClick={() => navigate(-1)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <span className="material-symbols-outlined" style={{ color: colors.onSurface }}>arrow_back</span>
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
             <div style={{ width: '40px', height: '40px', backgroundColor: colors.primaryContainer, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span className="material-symbols-outlined" style={{ color: 'white' }}>movie</span>
             </div>
             <div>
-              <h1 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', margin: 0 }}>{movieTitle}</h1>
-              <p style={{ fontSize: '12px', color: `${colors.onSurfaceVariant}99`, margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>{cinemaName} • {roomName} • {showDate}, {showTime}</p>
+              <h1 style={{ fontSize: 'clamp(16px, 5vw, 20px)', fontWeight: 'bold', color: 'white', margin: 0 }}>{movieTitle}</h1>
+              <p style={{ fontSize: 'clamp(10px, 3vw, 12px)', color: `${colors.onSurfaceVariant}99`, margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>{cinemaName} • {roomName} • {showDate}, {showTime}</p>
             </div>
           </div>
         </div>
@@ -243,137 +262,203 @@ const ChonGhe: React.FC = () => {
         </button>
       </header>
 
-      <main style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '64px', paddingBottom: '48px' }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ width: '100%', maxWidth: '600px', marginBottom: '64px', textAlign: 'center' }}>
-            <div style={{ height: '3px', width: '80%', margin: '0 auto 16px', background: 'linear-gradient(180deg, rgba(229,9,20,0.6) 0%, rgba(229,9,20,0) 100%)', filter: 'blur(4px)' }}></div>
-            <div style={{ fontSize: '10px', letterSpacing: '5px', color: `${colors.onSurfaceVariant}66`, fontWeight: 'bold' }}>SCREEN THIS WAY</div>
+      <main style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 20px', paddingBottom: '48px' }}>
+        {/* Thanh tiến trình */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginBottom: '40px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '9999px', backgroundColor: colors.primaryContainer, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: 'white' }}>1</div>
+            <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px', color: colors.primary }}>CHỌN GHẾ</span>
           </div>
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '32px', marginBottom: '64px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><div style={{ width: '14px', height: '14px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '2px' }}></div><span style={{ fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px' }}>CÒN TRỐNG</span></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#e50914', borderRadius: '2px', boxShadow: '0 0 5px #e50914' }}></div><span style={{ fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px' }}>ĐÃ CHỌN</span></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#3b5998', borderRadius: '2px' }}></div><span style={{ fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px' }}>ĐÃ ĐẶT</span></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#252525', borderRadius: '2px' }}></div><span style={{ fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px' }}>BỊ KHÓA</span></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#f59e0b', borderRadius: '2px' }}></div><span style={{ fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px' }}>GHẾ VIP</span></div>
+          <div style={{ width: '40px', height: '1px', backgroundColor: colors.border }}></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.5 }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '9999px', border: `1px solid ${colors.onSurface}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>2</div>
+            <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px' }}>CHỌN COMBO</span>
           </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '56px' }}>
-            {rows.map(row => {
-              const rowSeats = seatsByRow[row];
-              if (!rowSeats) return null;
-              const firstHalf = rowSeats.slice(0, 4);
-              const secondHalf = rowSeats.slice(4, 8);
-              return (
-                <div key={row} style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
-                  <div style={{ width: '16px', fontSize: '10px', fontWeight: 'bold', color: `${colors.onSurfaceVariant}66` }}>{row}</div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    {firstHalf.map(seat => (
-                      <button key={seat.id} onClick={() => handleSeatClick(seat.id)} disabled={!isSeatSelectable(seat)} style={getSeatStyle(seat, selectedSeatIds.has(seat.id))} />
-                    ))}
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    {secondHalf.map(seat => (
-                      <button key={seat.id} onClick={() => handleSeatClick(seat.id)} disabled={!isSeatSelectable(seat)} style={getSeatStyle(seat, selectedSeatIds.has(seat.id))} />
-                    ))}
-                  </div>
-                  <div style={{ width: '16px', fontSize: '10px', fontWeight: 'bold', color: `${colors.onSurfaceVariant}66`, textAlign: 'right' }}>{row}</div>
-                </div>
-              );
-            })}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '32px' }}>
-              {coupleSeatsData.map(couple => (
-                <button key={couple.id} onClick={() => handleCoupleClick(couple.id)} style={{
-                  padding: '8px 20px', borderRadius: '9999px', border: '1px solid', fontSize: '9px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase',
-                  backgroundColor: selectedCoupleIds.has(couple.id) ? colors.primaryContainer : 'rgba(255,255,255,0.05)',
-                  borderColor: selectedCoupleIds.has(couple.id) ? colors.primaryContainer : 'rgba(255,255,255,0.05)',
-                  color: selectedCoupleIds.has(couple.id) ? 'white' : `${colors.onSurfaceVariant}99`,
-                  boxShadow: selectedCoupleIds.has(couple.id) ? '0 0 10px rgba(229,9,20,0.3)' : 'none',
-                  cursor: 'pointer'
-                }}>
-                  COUPLE
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: '16px', width: '100%', maxWidth: '600px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: `${colors.primaryContainer}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span className="material-symbols-outlined" style={{ color: colors.primaryContainer }}>timer</span>
-            </div>
-            <p style={{ fontSize: '13px', margin: 0 }}>Ghế sẽ được giữ trong <strong style={{ color: colors.primaryContainer }}>{formatTime(timeLeft)}</strong> phút. Vui lòng hoàn tất thanh toán trước khi hết thời gian.</p>
+          <div style={{ width: '40px', height: '1px', backgroundColor: colors.border }}></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.5 }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '9999px', border: `1px solid ${colors.onSurface}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>3</div>
+            <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px' }}>THANH TOÁN</span>
           </div>
         </div>
 
-        <aside style={{ width: '100%', maxWidth: '440px', margin: '0 auto' }}>
-          <div style={{ background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '32px', position: 'sticky', top: '32px', display: 'flex', flexDirection: 'column', gap: '32px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <span className="material-symbols-outlined" style={{ color: colors.primaryContainer, fontSize: '24px', fontVariationSettings: "'FILL' 1" }}>shopping_cart</span>
-              <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>Tóm tắt đặt vé</h2>
+        <div className="two-column-layout" style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 'clamp(24px, 5vw, 48px)' }}>
+          {/* Cột trái - Sơ đồ ghế */}
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ width: '100%', maxWidth: '700px', marginBottom: '64px', textAlign: 'center' }}>
+              <div style={{ height: '3px', width: '80%', margin: '0 auto 16px', background: 'linear-gradient(180deg, rgba(229,9,20,0.6) 0%, rgba(229,9,20,0) 100%)', filter: 'blur(4px)' }}></div>
+              <div style={{ fontSize: '10px', letterSpacing: '5px', color: `${colors.onSurfaceVariant}66`, fontWeight: 'bold' }}>SCREEN THIS WAY</div>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '16px', padding: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
-                <div>
-                  <div style={{ fontSize: '11px', fontWeight: 'bold', color: colors.primaryContainer, letterSpacing: '1.5px', marginBottom: '8px' }}>GHẾ ĐÃ CHỌN</div>
-                  <h3 style={{ fontSize: '22px', fontWeight: 'bold', margin: 0 }}>{selectedSeatsDisplay}</h3>
-                </div>
-                <span style={{ fontSize: '24px', fontWeight: 'bold' }}>${subtotal.toFixed(2)}</span>
+
+            {/* Chú thích màu sắc */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 'clamp(12px, 4vw, 32px)', marginBottom: '64px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#444444', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>GHẾ THƯỜNG</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#f5b000', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>GHẾ VIP</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#00c853', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>VIP TRUNG TÂM</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#ff0000', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>ĐÃ CHỌN</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#5b57c7', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>ĐÃ ĐẶT</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#222222', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>BỊ KHÓA</span></div>
+            </div>
+
+            {/* Danh sách ghế với lối đi (7 trái, 8 phải) */}
+            <div style={{ overflowX: 'auto', width: '100%', paddingBottom: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 1.5vw, 10px)', minWidth: 'min-content' }}>
+                {rows.map(row => {
+                  const rowSeats = seatsByRow[row];
+                  if (!rowSeats) return null;
+                  const leftSeats = rowSeats.slice(0, 7);
+                  const rightSeats = rowSeats.slice(7, 15);
+                  const gapBetweenHalves = 'clamp(30px, 6vw, 50px)';
+                  return (
+                    <div key={row} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: gapBetweenHalves }}>
+                      <div style={{ width: '20px', fontSize: 'clamp(8px, 2vw, 10px)', fontWeight: 'bold', color: `${colors.onSurfaceVariant}66`, textAlign: 'center' }}>{row}</div>
+                      <div style={{ display: 'flex', gap: 'clamp(3px, 1vw, 6px)' }}>
+                        {leftSeats.map(seat => (
+                          <button key={seat.id} onClick={() => handleSeatClick(seat.id)} disabled={!isSeatSelectable(seat)} style={getSeatStyle(seat, selectedSeatIds.has(seat.id))} />
+                        ))}
+                      </div>
+                      <div style={{ display: 'flex', gap: 'clamp(3px, 1vw, 6px)' }}>
+                        {rightSeats.map(seat => (
+                          <button key={seat.id} onClick={() => handleSeatClick(seat.id)} disabled={!isSeatSelectable(seat)} style={getSeatStyle(seat, selectedSeatIds.has(seat.id))} />
+                        ))}
+                      </div>
+                      <div style={{ width: '20px', fontSize: 'clamp(8px, 2vw, 10px)', fontWeight: 'bold', color: `${colors.onSurfaceVariant}66`, textAlign: 'center' }}>{row}</div>
+                    </div>
+                  );
+                })}
               </div>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <span style={{ background: colors.primaryContainer, color: 'white', padding: '6px 16px', borderRadius: '6px', fontSize: '10px', fontWeight: 'bold' }}>{selectedSeats.length + selectedCouples.length} vé</span>
-                <span style={{ background: 'rgba(255,255,255,0.1)', padding: '6px 16px', borderRadius: '6px', fontSize: '10px', fontWeight: 'bold' }}>{selectedSeats.some(s => s.type === 'vip') || selectedCouples.length > 0 ? 'Có VIP' : 'Thường'}</span>
+            </div>
+
+            {/* Timer */}
+            <div style={{ ...glassStyle, borderRadius: '16px', padding: 'clamp(12px, 3vw, 16px) clamp(16px, 4vw, 24px)', display: 'flex', alignItems: 'center', gap: 'clamp(12px, 3vw, 16px)', width: '100%', maxWidth: '600px', marginTop: '32px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: `${colors.primaryContainer}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span className="material-symbols-outlined" style={{ color: colors.primaryContainer }}>timer</span>
               </div>
-            </div>
-            <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: `${colors.onSurfaceVariant}99` }}><span>Tạm tính (vé + ghế đôi)</span><span style={{ color: 'white' }}>${subtotal.toFixed(2)}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: `${colors.onSurfaceVariant}99` }}><span>Phí đặt vé</span><span style={{ color: 'white' }}>${BOOKING_FEE.toFixed(2)}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: `${colors.onSurfaceVariant}99`, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '16px' }}><span>VAT (10%)</span><span style={{ color: 'white' }}>${tax.toFixed(2)}</span></div>
-            </div>
-            <div style={{ background: 'rgba(234,179,8,0.05)', border: '1px solid rgba(234,179,8,0.2)', borderRadius: '12px', padding: '16px', display: 'flex', gap: '16px', cursor: 'pointer' }}>
-              <span className="material-symbols-outlined" style={{ color: '#eab308', fontVariationSettings: "'FILL' 1" }}>stars</span>
-              <div>
-                <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#eab308', letterSpacing: '1px' }}>CÓ THỂ NÂNG CẤP LÊN GHẾ VIP</div>
-                <p style={{ fontSize: '13px', margin: 0, color: 'rgba(255,255,255,0.8)' }}>Thêm bắp rang và nước ngọt với giá <strong style={{ color: '#eab308' }}>$8.50</strong></p>
-              </div>
-            </div>
-            {/* Nút Đồ ăn đã có onClick */}
-            <button 
-              onClick={handleFoodDrink}
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '16px', color: 'white', fontWeight: 'bold', letterSpacing: '1px', cursor: 'pointer' }}
-            >
-              Đồ ăn
-            </button>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '24px' }}>
-              <div><div style={{ fontSize: '12px', fontWeight: 'bold', color: `${colors.onSurfaceVariant}80`, letterSpacing: '1px' }}>Tổng tiền</div><div style={{ fontSize: '48px', fontWeight: '900', color: colors.primaryContainer, lineHeight: 1 }}>${total.toFixed(2)}</div></div>
-              <div style={{ fontSize: '9px', fontWeight: 'bold', color: `${colors.onSurfaceVariant}66`, letterSpacing: '1px' }}>Đã bao gồm tất cả thuế</div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <button onClick={handleConfirm} style={{ background: colors.primaryContainer, border: 'none', padding: '16px', borderRadius: '16px', color: 'white', fontWeight: 'bold', fontSize: '15px', letterSpacing: '1.5px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', cursor: 'pointer', boxShadow: '0 8px 30px rgba(229,9,20,0.4)' }}>
-                Xác nhận lựa chọn <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
-              </button>
-              <div style={{ fontSize: '9px', fontWeight: 'bold', textAlign: 'center', letterSpacing: '2px', color: `${colors.onSurfaceVariant}4d` }}>THANH TOÁN BẢO MẬT BỞI CINEMAPAY</div>
+              <p style={{ fontSize: 'clamp(11px, 3vw, 13px)', margin: 0 }}>Ghế sẽ được giữ trong <strong style={{ color: colors.primaryContainer }}>{formatTime(timeLeft)}</strong> phút. Vui lòng hoàn tất thanh toán trước khi hết thời gian.</p>
             </div>
           </div>
-        </aside>
+
+          {/* Cột phải - Tóm tắt đặt vé (hiển thị tiền đẹp hơn) */}
+          <aside style={{ width: '100%', maxWidth: '380px', flexShrink: 0, position: 'sticky', top: '32px' }}>
+            <div style={{ ...glassStyle, borderRadius: '24px', padding: 'clamp(20px, 4vw, 32px)', display: 'flex', flexDirection: 'column', gap: 'clamp(24px, 4vw, 32px)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <span className="material-symbols-outlined" style={{ color: colors.primaryContainer, fontSize: '24px', fontVariationSettings: "'FILL' 1" }}>shopping_cart</span>
+                  <h2 style={{ fontSize: 'clamp(18px, 4vw, 20px)', fontWeight: 'bold', margin: 0 }}>Tóm tắt đặt vé</h2>
+                </div>
+                <span style={{ background: 'rgba(229,9,20,0.2)', padding: '4px 12px', borderRadius: '40px', fontSize: '13px', fontWeight: 'bold', color: colors.primaryContainer }}>
+                  {ticketCount} ghế
+                </span>
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '16px', padding: 'clamp(16px, 3vw, 24px)', border: `1px solid ${colors.border}` }}>
+                <div style={{ fontSize: '11px', fontWeight: 'bold', color: colors.primaryContainer, letterSpacing: '1.5px', marginBottom: '12px' }}>GHẾ ĐÃ CHỌN</div>
+                <div style={{ maxHeight: '160px', overflowY: 'auto' }}>
+                  {previewSeats.length === 0 ? (
+                    <div style={{ color: `${colors.onSurfaceVariant}99`, fontSize: '13px' }}>Chưa có ghế nào</div>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                        {displayedSeats.map(seat => (
+                          <span key={seat} style={{ padding: '4px 8px', borderRadius: '999px', background: 'rgba(255,255,255,.08)', fontSize: '11px' }}>
+                            {seat}
+                          </span>
+                        ))}
+                      </div>
+                      {previewSeats.length > 6 && (
+                        <div style={{ color: colors.primary, fontSize: '12px', marginTop: '4px' }}>
+                          +{previewSeats.length - 6} ghế khác
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {hasTickets ? (
+                <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 'clamp(14px, 4vw, 16px)', color: `${colors.onSurfaceVariant}99` }}>
+                    <span>Tạm tính</span>
+                    <span style={{ color: colors.onSurface, fontWeight: 600 }}>{formatVND(subtotal)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 'clamp(14px, 4vw, 16px)', color: `${colors.onSurfaceVariant}99`, borderBottom: `1px solid ${colors.border}`, paddingBottom: '16px' }}>
+                    <span>Phí đặt vé</span>
+                    <span style={{ color: colors.onSurface, fontWeight: 600 }}>{formatVND(BOOKING_FEE)}</span>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ padding: '16px', textAlign: 'center', color: `${colors.onSurfaceVariant}66`, fontSize: '13px' }}>
+                  Vui lòng chọn ghế để xem chi tiết giá
+                </div>
+              )}
+
+              <div style={{ background: 'rgba(234,179,8,0.05)', border: '1px solid rgba(234,179,8,0.2)', borderRadius: '12px', padding: '16px', display: 'flex', gap: '16px', cursor: 'pointer', flexWrap: 'wrap' }}>
+                <span className="material-symbols-outlined" style={{ color: '#eab308', fontVariationSettings: "'FILL' 1" }}>stars</span>
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#eab308', letterSpacing: '1px' }}>CÓ THỂ NÂNG CẤP LÊN GHẾ VIP</div>
+                  <p style={{ fontSize: 'clamp(11px, 3vw, 13px)', margin: 0, color: 'rgba(255,255,255,0.8)' }}>Thêm bắp rang và nước ngọt với giá <strong style={{ color: '#eab308' }}>{formatVND(85000)}</strong></p>
+                </div>
+              </div>
+
+              <button onClick={handleFoodDrink} style={{ ...glassStyle, padding: '14px 16px', borderRadius: '16px', color: colors.onSurface, fontWeight: 'bold', letterSpacing: '1px', cursor: 'pointer', fontSize: '14px' }}>
+                🍿 CHỌN COMBO & ĐỒ ĂN
+              </button>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderTop: `1px solid ${colors.border}`, paddingTop: '24px', flexWrap: 'wrap', gap: '12px' }}>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: `${colors.onSurfaceVariant}80`, letterSpacing: '1px' }}>Tổng tiền</div>
+                  <div style={{ fontSize: 'clamp(32px, 8vw, 48px)', fontWeight: '900', color: colors.primaryContainer, lineHeight: 1.2 }}>
+                    {formatVND(total)}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <button
+                  onClick={handleConfirm}
+                  disabled={!hasTickets}
+                  style={{
+                    background: hasTickets ? colors.primaryContainer : 'rgba(255,255,255,0.2)',
+                    border: 'none',
+                    padding: '16px',
+                    borderRadius: '16px',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontSize: '15px',
+                    letterSpacing: '1.5px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '12px',
+                    cursor: hasTickets ? 'pointer' : 'not-allowed',
+                    boxShadow: hasTickets ? '0 8px 30px rgba(229,9,20,0.4)' : 'none',
+                    opacity: hasTickets ? 1 : 0.5,
+                  }}
+                >
+                  Xác nhận lựa chọn <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
+                </button>
+                <div style={{ fontSize: '9px', fontWeight: 'bold', textAlign: 'center', letterSpacing: '2px', color: `${colors.onSurfaceVariant}4d` }}>THANH TOÁN BẢO MẬT BỞI CINEMAPAY</div>
+              </div>
+            </div>
+          </aside>
+        </div>
       </main>
 
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.03)', padding: '40px 20px', textAlign: 'center', marginTop: '48px' }}>
+      <footer style={{ borderTop: `1px solid ${colors.border}`, padding: '40px 20px', textAlign: 'center', marginTop: '48px' }}>
         <div style={{ fontSize: '11px', color: `${colors.onSurfaceVariant}4d`, letterSpacing: '1px' }}>© 2024 KSTAR Cinema. Bảo lưu mọi quyền.</div>
       </footer>
 
       <style>{`
-        .material-symbols-outlined {
-          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        button { transition: all 0.2s; }
+        button:hover:not(:disabled) { transform: scale(1.02); }
+        button:active:not(:disabled) { transform: scale(0.98); }
+        @media (max-width: 1200px) {
+          .two-column-layout { flex-direction: column !important; align-items: center !important; }
+          .two-column-layout aside { width: 100% !important; max-width: 500px !important; position: static !important; margin-top: 32px; }
         }
-        button {
-          transition: all 0.2s;
-        }
-        button:hover:not(:disabled) {
-          transform: scale(1.05);
-        }
-        button:active:not(:disabled) {
-          transform: scale(0.95);
-        }
+        div::-webkit-scrollbar { width: 4px; }
+        div::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
+        div::-webkit-scrollbar-thumb { background: rgba(229,9,20,0.5); border-radius: 4px; }
       `}</style>
     </div>
   );
