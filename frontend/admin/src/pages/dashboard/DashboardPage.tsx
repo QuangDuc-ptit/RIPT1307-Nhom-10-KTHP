@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Row, Col, Card, Typography, Space, Tag, Table, Progress, Button, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { 
-  DollarOutlined, 
+  MoneyCollectOutlined, // 🇻🇳 Đổi từ DollarOutlined sang MoneyCollectOutlined cho phù hợp với VND
   TagsOutlined, 
   UserOutlined, 
   DashboardOutlined, 
@@ -15,6 +15,14 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const { Title, Text } = Typography;
+
+// 💡 Hàm tiện ích giúp tự động định dạng số thành tiền VND (Ví dụ: 100000 -> 100.000 ₫)
+const formatVND = (value: number | string | undefined) => {
+  if (value === undefined || value === null || value === '') return '-- đ';
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(num)) return value; // Nếu là chuỗi không phải số thì giữ nguyên
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
+};
 
 // --- DỮ LIỆU GIẢ CHO BIỂU ĐỒ ---
 const chartData7Days = [
@@ -58,18 +66,24 @@ export default function DashboardPage() {
   
   const bookingColumns = [
     {
+      key: 'user',
       title: 'KHÁCH HÀNG',
       dataIndex: 'user',
-      key: 'user',
       render: (user: string) => <Text style={{ fontWeight: 500 }}>{user || '--'}</Text>
     },
-    { title: 'PHIM', dataIndex: 'movie', key: 'movie', render: (text: string) => text || '--' },
-    { title: 'PHÒNG', dataIndex: 'theater', key: 'theater', render: (text: string) => text || '--' },
-    { title: 'SỐ TIỀN', dataIndex: 'amount', key: 'amount', render: (text: string) => text || '--' },
+    { key: 'movie', title: 'PHIM', dataIndex: 'movie', render: (text: string) => text || '--' },
+    { key: 'theater', title: 'PHÒNG', dataIndex: 'theater', render: (text: string) => text || '--' },
+    { 
+      key: 'amount', 
+      title: 'SỐ TIỀN', 
+      dataIndex: 'amount', 
+      // 🇻🇳 Tự động format tiền cột "Số tiền" trong bảng lịch sử giao dịch
+      render: (amount: number | string) => <Text strong>{formatVND(amount)}</Text> 
+    },
     {
+      key: 'status',
       title: 'TRẠNG THÁI',
       dataIndex: 'status',
-      key: 'status',
       render: (status: string) => (
         <Tag color={status === 'Completed' ? 'green' : 'orange'}>
           {status === 'Completed' ? 'Thành công' : 'Chờ xử lý'}
@@ -92,9 +106,11 @@ export default function DashboardPage() {
             <Space direction="vertical" style={{ width: '100%' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Text type="secondary" strong>TỔNG DOANH THU</Text>
-                <DollarOutlined style={{ color: '#3b82f6', fontSize: 20 }} />
+                {/* Đổi màu sắc và icon ví/tiền tại đây */}
+                <MoneyCollectOutlined style={{ color: '#10b981', fontSize: 20 }} />
               </div>
-              <Title level={3} style={{ margin: 0, fontWeight: 700 }}>--</Title>
+              {/* Thay đổi hiển thị mặc định khi chưa có data sang đơn vị VND */}
+              <Title level={3} style={{ margin: 0, fontWeight: 700 }}>-- đ</Title>
               <Tag color="green"><ArrowUpOutlined /> --%</Tag>
             </Space>
           </Card>
@@ -116,7 +132,7 @@ export default function DashboardPage() {
             <Space direction="vertical" style={{ width: '100%' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Text type="secondary" strong>NGƯỜI DÙNG MỚI</Text>
-                <UserOutlined style={{ color: '#10b981', fontSize: 20 }} />
+                <UserOutlined style={{ color: '#3b82f6', fontSize: 20 }} />
               </div>
               <Title level={3} style={{ margin: 0, fontWeight: 700 }}>--</Title>
               <Tag color="red"><ArrowDownOutlined /> --%</Tag>
@@ -155,16 +171,17 @@ export default function DashboardPage() {
                 <LineChart data={currentChartData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                  <YAxis axisLine={false} tickLine={false} />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                  {/* Trục Y tự động format thêm chữ đ phía sau số trục tọa độ */}
+                  <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => value === 0 ? '0' : `${value.toLocaleString('vi-VN')}đ`} />
+                  {/* Tooltip khi hover vào biểu đồ cũng sẽ hiển thị chuẩn VND */}
+                  <Tooltip formatter={(value) => [formatVND(value as number), 'Doanh thu']} />
+                  <Line type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </Card>
         </Col>
 
-        {/* Top Phim ăn khách nhất - Đã thêm phim thứ 4 */}
         <Col xs={24} lg={8}>
           <Card 
             title={<Text strong>Phim ăn khách nhất</Text>} 
@@ -193,7 +210,6 @@ export default function DashboardPage() {
                 </div>
                 <Progress percent={0} showInfo={false} strokeColor="#10b981" />
               </div>
-              {/* PHIM THỨ 4 MỚI THÊM */}
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                   <Text strong>--</Text>

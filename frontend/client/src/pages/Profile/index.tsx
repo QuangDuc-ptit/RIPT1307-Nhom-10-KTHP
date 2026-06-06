@@ -1,36 +1,50 @@
 import React, { useState } from 'react';
 import { Avatar, Button } from 'antd';
 import { SafetyCertificateFilled, BellOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-// Import các component và Type vừa tạo
+
+// Import các component và Type
 import ProfileSidebar from './components/ProfileSidebar';
 import AccountForm from './components/AccountForm';
 import { UserProfile } from './typing';
 
+// Import useAuthStore để lấy dữ liệu user thật
+import { useAuthStore } from '@/store/auth'; 
+
 const ProfilePage: React.FC = () => {
-  // 1. Áp dụng Hook useState (Đúng chuẩn Sơ đồ tư duy)
   const [activeMenu, setActiveMenu] = useState<string>('hoso');
 
-  // 2. Dữ liệu mock (Sau này sẽ dùng useModel lấy từ API ở đây)
-  const mockUser: UserProfile = {
-    firstName: 'Karlis',
-    lastName: 'Pham',
-    email: 'karlispham021@example.com',
-    bio: 'Là một khách hàng kim cương.',
-    joinDate: 'tháng 10/2023',
-    rank: 'Khách hàng kim cương',
-    isVerified: true
-  };
+  // Ép kiểu any để bypass lỗi TypeScript
+  const authUser: any = useAuthStore((state: any) => state.user);
+
+  // Chuyển đổi dữ liệu, fallback về string trống hoặc giá trị mặc định nếu API không trả về
+  const currentUser: UserProfile | null = authUser ? {
+    firstName: authUser.firstName || authUser.name || 'Người',
+    lastName: authUser.lastName || 'Dùng',
+    email: authUser.email || '',
+    bio: authUser.bio || 'Chưa có thông tin giới thiệu.',
+    joinDate: authUser.createdAt ? new Date(authUser.createdAt).toLocaleDateString('vi-VN') : 'Gần đây',
+    rank: authUser.rank || 'Khách hàng',
+    isVerified: authUser.isVerified || false
+  } : null;
 
   const colors = { bgApp: '#151113', border: '#3b2a31', primary: '#e42755', textMain: '#ffffff', textDim: '#a3989c' };
+
+  if (!currentUser) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: colors.bgApp, color: colors.textMain, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        Đang tải thông tin...
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: colors.bgApp, color: colors.textMain }}>
       
-      {/* CỘT TRÁI: Import Component Sidebar */}
+      {/* CỘT TRÁI: Truyền dữ liệu thật xuống Sidebar */}
       <ProfileSidebar 
         activeMenu={activeMenu} 
         setActiveMenu={setActiveMenu} 
-        user={mockUser} 
+        user={currentUser} 
       />
 
       {/* CỘT PHẢI: Nội dung chính */}
@@ -45,14 +59,16 @@ const ProfilePage: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <Button shape="circle" icon={<BellOutlined />} style={{ backgroundColor: 'transparent', borderColor: colors.border, color: colors.textDim }} />
             <Button shape="circle" icon={<QuestionCircleOutlined />} style={{ backgroundColor: 'transparent', borderColor: colors.border, color: colors.textDim }} />
-            <Avatar style={{ backgroundColor: '#f0d9c4', cursor: 'pointer' }}>K</Avatar>
+            <Avatar style={{ backgroundColor: '#fcdfd5', color: colors.primary, fontWeight: 'bold', cursor: 'pointer' }}>
+              {currentUser.firstName.charAt(0).toUpperCase()}
+            </Avatar>
           </div>
         </div>
 
-        {/* Khu vực hiển thị Form dựa trên activeMenu */}
+        {/* Khu vực hiển thị Form */}
         <div style={{ padding: '40px', overflowY: 'auto', flex: 1, display: 'flex', justifyContent: 'center' }}>
           {activeMenu === 'hoso' || activeMenu === 'taikhoan' ? (
-            <AccountForm user={mockUser} />
+            <AccountForm user={currentUser} />
           ) : (
             <div style={{ color: colors.textDim, marginTop: '50px' }}>Tính năng đang được phát triển...</div>
           )}
