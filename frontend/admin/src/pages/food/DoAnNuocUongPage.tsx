@@ -14,15 +14,15 @@ interface FoodBeverageItem {
 }
 
 const INITIAL_DATA: FoodBeverageItem[] = [
-  { id: '1', name: 'Bắp rang bơ vị truyền thống (S)', category: 'popcorn', price: 4.5, status: 'available', image: '' },
-  { id: '2', name: 'Bắp rang bơ vị phô mai (L)', category: 'popcorn', price: 6.5, status: 'available', image: '' },
-  { id: '3', name: 'Pepsi Lon 330ml', category: 'drinks', price: 3.0, status: 'available', image: '' },
-  { id: '4', name: 'Nước suối Aquafina 500ml', category: 'drinks', price: 2.0, status: 'available', image: '' },
-  { id: '5', name: 'Combo Couple (1 Bắp L + 2 Nước L)', category: 'combos', price: 11.5, status: 'available', image: '' },
+  { id: '1', name: 'Bắp rang bơ vị truyền thống (S)', category: 'popcorn', price: 45000, status: 'available', image: '' },
+  { id: '2', name: 'Bắp rang bơ vị phô mai (L)', category: 'popcorn', price: 65000, status: 'available', image: '' },
+  { id: '3', name: 'Pepsi Lon 330ml', category: 'drinks', price: 30000, status: 'available', image: '' },
+  { id: '4', name: 'Nước suối Aquafina 500ml', category: 'drinks', price: 20000, status: 'available', image: '' },
+  { id: '5', name: 'Combo Couple (1 Bắp L + 2 Nước L)', category: 'combos', price: 115000, status: 'available', image: '' },
 ];
 
 export default function DoAnNuocUongPage() {
-  // Đọc dữ liệu và TỰ ĐỘNG CHUYỂN ĐỔI TOÀN BỘ danh mục cũ sang mới vĩnh viễn
+  // Đọc dữ liệu và TỰ ĐỘNG CHUYỂN ĐỔI TOÀN BỘ danh mục và giá tiền cũ sang mới vĩnh viễn
   const [fbList, setFbList] = useState<FoodBeverageItem[]>(() => {
     const savedData = localStorage.getItem('global_fb_list');
     if (savedData) {
@@ -32,8 +32,15 @@ export default function DoAnNuocUongPage() {
           let cat = item.category;
           if (cat === 'food') cat = 'popcorn';
           if (cat === 'drink') cat = 'drinks';
-          if (cat === 'combo') cat = 'combos'; // Sửa sót ở đây
-          return { ...item, category: cat };
+          if (cat === 'combo') cat = 'combos'; 
+          
+          let p = item.price;
+          // Tự động scale giá cũ (USD) lên VNĐ nếu thấy giá đang quá nhỏ (ví dụ: 4.5 -> 45000)
+          if (p && p < 1000) {
+            p = p * 10000;
+          }
+
+          return { ...item, category: cat, price: p };
         });
         // Lưu đè lại vào localStorage để đồng bộ hoàn toàn
         localStorage.setItem('global_fb_list', JSON.stringify(migrated));
@@ -153,7 +160,7 @@ export default function DoAnNuocUongPage() {
       width: 160,
       render: (price: number) => (
         <span style={{ fontWeight: 700, color: '#0f172a' }}>
-          {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price)}
+          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)}
         </span>
       ),
     },
@@ -265,14 +272,15 @@ export default function DoAnNuocUongPage() {
               </Select>
             </Form.Item>
 
-            <Form.Item name="price" label="Giá bán ($)" rules={[{ required: true, message: 'Vui lòng nhập giá bán!' }]}>
+            <Form.Item name="price" label="Giá bán (VNĐ)" rules={[{ required: true, message: 'Vui lòng nhập giá bán!' }]}>
               <InputNumber 
                 min={0} 
-                step={0.5} 
+                step={5000} 
                 style={{ width: '100%' }} 
-                formatter={(val) => `$ ${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(val: string | undefined) => (val ? val.replace(/\$\s?|(,*)/g, '') : '') as any}
-                placeholder="Ví dụ: 5.00"
+                formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                parser={(val) => val ? String(val).replace(/[^\d]/g, '') : '' as any}
+                placeholder="Ví dụ: 50000"
+                addonAfter="đ"
               />
             </Form.Item>
           </div>

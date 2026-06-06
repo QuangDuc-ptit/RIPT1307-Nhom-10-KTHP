@@ -5,8 +5,7 @@ import {
   CalendarOutlined,       // Lịch chiếu
   CoffeeOutlined,         // Đồ ăn và nước uống
   PercentageOutlined,     // Khuyến mãi
-  BarChartOutlined,       // Báo cáo
-  SettingOutlined,        // Cài đặt
+  SettingOutlined,        // Cài đặt (Đã xóa BarChartOutlined tại đây)
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
@@ -30,7 +29,7 @@ export const adminMenu: AdminMenuItem[] = [
   },
   {
     key: '/content',
-    label: <Link to='/content'>Quản lý rạp</Link>, // Đã đổi tên danh mục theo yêu cầu của bạn
+    label: <Link to='/content'>Quản lý rạp</Link>,
     icon: <VideoCameraOutlined />,
   },
   {
@@ -47,11 +46,6 @@ export const adminMenu: AdminMenuItem[] = [
     key: '/promotions',
     label: <Link to='/promotions'>Khuyến mãi</Link>,
     icon: <PercentageOutlined />,
-  },
-  {
-    key: '/reports',
-    label: <Link to='/reports'>Báo cáo</Link>,
-    icon: <BarChartOutlined />,
   },
   {
     key: '/settings',
