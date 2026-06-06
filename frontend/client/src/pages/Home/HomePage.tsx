@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { env } from '@/config/env';
+import { getNowShowingMovies, getComingSoonMovies } from '@/api/movies';
 import './HomePage.css';
 import {
   Layout,
@@ -19,6 +19,7 @@ import {
   Form,
   Menu,
   Card,
+  Carousel, // 🟢 Đã tích hợp Carousel từ Ant Design
 } from 'antd';
 import {
   SearchOutlined,
@@ -38,35 +39,6 @@ const { Header, Footer, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 
-interface Movie {
-  id: number;
-  title: string;
-  genre: string;
-  duration: string;
-  rating: number;
-  poster: string;
-}
-
-const nowShowingMovies: Movie[] = [
-  { id: 1, title: 'Hành Tinh Của Những Vị Thần', genre: 'Hành động, Viễn tưởng', duration: '124 phút', rating: 8.9, poster: 'poster1.png' },
-  { id: 2, title: 'Vùng Đất Vô Định', genre: 'Phiêu lưu, Tâm lý', duration: '142 phút', rating: 9.2, poster: 'poster2.png' },
-  { id: 3, title: 'Kỹ Nguyên Robot', genre: 'Hành động, Khoa học', duration: '115 phút', rating: 8.5, poster: 'poster3.png' },
-  { id: 4, title: 'Bản Giao Hưởng Cuối Cùng', genre: 'Âm nhạc, Lãng mạn', duration: '130 phút', rating: 8.7, poster: 'poster4.png' },
-  { id: 5, title: 'Tiếng Gọi Trong Đêm', genre: 'Kinh dị, Giật gân', duration: '108 phút', rating: 8.2, poster: 'poster5.png' },
-  { id: 6, title: 'Chiến Binh Ánh Sáng', genre: 'Hành động, Kỳ ảo', duration: '135 phút', rating: 9.0, poster: 'poster6.png' },
-  { id: 7, title: 'Thành Phố Ngầm', genre: 'Viễn tưởng, Bí ẩn', duration: '112 phút', rating: 8.4, poster: 'poster7.png' },
-  { id: 8, title: 'Mật Mã Cuối Cùng', genre: 'Giật gân, Tội phạm', duration: '128 phút', rating: 8.8, poster: 'poster8.png' },
-  { id: 9, title: 'Vũ Điệu Hoang Dã', genre: 'Hoạt hình, Gia đình', duration: '95 phút', rating: 8.1, poster: 'poster9.png' },
-  { id: 10, title: 'Siêu Anh Hùng: Trỗi Dậy', genre: 'Hành động, Phiêu lưu', duration: '148 phút', rating: 9.5, poster: 'poster10.png' },
-];
-
-const comingSoonMovies = [
-  { id: 1, title: 'Vệ Binh Dải Ngân Hà 4', date: '15 / 04', desc: 'Đội ngũ anh hùng quen thuộc trở lại với sứ mệnh bảo vệ vũ trụ khỏi một thực thể cổ xưa...', image: 'coming1.png' },
-  { id: 2, title: 'Trí Tuệ Nhân Tạo', date: '22 / 04', desc: 'Khi AI vượt qua sự kiểm soát của con người, ranh giới giữa sự sống và máy móc trở nên mờ nhạt.', image: 'coming2.png' },
-  { id: 3, title: 'Ảo Ảnh Đỏ', date: '01 / 05', desc: 'Một bộ phim tâm lý ly kỳ đưa khán giả vào những góc tối nhất của tâm trí con người.', image: 'coming3.png' },
-  { id: 4, title: 'Ngôi Đền Cổ', date: '12 / 05', desc: 'Hành trình tìm kiếm kho báu mất tích dẫn đến những bí mật kinh hoàng của một nền văn minh đã quên.', image: 'coming4.png' },
-];
-
 const footerCustomerLinks = ['FAQs', 'Terms of Service', 'Privacy Policy', 'Contact Us'];
 const footerAboutLinks = ['About Us', 'Careers', 'Membership', 'Cinemas'];
 
@@ -83,10 +55,16 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   const headerRef = useRef<HTMLElement>(null);
-  const heroContentRef = useRef<HTMLDivElement>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
   const prevBtnRef = useRef<HTMLButtonElement>(null);
   const nextBtnRef = useRef<HTMLButtonElement>(null);
+
+  // LẤY DỮ LIỆU TỪ KHO API TỔNG
+  const nowShowingMovies = getNowShowingMovies();
+  const comingSoonMovies = getComingSoonMovies();
+
+  // State quản lý Chọn phim ở khối "Mua vé nhanh"
+  const [quickBookMovieId, setQuickBookMovieId] = useState<number>(nowShowingMovies[0]?.id || 1);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -96,18 +74,6 @@ export default function HomePage() {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (heroContentRef.current) {
-        const xAxis = (window.innerWidth / 2 - e.pageX) / 50;
-        const yAxis = (window.innerHeight / 2 - e.pageY) / 50;
-        heroContentRef.current.style.transform = `translate(${xAxis}px, ${yAxis}px)`;
-      }
-    };
-    document.addEventListener('mousemove', handleMouseMove);
-    return () => document.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   useEffect(() => {
@@ -153,10 +119,13 @@ export default function HomePage() {
     </Col>
   );
 
-  // Hàm xử lý đặt vé: chuyển đến trang chi tiết phim
+  // Hàm xử lý đặt vé
   const handleBookMovie = (movieId: number) => {
     navigate(`/movie/${movieId}`);
   };
+
+  // Lấy ra tối đa 5 bộ phim HOT nhất đang chiếu để hiển thị trên Banner lướt
+  const heroMovies = nowShowingMovies.slice(0, 5);
 
   return (
     <Layout style={{ background: colors.surface, minHeight: '100vh' }}>
@@ -175,7 +144,7 @@ export default function HomePage() {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1280, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 48 }}>
-            <Title level={3} style={{ margin: 0, color: colors.primary, fontWeight: 800, letterSpacing: '-0.02em', fontSize: '28px', textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+            <Title level={3} style={{ margin: 0, color: colors.primary, fontWeight: 800, letterSpacing: '-0.02em', fontSize: '28px', textShadow: '0 2px 10px rgba(0,0,0,0.3)', cursor: 'pointer' }} onClick={() => navigate('/')}>
               KSTAR
             </Title>
             <Menu mode="horizontal" selectedKeys={['movies']} style={{ background: 'transparent', border: 'none', minWidth: 360, lineHeight: 'normal' }} items={menuItems} />
@@ -198,39 +167,55 @@ export default function HomePage() {
         </div>
       </Header>
 
-      {/* Hero Section */}
-      <div style={{ position: 'relative', height: '100vh', width: '100%', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://lh3.googleusercontent.com/aida-public/AB6AXuBlCtflLWk3fLSCug8wAaXWQUoiJ4Lk1o7gXal4ssufHcNJ1Y0AHpB-csPZpxgnIyGvhQUbTX6qQ44onQPqZHg4bKR0k6V7hmbgJoOAJvKXPOjE6o0vyyjEZrS0SFHWCN7WNbs6XRtDcniEKQkoIQQom6fLjhIrE8FbHy3hdNqLC3BpwFaGh-CNFhmM20wtqXDbm_Hkxt_mZ34HGdvG36-UPI2Iti2rMwWzrwC66YmwHpHZIOlv7Wv6GpnG3v4R84JLhIO3InBRRXg)', backgroundSize: 'cover', backgroundPosition: 'center', transform: 'scale(1.02)', transition: 'transform 10s ease-out' }} />
-        <div className="hero-gradient" style={{ position: 'absolute', inset: 0, zIndex: 1 }} />
-        
-        <div ref={heroContentRef} style={{ position: 'relative', zIndex: 2, maxWidth: 1280, margin: '0 auto', padding: '0 48px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 100, transition: 'transform 0.3s ease-out' }}>
-          <div style={{ maxWidth: 620 }}>
-            <div style={{ display: 'inline-block', background: colors.primaryRed, color: 'white', padding: '6px 20px', borderRadius: 40, fontSize: 13, fontWeight: 700, marginBottom: 24, letterSpacing: '1px', boxShadow: '0 4px 15px rgba(229, 9, 20, 0.4)' }}>
-              NOW SHOWING
+      {/* 🚀 LƯỚT HERO SECTION (Carousel tự động chuyển phim) */}
+      <div className="hero-carousel-wrapper" style={{ position: 'relative', width: '100%', height: '100vh' }}>
+        <Carousel autoplay effect="fade" autoplaySpeed={5000} className="hero-carousel">
+          {heroMovies.map((movie) => (
+            <div key={movie.id}>
+              <div style={{ position: 'relative', height: '100vh', width: '100%', overflow: 'hidden' }}>
+                {/* Background Image của từng phim */}
+                <div style={{ 
+                  position: 'absolute', inset: 0, 
+                  backgroundImage: `url(${movie.poster?.includes('/') ? movie.poster : `/movies/${movie.poster}`})`, 
+                  backgroundSize: 'cover', backgroundPosition: 'center', transform: 'scale(1.02)'
+                }} />
+                
+                {/* Lớp phủ mờ Gradient để dễ đọc chữ */}
+                <div className="hero-gradient" style={{ position: 'absolute', inset: 0, zIndex: 1, background: 'linear-gradient(to top, #200e0c 0%, rgba(32,14,12,0.6) 50%, rgba(0,0,0,0.2) 100%)' }} />
+                
+                {/* Nội dung chữ của phim */}
+                <div style={{ position: 'relative', zIndex: 2, maxWidth: 1280, margin: '0 auto', padding: '0 48px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 140 }}>
+                  <div style={{ maxWidth: 620 }}>
+                    <div style={{ display: 'inline-block', background: colors.primaryRed, color: 'white', padding: '6px 20px', borderRadius: 40, fontSize: 13, fontWeight: 700, marginBottom: 24, letterSpacing: '1px', boxShadow: '0 4px 15px rgba(229, 9, 20, 0.4)' }}>
+                      NOW SHOWING
+                    </div>
+                    <Title level={1} style={{ color: 'white', fontSize: 72, margin: 0, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.1, textShadow: '0 8px 30px rgba(0,0,0,0.6)', textTransform: 'uppercase' }}>
+                      {movie.title}
+                    </Title>
+                    <Paragraph style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: 18, marginTop: 24, lineHeight: 1.6, maxWidth: '90%', textShadow: '0 2px 10px rgba(0,0,0,0.5)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {movie.description || movie.tagline || 'Đang gây bão tại các rạp chiếu trên toàn quốc. Đặt vé ngay hôm nay để không bỏ lỡ!'}
+                    </Paragraph>
+                    
+                    <Space size="middle" style={{ marginTop: 40 }}>
+                      <Button 
+                        type="primary" 
+                        size="large" 
+                        icon={<PlayCircleOutlined />} 
+                        style={{ background: colors.primaryRed, borderColor: colors.primaryRed, borderRadius: 48, fontWeight: 'bold', padding: '0 40px', height: 56, fontSize: '16px', boxShadow: '0 8px 25px rgba(229, 9, 20, 0.4)', transition: 'all 0.3s ease' }}
+                        onClick={() => handleBookMovie(movie.id)}
+                      >
+                        Đặt vé ngay
+                      </Button>
+                      <Button size="large" icon={<PlayCircleOutlined />} style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: 48, color: 'white', padding: '0 40px', height: 56, fontSize: '16px', boxShadow: '0 8px 25px rgba(0, 0, 0, 0.2)', transition: 'all 0.3s ease' }}>
+                        Xem Trailer
+                      </Button>
+                    </Space>
+                  </div>
+                </div>
+              </div>
             </div>
-            <Title level={1} style={{ color: 'white', fontSize: 72, margin: 0, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.1, textShadow: '0 8px 30px rgba(0,0,0,0.6)' }}>
-              DUNE: PART TWO
-            </Title>
-            <Paragraph style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: 18, marginTop: 24, lineHeight: 1.6, maxWidth: '90%', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
-              Hành trình sử thi tiếp theo của Paul Atreides khi anh hợp lực với Chani và người Fremen để trả thù những kẻ đã hủy hoại gia đình mình.
-            </Paragraph>
-            
-            <Space size="middle" style={{ marginTop: 40 }}>
-              <Button 
-                type="primary" 
-                size="large" 
-                icon={<PlayCircleOutlined />} 
-                style={{ background: colors.primaryRed, borderColor: colors.primaryRed, borderRadius: 48, fontWeight: 'bold', padding: '0 40px', height: 56, fontSize: '16px', boxShadow: '0 8px 25px rgba(229, 9, 20, 0.4)', transition: 'all 0.3s ease' }}
-                onClick={() => handleBookMovie(1)}  // Dune: Part Two có id = 1 (giả định)
-              >
-                Đặt vé
-              </Button>
-              <Button size="large" icon={<PlayCircleOutlined />} style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: 48, color: 'white', padding: '0 40px', height: 56, fontSize: '16px', boxShadow: '0 8px 25px rgba(0, 0, 0, 0.2)', transition: 'all 0.3s ease' }}>
-                Xem Trailer
-              </Button>
-            </Space>
-          </div>
-        </div>
+          ))}
+        </Carousel>
       </div>
 
       {/* Quick Booking Bar */}
@@ -238,10 +223,10 @@ export default function HomePage() {
         <Card className="glass-card" style={{ padding: 20, borderRadius: 24 }} bordered={false}>
           <Row gutter={[24, 16]} align="bottom">
             {renderBookingField('Chọn Phim', (
-              <Select className="quick-book-input" placeholder="Chọn phim" defaultValue="dune">
-                <Option value="dune">Dune: Part Two</Option>
-                <Option value="godzilla">Godzilla x Kong</Option>
-                <Option value="kungfu">Kung Fu Panda 4</Option>
+              <Select className="quick-book-input" placeholder="Chọn phim" defaultValue={nowShowingMovies[0]?.id} onChange={(val) => setQuickBookMovieId(val)}>
+                {nowShowingMovies.map(movie => (
+                  <Option key={movie.id} value={movie.id}>{movie.title}</Option>
+                ))}
               </Select>
             ))}
             {renderBookingField('Ngày Chiếu', (
@@ -259,7 +244,7 @@ export default function HomePage() {
                 type="primary" 
                 block 
                 style={{ background: colors.primaryRed, borderColor: colors.primaryRed, height: 48, fontWeight: 'bold', borderRadius: 40 }}
-                onClick={() => handleBookMovie(1)}  // Chuyển đến phim đang chọn (ví dụ Dune)
+                onClick={() => handleBookMovie(quickBookMovieId)}
               >
                 Mua vé nhanh
               </Button>
@@ -306,7 +291,7 @@ export default function HomePage() {
               <div key={movie.id} className="movie-card" style={{ flex: '0 0 auto', width: 'calc(20% - 22.4px)', minWidth: 220 }}>
                 <div className="movie-card-inner">
                   <div className="movie-poster-wrapper">
-                    <img src={`/movies/${movie.poster}`} alt={movie.title} className="movie-poster-img" />
+                    <img src={movie.poster?.includes('/') ? movie.poster : `/movies/${movie.poster}`} alt={movie.title} className="movie-poster-img" />
                     
                     <div className="movie-rating">
                       <StarFilled style={{ color: '#fadb14', fontSize: 14, paddingBottom: 2 }} />
@@ -353,12 +338,12 @@ export default function HomePage() {
             <Col xs={24} sm={12} md={6} key={movie.id}>
               <div className="coming-card">
                 <div className="coming-img-wrapper">
-                  <img src={`/banners/${movie.image}`} alt={movie.title} className="coming-img" />
+                  <img src={movie.poster?.includes('/') ? movie.poster : `/banners/${movie.poster}`} alt={movie.title} className="coming-img" />
                   <div className="coming-date">{movie.date}</div>
                 </div>
                 <div className="coming-content">
                   <h4 className="coming-title">{movie.title}</h4>
-                  <p className="coming-desc">{movie.desc}</p>
+                  <p className="coming-desc">{movie.description}</p>
                   <div className="coming-link" onClick={() => handleBookMovie(movie.id)}>
                     Thông tin chi tiết <ArrowRightOutlined />
                   </div>

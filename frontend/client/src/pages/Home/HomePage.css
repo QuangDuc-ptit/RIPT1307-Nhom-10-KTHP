@@ -183,3 +183,56 @@
 .movie-card:hover .movie-poster-img { 
   transform: scale(1.08); /* Phóng to nhẹ ảnh khi hover để tạo chiều sâu */
 }
+/* ==========================================================================
+   CUSTOM CAROUSEL HERO DOTS INDICATORS (KSTAR THEME)
+   ========================================================================== */
+
+/* Định vị vùng chứa cụm nút dots */
+.hero-carousel-wrapper .slick-dots {
+  position: absolute;
+  bottom: 85px; /* Khoảng cách từ cụm nút tới đáy màn hình (đặt ngay trên Quick Book Bar) */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 35;
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  gap: 12px; /* Khoảng cách giữa các chấm */
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Kiểu dáng chung mặc định cho các nút chấm tròn (Trạng thái ẩn - Inactive) */
+.hero-carousel-wrapper .slick-dots li {
+  width: 14px !important;
+  height: 14px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-carousel-wrapper .slick-dots li button {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50% !important;
+  background-color: #7b7573 !important; /* Màu xám đen sang trọng, tiệp với background */
+  opacity: 1 !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Kiểu dáng đặc biệt khi nút được Active (Đang xem phim đó) */
+.hero-carousel-wrapper .slick-dots li.slick-active {
+  width: 42px !important; /* Kéo dài nút ra thành hình Elip dẹt dài giống mẫu */
+}
+
+.hero-carousel-wrapper .slick-dots li.slick-active button {
+  border-radius: 20px !important; /* Tạo góc bo mềm mại dạng viên thuốc */
+  background-color: #E50914 !important; /* Đổi hẳn sang màu đỏ thương hiệu KSTAR */
+}
+
+/* Hiệu ứng tương tác nhẹ khi người dùng hover chuột qua các chấm xám */
+.hero-carousel-wrapper .slick-dots li:not(.slick-active):hover button {
+  background-color: #a8a2a0 !important;
+  transform: scale(1.1);
+}
