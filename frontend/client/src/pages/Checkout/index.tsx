@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Radio, message } from 'antd';
+import { bookingApi } from '@/api/booking';
 import {
   CloseOutlined,
   CreditCardOutlined,
@@ -115,12 +116,35 @@ const CheckoutPage: React.FC = () => {
     }
   };
 
-  const handleCheckout = () => {
-    message.loading({ content: 'Đang xử lý thanh toán bảo mật...', key: 'checkout' });
-    setTimeout(() => {
-      message.success({ content: 'Thanh toán thành công!', key: 'checkout', duration: 3 });
+  const handleCheckout = async () => {
+    message.loading({ content: 'Đang xử lý thanh toán và tạo đơn hàng...', key: 'checkout' });
+    try {
+      const showtimeId = bookingInfo?.showtimeId || bookingInfo?.showtime?.id;
+      if (!showtimeId) {
+        message.error({ content: 'Thiếu thông tin suất chiếu!', key: 'checkout' });
+        return;
+      }
+
+      const data = {
+        showtimeId,
+        showtimeSeatIds: selectedSeats.map(s => s.id),
+        foods: foodItems.map(f => ({ foodId: f.id, quantity: f.quantity }))
+      };
+
+      await bookingApi.createBooking(data);
+      
+      message.success({ content: 'Thanh toán thành công! Đơn hàng đã được ghi nhận.', key: 'checkout', duration: 3 });
+      
+      // Chuyển hướng về trang chủ hoặc trang lịch sử vé
       setTimeout(() => navigate('/'), 2000);
-    }, 2000);
+    } catch (error: any) {
+      console.error('Lỗi khi thanh toán:', error);
+      message.error({ 
+        content: error.response?.data?.message || 'Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại!', 
+        key: 'checkout', 
+        duration: 4 
+      });
+    }
   };
 
   // --- Style đồng bộ với FoodDrinkPage ---

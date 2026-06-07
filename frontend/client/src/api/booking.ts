@@ -60,5 +60,10 @@ export const bookingApi = {
   huyGhe: async (showtimeSeatId: string) => {
     const res = await apiClient.post('/dat-ve/huy-ghe', { showtimeSeatId });
     return res;
+  },
+
+  createBooking: async (data: { showtimeId: string, showtimeSeatIds: string[], foods: { foodId: string, quantity: number }[] }) => {
+    const res = await apiClient.post('/dat-ve/booking', data);
+    return res;
   }
 };
