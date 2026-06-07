@@ -66,12 +66,13 @@ const AppHeader: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) => 
                 ]
               }} 
               placement="bottomRight"
+              trigger={['click']}
             >
               <Avatar style={{ cursor: 'pointer', border: '2px solid #ff1e00' }} src={user?.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCs1hn6nDRgKqiNDwmEKBKHUjkw4Idae_YTNR6hF_Hz2VtFL1dIgaTw0lE_v6mBr2Wq-oIeiahjrVQ2KTCnAFu5Y_b9l05sZA4FA9bLEDBzoXl16aZiR40jis_t0XpX8E1tmlwUd3mtKTDYKIZPUnyeDaWbVV7K38FN1DvhkkOdhre-qNgWkobUaGgIss0U30Bs_XBVdfbtyY1qr7txJah7MnZNmhc9jJOS3u0cTYRTH9LdSeqwiXPnzbIpExYqscFtqVH6LPvFmhQ"} />
             </Dropdown>
           </>
         ) : (
-          <Button type="primary" danger onClick={onLoginClick}>Đăng nhập</Button>
+          <Button type="primary" style={{ background: '#E50914', border: 'none', borderRadius: 20, fontWeight: 'bold', padding: '0 24px', height: '38px' }} onClick={onLoginClick}>Đăng nhập</Button>
         )}
       </Space>
     </Header>
