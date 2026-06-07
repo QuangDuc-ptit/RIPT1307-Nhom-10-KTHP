@@ -12,6 +12,8 @@ const { Header, Footer, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 
+import AppHeader from '@/components/layout/Header';
+
 // Bảng màu Dark Mode đồng bộ toàn trang
 const colors = { surface: '#151113', primaryRed: '#E50914', onSurface: '#ffffff', onSurfaceVariant: '#a3989c', surfaceVariant: '#2d2025', primary: '#ff1e00', bgCard: '#1a1316' };
 
@@ -105,21 +107,7 @@ export default function HomePage() {
       <Helmet><title>KSTAR Cinema - Trang chủ</title></Helmet>
 
       {/* Header */}
-      <Header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(21, 17, 19, 0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', padding: '1rem 48px', height: 'auto', borderBottom: `1px solid ${colors.surfaceVariant}` }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1280, margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 48 }}>
-            <Title level={3} style={{ margin: 0, color: colors.primaryRed, cursor: 'pointer', fontWeight: 900 }} onClick={() => navigate('/')}>KSTAR</Title>
-            <Menu mode="horizontal" selectedKeys={['home']} style={{ background: 'transparent', border: 'none', minWidth: 360, color: 'white' }} items={[
-              { key: 'home', label: <span style={{ fontWeight: 'bold', color: 'white' }} onClick={() => navigate('/')}>Trang chủ</span> },
-              { key: 'movies', label: <span style={{ fontWeight: 'bold', color: 'white' }} onClick={() => navigate('/movies')}>Phim</span> },
-              { key: 'membership', label: <span style={{ fontWeight: 'bold', color: 'white' }}>Membership</span> }
-            ]} />
-          </div>
-          <Space size="large">
-            <Button type="primary" style={{ background: colors.primaryRed, border: 'none', borderRadius: 20, fontWeight: 'bold' }} onClick={() => navigate('/auth/login')}>Đăng nhập</Button>
-          </Space>
-        </div>
-      </Header>
+      <AppHeader onLoginClick={() => navigate('/auth/login')} />
 
       {/* Hero Section Động */}
       <div style={{ position: 'relative', height: '100vh', width: '100%', overflow: 'hidden', marginTop: '-80px' }}>

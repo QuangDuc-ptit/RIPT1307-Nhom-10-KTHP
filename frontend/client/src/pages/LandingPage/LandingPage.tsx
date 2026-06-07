@@ -15,6 +15,7 @@ import {
 } from '@ant-design/icons';
 // 🟢 IMPORT KHO DỮ LIỆU TỔNG
 import { fetchMovies, Movie } from '@/api/movies';
+import AppHeader from '@/components/layout/Header';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -111,72 +112,7 @@ const LandingPage = () => {
   return (
     <>
       {/* Header */}
-      <Header
-        style={{
-          position: 'sticky', top: 0, zIndex: 1000,
-          background: 'rgba(24, 10, 8, 0.75)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
-          padding: '1rem 48px', height: 'auto', lineHeight: 'normal', transition: 'all 0.3s ease',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1280, margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 48 }}>
-            <Title level={3} onClick={() => scrollToSection("home")} style={{ margin: 0, color: footerStyles.primary, fontWeight: 800, letterSpacing: '-0.02em', fontSize: '28px', textShadow: '0 2px 10px rgba(0,0,0,0.3)', cursor: 'pointer' }}>
-              KSTAR
-            </Title>
-            <Menu mode="horizontal" selectedKeys={['home']} style={{ background: 'transparent', border: 'none', minWidth: 360, lineHeight: 'normal' }} items={menuItems} />
-          </div>
-          
-          <Space size="large">
-            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: 40, padding: '6px 20px', width: 260, boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.2)', transition: 'all 0.3s ease' }}>
-              <SearchOutlined style={{ color: footerStyles.onSurfaceVariant, fontSize: 18 }} />
-              <Input placeholder="Tìm phim..." bordered={false} style={{ background: 'transparent', color: footerStyles.onSurface, marginLeft: 8 }} />
-            </div>
-            
-            {isLoggedIn ? (
-              <>
-                <Badge dot offset={[2, 0]}>
-                  <BellOutlined style={{ fontSize: 22, color: footerStyles.onSurfaceVariant, cursor: 'pointer', transition: 'transform 0.3s ease' }} />
-                </Badge>
-                <Avatar 
-                  src={user?.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCs1hn6nDRgKqiNDwmEKBKHUjkw4Idae_YTNR6hF_Hz2VtFL1dIgaTw0lE_v6mBr2Wq-oIeiahjrVQ2KTCnAFu5Y_b9l05sZA4FA9bLEDBzoXl16aZiR40jis_t0XpX8E1tmlwUd3mtKTDYKIZPUnyeDaWbVV7K38FN1DvhkkOdhre-qNgWkobUaGgIss0U30Bs_XBVdfbtyY1qr7txJah7MnZNmhc9jJOS3u0cTYRTH9LdSeqwiXPnzbIpExYqscFtqVH6LPvFmhQ"} 
-                  style={{ border: `2px solid ${footerStyles.primaryRed}`, cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.4)', transition: 'transform 0.3s ease' }} 
-                  onClick={() => navigate('/profile')}
-                />
-              </>
-            ) : (
-              <button
-                onClick={() => navigate('/auth/login')}
-                style={{
-                  background: 'linear-gradient(135deg, #E50914 0%, #b2070f 100%)',
-                  border: 'none',
-                  color: 'white',
-                  fontWeight: 600,
-                  fontSize: '0.95rem',
-                  padding: '8px 24px',
-                  borderRadius: '40px',
-                  cursor: 'pointer',
-                  transition: 'all 0.25s ease',
-                  boxShadow: '0 4px 12px rgba(229, 9, 20, 0.3)',
-                  letterSpacing: '0.5px'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(135deg, #ff1e2e 0%, #d40a14 100%)';
-                  e.currentTarget.style.transform = 'scale(1.02)';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(229, 9, 20, 0.5)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(135deg, #E50914 0%, #b2070f 100%)';
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(229, 9, 20, 0.3)';
-                }}
-              >
-                Đăng nhập
-              </button>
-            )}
-          </Space>
-        </div>
-      </Header>
+      <AppHeader onLoginClick={() => navigate('/auth/login')} />
 
       <div className="cinema-marquee">
         <div className="cinema-track">
