@@ -1,115 +1,47 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { env } from '@/config/env';
 import './HomePage.css';
-import {
-  Layout,
-  Button,
-  Input,
-  Select,
-  DatePicker,
-  Row,
-  Col,
-  Badge,
-  Avatar,
-  Space,
-  Typography,
-  Divider,
-  Form,
-  Menu,
-  Card,
-} from 'antd';
-import {
-  SearchOutlined,
-  BellOutlined,
-  StarFilled,
-  PlayCircleOutlined,
-  LeftOutlined,
-  RightOutlined,
-  GlobalOutlined,
-  VideoCameraOutlined,
-  ShareAltOutlined,
-  ArrowRightOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons';
+import { Layout, Button, Input, Select, DatePicker, Row, Col, Badge, Avatar, Space, Typography, Divider, Form, Menu, Card, Modal } from 'antd';
+import { SearchOutlined, BellOutlined, StarFilled, PlayCircleOutlined, LeftOutlined, RightOutlined, GlobalOutlined, VideoCameraOutlined, ShareAltOutlined, ArrowRightOutlined, CalendarOutlined, CloseOutlined } from '@ant-design/icons';
+
+// 🟢 IMPORT HÀM TỪ API CHUNG
+import { getNowShowingMovies, getComingSoonMovies } from '@/api/movies';
 
 const { Header, Footer, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 
-interface Movie {
-  id: number;
-  title: string;
-  genre: string;
-  duration: string;
-  rating: number;
-  poster: string;
-}
-
-const nowShowingMovies: Movie[] = [
-  { id: 1, title: 'Hành Tinh Của Những Vị Thần', genre: 'Hành động, Viễn tưởng', duration: '124 phút', rating: 8.9, poster: 'poster1.png' },
-  { id: 2, title: 'Vùng Đất Vô Định', genre: 'Phiêu lưu, Tâm lý', duration: '142 phút', rating: 9.2, poster: 'poster2.png' },
-  { id: 3, title: 'Kỹ Nguyên Robot', genre: 'Hành động, Khoa học', duration: '115 phút', rating: 8.5, poster: 'poster3.png' },
-  { id: 4, title: 'Bản Giao Hưởng Cuối Cùng', genre: 'Âm nhạc, Lãng mạn', duration: '130 phút', rating: 8.7, poster: 'poster4.png' },
-  { id: 5, title: 'Tiếng Gọi Trong Đêm', genre: 'Kinh dị, Giật gân', duration: '108 phút', rating: 8.2, poster: 'poster5.png' },
-  { id: 6, title: 'Chiến Binh Ánh Sáng', genre: 'Hành động, Kỳ ảo', duration: '135 phút', rating: 9.0, poster: 'poster6.png' },
-  { id: 7, title: 'Thành Phố Ngầm', genre: 'Viễn tưởng, Bí ẩn', duration: '112 phút', rating: 8.4, poster: 'poster7.png' },
-  { id: 8, title: 'Mật Mã Cuối Cùng', genre: 'Giật gân, Tội phạm', duration: '128 phút', rating: 8.8, poster: 'poster8.png' },
-  { id: 9, title: 'Vũ Điệu Hoang Dã', genre: 'Hoạt hình, Gia đình', duration: '95 phút', rating: 8.1, poster: 'poster9.png' },
-  { id: 10, title: 'Siêu Anh Hùng: Trỗi Dậy', genre: 'Hành động, Phiêu lưu', duration: '148 phút', rating: 9.5, poster: 'poster10.png' },
-];
-
-const comingSoonMovies = [
-  { id: 1, title: 'Vệ Binh Dải Ngân Hà 4', date: '15 / 04', desc: 'Đội ngũ anh hùng quen thuộc trở lại với sứ mệnh bảo vệ vũ trụ khỏi một thực thể cổ xưa...', image: 'coming1.png' },
-  { id: 2, title: 'Trí Tuệ Nhân Tạo', date: '22 / 04', desc: 'Khi AI vượt qua sự kiểm soát của con người, ranh giới giữa sự sống và máy móc trở nên mờ nhạt.', image: 'coming2.png' },
-  { id: 3, title: 'Ảo Ảnh Đỏ', date: '01 / 05', desc: 'Một bộ phim tâm lý ly kỳ đưa khán giả vào những góc tối nhất của tâm trí con người.', image: 'coming3.png' },
-  { id: 4, title: 'Ngôi Đền Cổ', date: '12 / 05', desc: 'Hành trình tìm kiếm kho báu mất tích dẫn đến những bí mật kinh hoàng của một nền văn minh đã quên.', image: 'coming4.png' },
-];
-
-const footerCustomerLinks = ['FAQs', 'Terms of Service', 'Privacy Policy', 'Contact Us'];
-const footerAboutLinks = ['About Us', 'Careers', 'Membership', 'Cinemas'];
-
-const colors = {
-  surface: '#200e0c',
-  primaryRed: '#E50914',
-  onSurface: '#ffdad5',
-  onSurfaceVariant: '#e9bcb6',
-  surfaceVariant: '#462f2c',
-  primary: '#ff1e00',
-};
+// Bảng màu Dark Mode đồng bộ toàn trang
+const colors = { surface: '#151113', primaryRed: '#E50914', onSurface: '#ffffff', onSurfaceVariant: '#a3989c', surfaceVariant: '#2d2025', primary: '#ff1e00', bgCard: '#1a1316' };
 
 export default function HomePage() {
   const navigate = useNavigate();
-
   const headerRef = useRef<HTMLElement>(null);
-  const heroContentRef = useRef<HTMLDivElement>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
   const prevBtnRef = useRef<HTMLButtonElement>(null);
   const nextBtnRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (headerRef.current) {
-        headerRef.current.style.padding = window.scrollY > 50 ? '0.5rem 0' : '1rem 0';
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const nowShowingMovies = getNowShowingMovies();
+  const comingSoonMovies = getComingSoonMovies();
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (heroContentRef.current) {
-        const xAxis = (window.innerWidth / 2 - e.pageX) / 50;
-        const yAxis = (window.innerHeight / 2 - e.pageY) / 50;
-        heroContentRef.current.style.transform = `translate(${xAxis}px, ${yAxis}px)`;
-      }
-    };
-    document.addEventListener('mousemove', handleMouseMove);
-    return () => document.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+  // STATE CHO SLIDER HERO & MUA VÉ NHANH
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [quickBookMovieId, setQuickBookMovieId] = useState<number>(nowShowingMovies[0]?.id || 2);
 
+  // STATE QUẢN LÝ POPUP PHIM SẮP CHIẾU
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedComingSoon, setSelectedComingSoon] = useState<any>(null);
+
+  // Hiệu ứng tự động chuyển slide banner đầu trang
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev >= nowShowingMovies.length - 1 ? 0 : prev + 1));
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [nowShowingMovies.length]);
+
+  // Logic cho thanh trượt "Phim đang chiếu"
   useEffect(() => {
     const slider = sliderRef.current;
     const prevBtn = prevBtnRef.current;
@@ -128,240 +60,171 @@ export default function HomePage() {
     prevBtn.addEventListener('click', handlePrev);
     nextBtn.addEventListener('click', handleNext);
     slider.addEventListener('scroll', updateButtons);
-    window.addEventListener('resize', updateButtons);
     updateButtons();
 
     return () => {
       prevBtn.removeEventListener('click', handlePrev);
       nextBtn.removeEventListener('click', handleNext);
       slider.removeEventListener('scroll', updateButtons);
-      window.removeEventListener('resize', updateButtons);
     };
   }, []);
 
-  const menuItems = [
-    { key: 'movies', label: <span style={{ fontSize: '15px', transition: 'color 0.3s', color: '#fff', fontWeight: 600 }}>Movies</span> },
-    { key: 'cinemas', label: <span style={{ fontSize: '15px', transition: 'color 0.3s', color: colors.onSurfaceVariant }}>Cinemas</span> },
-    { key: 'offers', label: <span style={{ fontSize: '15px', transition: 'color 0.3s', color: colors.onSurfaceVariant }}>Offers</span> },
-    { key: 'membership', label: <span style={{ fontSize: '15px', transition: 'color 0.3s', color: colors.onSurfaceVariant }}>Membership</span> },
-  ];
-
   const renderBookingField = (label: string, children: React.ReactNode) => (
     <Col xs={24} md={6}>
-      <Text className="quick-book-label">{label}</Text>
+      <Text style={{ color: colors.onSurfaceVariant, display: 'block', marginBottom: 8, fontWeight: 'bold' }}>{label}</Text>
       {children}
     </Col>
   );
 
-  // Hàm xử lý đặt vé: chuyển đến trang chi tiết phim
   const handleBookMovie = (movieId: number) => {
     navigate(`/movie/${movieId}`);
   };
 
+  const handleComingSoonDetail = (movie: any) => {
+    setSelectedComingSoon(movie);
+    setIsModalVisible(true);
+  };
+
+  const featuredMovie = nowShowingMovies[currentSlide] || nowShowingMovies[0];
+
   return (
     <Layout style={{ background: colors.surface, minHeight: '100vh' }}>
-      <Helmet>
-        <title>KSTAR Cinema - Trang chủ</title>
-      </Helmet>
+      <Helmet><title>KSTAR Cinema - Trang chủ</title></Helmet>
 
-      <Header
-        ref={headerRef as any}
-        style={{
-          position: 'sticky', top: 0, zIndex: 50,
-          background: 'rgba(24, 10, 8, 0.75)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
-          padding: '1rem 48px', height: 'auto', lineHeight: 'normal', transition: 'all 0.3s ease',
-        }}
-      >
+      {/* Header */}
+      <Header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(21, 17, 19, 0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', padding: '1rem 48px', height: 'auto', borderBottom: `1px solid ${colors.surfaceVariant}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1280, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 48 }}>
-            <Title level={3} style={{ margin: 0, color: colors.primary, fontWeight: 800, letterSpacing: '-0.02em', fontSize: '28px', textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
-              KSTAR
-            </Title>
-            <Menu mode="horizontal" selectedKeys={['movies']} style={{ background: 'transparent', border: 'none', minWidth: 360, lineHeight: 'normal' }} items={menuItems} />
+            <Title level={3} style={{ margin: 0, color: colors.primaryRed, cursor: 'pointer', fontWeight: 900 }} onClick={() => navigate('/')}>KSTAR</Title>
+            <Menu mode="horizontal" selectedKeys={['home']} style={{ background: 'transparent', border: 'none', minWidth: 360, color: 'white' }} items={[
+              { key: 'home', label: <span style={{ fontWeight: 'bold', color: 'white' }} onClick={() => navigate('/')}>Trang chủ</span> },
+              { key: 'movies', label: <span style={{ fontWeight: 'bold', color: 'white' }} onClick={() => navigate('/movies')}>Phim</span> },
+              { key: 'membership', label: <span style={{ fontWeight: 'bold', color: 'white' }}>Membership</span> }
+            ]} />
           </div>
-          
           <Space size="large">
-            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: 40, padding: '6px 20px', width: 260, boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.2)', transition: 'all 0.3s ease' }}>
-              <SearchOutlined style={{ color: colors.onSurfaceVariant, fontSize: 18 }} />
-              <Input placeholder="Tìm phim..." bordered={false} style={{ background: 'transparent', color: colors.onSurface, marginLeft: 8 }} />
-            </div>
-            <Badge dot offset={[2, 0]}>
-              <BellOutlined style={{ fontSize: 22, color: colors.onSurfaceVariant, cursor: 'pointer', transition: 'transform 0.3s ease' }} />
-            </Badge>
-            <Avatar 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCs1hn6nDRgKqiNDwmEKBKHUjkw4Idae_YTNR6hF_Hz2VtFL1dIgaTw0lE_v6mBr2Wq-oIeiahjrVQ2KTCnAFu5Y_b9l05sZA4FA9bLEDBzoXl16aZiR40jis_t0XpX8E1tmlwUd3mtKTDYKIZPUnyeDaWbVV7K38FN1DvhkkOdhre-qNgWkobUaGgIss0U30Bs_XBVdfbtyY1qr7txJah7MnZNmhc9jJOS3u0cTYRTH9LdSeqwiXPnzbIpExYqscFtqVH6LPvFmhQ" 
-              style={{ border: `2px solid ${colors.primaryRed}`, cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.4)', transition: 'transform 0.3s ease' }} 
-              onClick={() => navigate('/profile')}
-            />
+            <Button type="primary" style={{ background: colors.primaryRed, border: 'none', borderRadius: 20, fontWeight: 'bold' }} onClick={() => navigate('/auth/login')}>Đăng nhập</Button>
           </Space>
         </div>
       </Header>
 
-      {/* Hero Section */}
-      <div style={{ position: 'relative', height: '100vh', width: '100%', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://lh3.googleusercontent.com/aida-public/AB6AXuBlCtflLWk3fLSCug8wAaXWQUoiJ4Lk1o7gXal4ssufHcNJ1Y0AHpB-csPZpxgnIyGvhQUbTX6qQ44onQPqZHg4bKR0k6V7hmbgJoOAJvKXPOjE6o0vyyjEZrS0SFHWCN7WNbs6XRtDcniEKQkoIQQom6fLjhIrE8FbHy3hdNqLC3BpwFaGh-CNFhmM20wtqXDbm_Hkxt_mZ34HGdvG36-UPI2Iti2rMwWzrwC66YmwHpHZIOlv7Wv6GpnG3v4R84JLhIO3InBRRXg)', backgroundSize: 'cover', backgroundPosition: 'center', transform: 'scale(1.02)', transition: 'transform 10s ease-out' }} />
-        <div className="hero-gradient" style={{ position: 'absolute', inset: 0, zIndex: 1 }} />
+      {/* Hero Section Động */}
+      <div style={{ position: 'relative', height: '100vh', width: '100%', overflow: 'hidden', marginTop: '-80px' }}>
+        <div style={{ 
+          position: 'absolute', inset: 0, 
+          backgroundImage: `url('${featuredMovie?.coverImage}')`, 
+          backgroundSize: 'cover', backgroundPosition: 'center top', 
+          transition: 'background-image 1s ease-in-out',
+          transform: 'scale(1.02)' 
+        }} />
         
-        <div ref={heroContentRef} style={{ position: 'relative', zIndex: 2, maxWidth: 1280, margin: '0 auto', padding: '0 48px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 100, transition: 'transform 0.3s ease-out' }}>
-          <div style={{ maxWidth: 620 }}>
-            <div style={{ display: 'inline-block', background: colors.primaryRed, color: 'white', padding: '6px 20px', borderRadius: 40, fontSize: 13, fontWeight: 700, marginBottom: 24, letterSpacing: '1px', boxShadow: '0 4px 15px rgba(229, 9, 20, 0.4)' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(21,17,19,0.95) 0%, rgba(21,17,19,0.4) 50%, transparent 100%), linear-gradient(to top, #151113 0%, rgba(21,17,19,0.4) 30%, transparent 100%)' }} />
+        
+        <div style={{ position: 'relative', zIndex: 2, maxWidth: 1280, margin: '0 auto', padding: '0 48px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ maxWidth: 650, marginTop: '5vh' }}>
+            <div style={{ display: 'inline-block', background: colors.primaryRed, color: 'white', padding: '6px 20px', borderRadius: 40, fontWeight: 800, marginBottom: 20, fontSize: '13px' }}>
               NOW SHOWING
             </div>
-            <Title level={1} style={{ color: 'white', fontSize: 72, margin: 0, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.1, textShadow: '0 8px 30px rgba(0,0,0,0.6)' }}>
-              DUNE: PART TWO
+            <Title level={1} style={{ color: 'white', fontSize: 72, margin: '0 0 16px 0', fontWeight: 900, textTransform: 'uppercase', textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+              {featuredMovie?.title}
             </Title>
-            <Paragraph style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: 18, marginTop: 24, lineHeight: 1.6, maxWidth: '90%', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
-              Hành trình sử thi tiếp theo của Paul Atreides khi anh hợp lực với Chani và người Fremen để trả thù những kẻ đã hủy hoại gia đình mình.
+            <Paragraph style={{ color: 'rgba(255,255,255,0.9)', fontSize: 18, margin: '0 0 40px 0', lineHeight: 1.6 }}>
+              {featuredMovie?.description}
             </Paragraph>
             
-            <Space size="middle" style={{ marginTop: 40 }}>
-              <Button 
-                type="primary" 
-                size="large" 
-                icon={<PlayCircleOutlined />} 
-                style={{ background: colors.primaryRed, borderColor: colors.primaryRed, borderRadius: 48, fontWeight: 'bold', padding: '0 40px', height: 56, fontSize: '16px', boxShadow: '0 8px 25px rgba(229, 9, 20, 0.4)', transition: 'all 0.3s ease' }}
-                onClick={() => handleBookMovie(1)}  // Dune: Part Two có id = 1 (giả định)
-              >
+            {/* 🚀 KHU VỰC NÚT BẤM ĐÃ ĐƯỢC PHỤC HỒI ĐỦ 2 NÚT */}
+            <Space size="middle">
+              <Button type="primary" size="large" icon={<PlayCircleOutlined />} style={{ background: colors.primaryRed, border: 'none', borderRadius: 48, padding: '0 40px', height: 56, fontWeight: 'bold' }} onClick={() => handleBookMovie(featuredMovie?.id)}>
                 Đặt vé
               </Button>
-              <Button size="large" icon={<PlayCircleOutlined />} style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: 48, color: 'white', padding: '0 40px', height: 56, fontSize: '16px', boxShadow: '0 8px 25px rgba(0, 0, 0, 0.2)', transition: 'all 0.3s ease' }}>
+              {/* 🟢 NÚT XEM TRAILER ĐÃ QUAY TRỞ LẠI */}
+              <Button 
+                size="large" 
+                icon={<PlayCircleOutlined />} 
+                style={{ 
+                  background: 'rgba(255, 255, 255, 0.1)', // Hiệu ứng kính mờ
+                  backdropFilter: 'blur(12px)', 
+                  border: '1px solid rgba(255, 255, 255, 0.2)', 
+                  borderRadius: 48, 
+                  color: 'white', 
+                  padding: '0 40px', 
+                  height: 56, 
+                  fontSize: '16px', 
+                  boxShadow: '0 8px 25px rgba(0, 0, 0, 0.2)', 
+                  transition: 'all 0.3s ease' 
+                }}
+              >
                 Xem Trailer
               </Button>
             </Space>
+            
+            <div style={{ marginTop: 30, display: 'flex', gap: 10 }}>
+              {nowShowingMovies.map((_, index) => (
+                <div key={index} onClick={() => setCurrentSlide(index)} style={{ width: currentSlide === index ? 30 : 10, height: 10, borderRadius: 5, background: currentSlide === index ? colors.primaryRed : 'rgba(255,255,255,0.3)', cursor: 'pointer', transition: 'all 0.3s' }} />
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Quick Booking Bar */}
-      <div style={{ position: 'relative', zIndex: 30, marginTop: -56, padding: '0 48px', maxWidth: 1280, marginLeft: 'auto', marginRight: 'auto' }}>
-        <Card className="glass-card" style={{ padding: 20, borderRadius: 24 }} bordered={false}>
+      <div style={{ position: 'relative', zIndex: 30, marginTop: -60, padding: '0 48px', maxWidth: 1280, margin: '0 auto' }}>
+        <Card style={{ padding: 20, borderRadius: 24, background: '#1d171a', border: `1px solid ${colors.surfaceVariant}` }} bordered={false}>
           <Row gutter={[24, 16]} align="bottom">
             {renderBookingField('Chọn Phim', (
-              <Select className="quick-book-input" placeholder="Chọn phim" defaultValue="dune">
-                <Option value="dune">Dune: Part Two</Option>
-                <Option value="godzilla">Godzilla x Kong</Option>
-                <Option value="kungfu">Kung Fu Panda 4</Option>
+              <Select placeholder="Chọn phim" defaultValue={nowShowingMovies[0]?.id} onChange={(val) => setQuickBookMovieId(val)} style={{ width: '100%' }}>
+                {nowShowingMovies.map(movie => <Option key={movie.id} value={movie.id}>{movie.title}</Option>)}
               </Select>
             ))}
-            {renderBookingField('Ngày Chiếu', (
-              <DatePicker className="quick-book-input" placeholder="Chọn ngày" suffixIcon={<CalendarOutlined />} />
-            ))}
-            {renderBookingField('Chọn Rạp', (
-              <Select className="quick-book-input" placeholder="Chọn rạp" defaultValue="nguyenDu">
-                <Option value="nguyenDu">KSTAR Nguyễn Du</Option>
-                <Option value="hungVuong">KSTAR Hùng Vương</Option>
-                <Option value="landmark">KSTAR Landmark</Option>
-              </Select>
-            ))}
+            {renderBookingField('Ngày Chiếu', <DatePicker placeholder="Chọn ngày" style={{ width: '100%' }} />)}
+            {renderBookingField('Chọn Rạp', <Select placeholder="Chọn rạp" defaultValue="nguyenDu" style={{ width: '100%' }}><Option value="nguyenDu">KSTAR Nguyễn Du</Option></Select>)}
             <Col xs={24} md={6}>
-              <Button 
-                type="primary" 
-                block 
-                style={{ background: colors.primaryRed, borderColor: colors.primaryRed, height: 48, fontWeight: 'bold', borderRadius: 40 }}
-                onClick={() => handleBookMovie(1)}  // Chuyển đến phim đang chọn (ví dụ Dune)
-              >
-                Mua vé nhanh
-              </Button>
+              <Button type="primary" block style={{ background: colors.primaryRed, border: 'none', height: 48, borderRadius: 40, fontWeight: 'bold' }} onClick={() => handleBookMovie(quickBookMovieId)}>Mua vé nhanh</Button>
             </Col>
           </Row>
         </Card>
       </div>
 
-      {/* Now Showing Section */}
+      {/* Phim Đang Chiếu */}
       <Content style={{ padding: '80px 48px 0', maxWidth: 1280, margin: '0 auto', width: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 }}>
-          <Title level={2} style={{ 
-            color: colors.onSurface, 
-            margin: 0, 
-            fontWeight: 800,
-            position: 'relative',
-            paddingLeft: 20,
-            letterSpacing: '0.5px'
-          }}>
-            <span style={{ position: 'absolute', left: 0, top: '10%', height: '80%', width: 5, background: colors.primaryRed, borderRadius: 10 }}></span>
-            Phim Đang Chiếu
-          </Title>
-          
-          <Button 
-            type="text" 
-            className="view-all-btn" 
-            style={{ color: colors.onSurfaceVariant, fontSize: '15px', fontWeight: 600 }}
-            onClick={() => navigate('/movies')}
-          >
-            Xem tất cả <ArrowRightOutlined className="view-all-arrow" />
-          </Button>
-        </div>
-
-        <div className="carousel-container" style={{ position: 'relative', margin: '0 -20px', padding: '0 20px' }}>
-          <button ref={prevBtnRef} className="carousel-nav-btn prev-btn">
-            <LeftOutlined style={{ fontSize: 18 }} />
-          </button>
-          <button ref={nextBtnRef} className="carousel-nav-btn next-btn">
-            <RightOutlined style={{ fontSize: 18 }} />
-          </button>
-          
-          <div ref={sliderRef} className="movie-slider" style={{ display: 'flex', overflowX: 'auto', scrollBehavior: 'smooth', gap: 28, paddingBottom: 40, paddingTop: 16, scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {nowShowingMovies.map((movie) => (
-              <div key={movie.id} className="movie-card" style={{ flex: '0 0 auto', width: 'calc(20% - 22.4px)', minWidth: 220 }}>
-                <div className="movie-card-inner">
-                  <div className="movie-poster-wrapper">
-                    <img src={`/movies/${movie.poster}`} alt={movie.title} className="movie-poster-img" />
-                    
-                    <div className="movie-rating">
-                      <StarFilled style={{ color: '#fadb14', fontSize: 14, paddingBottom: 2 }} />
-                      <span>{movie.rating}</span>
+        <Title level={2} style={{ color: colors.onSurface, fontWeight: 800, marginBottom: 40, borderLeft: `5px solid ${colors.primaryRed}`, paddingLeft: 16 }}>Phim Đang Chiếu</Title>
+        <div style={{ position: 'relative' }}>
+          <button ref={prevBtnRef} className="carousel-nav-btn prev-btn"><LeftOutlined /></button>
+          <button ref={nextBtnRef} className="carousel-nav-btn next-btn"><RightOutlined /></button>
+          <div ref={sliderRef} className="movie-slider" style={{ display: 'flex', overflowX: 'auto', gap: 28, paddingBottom: 20, scrollBehavior: 'smooth' }}>
+            {nowShowingMovies.map((movie: any) => (
+              <div key={movie.id} className="movie-card-homepage" onClick={() => handleBookMovie(movie.id)} style={{ flex: '0 0 auto', width: 220, cursor: 'pointer' }}>
+                <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', height: 330 }}>
+                  <img src={movie.poster?.includes('/') ? movie.poster : `/movies/${movie.poster}`} alt={movie.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {movie.rating > 0 && (
+                    <div style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.8)', padding: '4px 8px', borderRadius: 8, color: '#fadb14', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <StarFilled /> {movie.rating}
                     </div>
-                    
-                    <div className="movie-overlay">
-                      <Button 
-                        type="primary" 
-                        shape="round" 
-                        size="large" 
-                        style={{ 
-                          background: colors.primaryRed, 
-                          borderColor: colors.primaryRed, 
-                          fontWeight: 'bold',
-                          boxShadow: '0 8px 20px rgba(229, 9, 20, 0.4)' 
-                        }}
-                        onClick={() => handleBookMovie(movie.id)}
-                      >
-                        Đặt vé
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div style={{ paddingTop: 16, paddingLeft: 4 }}>
-                    <h3 className="movie-title">{movie.title}</h3>
-                    <p className="movie-meta">{movie.genre} • {movie.duration}</p>
-                  </div>
+                  )}
                 </div>
+                <h3 style={{ color: 'white', margin: '16px 0 4px', fontWeight: 'bold', fontSize: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{movie.title}</h3>
+                <p style={{ color: colors.onSurfaceVariant, margin: 0, fontSize: 13 }}>{movie.genre}</p>
               </div>
             ))}
           </div>
         </div>
       </Content>
 
-      {/* Coming Soon Section */}
+      {/* Sắp khởi chiếu */}
       <Content style={{ padding: '80px 48px', maxWidth: 1280, margin: '0 auto', width: '100%' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 36 }}>
-          <Title level={2} style={{ color: colors.onSurface, marginBottom: 0, marginRight: 24, fontWeight: 700 }}>Sắp khởi chiếu</Title>
-          <div style={{ flex: 1, height: 2, background: 'rgba(255,255,255,0.08)' }} />
-        </div>
+        <Title level={2} style={{ color: colors.onSurface, fontWeight: 800, marginBottom: 40, borderLeft: `5px solid ${colors.primaryRed}`, paddingLeft: 16 }}>Sắp khởi chiếu</Title>
         <Row gutter={[24, 24]}>
           {comingSoonMovies.map((movie) => (
             <Col xs={24} sm={12} md={6} key={movie.id}>
-              <div className="coming-card">
-                <div className="coming-img-wrapper">
-                  <img src={`/banners/${movie.image}`} alt={movie.title} className="coming-img" />
-                  <div className="coming-date">{movie.date}</div>
+              <div style={{ background: colors.surfaceVariant, borderRadius: 16, overflow: 'hidden', cursor: 'pointer', transition: 'transform 0.3s' }} onClick={() => handleComingSoonDetail(movie)} onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+                <div style={{ position: 'relative' }}>
+                  <img src={movie.poster?.includes('/') ? movie.poster : `/banners/${movie.poster}`} alt={movie.title} style={{ width: '100%', height: 200, objectFit: 'cover' }} />
+                  {movie.date && <div style={{ position: 'absolute', top: 12, left: 12, background: colors.primaryRed, color: 'white', padding: '4px 12px', borderRadius: 20, fontWeight: 'bold', fontSize: 12 }}>{movie.date}</div>}
                 </div>
-                <div className="coming-content">
-                  <h4 className="coming-title">{movie.title}</h4>
-                  <p className="coming-desc">{movie.desc}</p>
-                  <div className="coming-link" onClick={() => handleBookMovie(movie.id)}>
-                    Thông tin chi tiết <ArrowRightOutlined />
-                  </div>
+                <div style={{ padding: 20 }}>
+                  <h4 style={{ color: 'white', fontWeight: 'bold', margin: '0 0 8px', fontSize: 16, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{movie.title}</h4>
+                  <p style={{ color: colors.onSurfaceVariant, fontSize: 13, margin: '0 0 16px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{movie.description}</p>
+                  <span style={{ color: colors.primaryRed, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 8 }}>Thông tin chi tiết <ArrowRightOutlined /></span>
                 </div>
               </div>
             </Col>
@@ -369,54 +232,72 @@ export default function HomePage() {
         </Row>
       </Content>
 
+      {/* 🚀 MODAL TÔNG MÀU TỐI (DARK MODE) ĐÃ ĐƯỢC GIỮ NGUYÊN */}
+      <Modal
+        title={null}
+        open={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        footer={null}
+        width={900}
+        centered
+        closeIcon={<CloseOutlined style={{ color: '#fff', fontSize: '18px', background: 'rgba(255,255,255,0.1)', padding: '8px', borderRadius: '50%' }} />}
+        styles={{
+          content: { 
+            padding: 0, 
+            overflow: 'hidden', 
+            borderRadius: 16, 
+            backgroundColor: colors.bgCard, // Màu xám đen
+            border: `1px solid ${colors.surfaceVariant}` 
+          }
+        }}
+      >
+        {selectedComingSoon && (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', padding: '40px', gap: '30px' }}>
+               <div style={{ width: '260px', flexShrink: 0, position: 'relative' }}>
+                  <img src={selectedComingSoon.poster?.includes('/') ? selectedComingSoon.poster : `/banners/${selectedComingSoon.poster}`} alt="poster" style={{ width: '100%', borderRadius: '12px', boxShadow: '0 10px 20px rgba(0,0,0,0.5)', border: `1px solid ${colors.surfaceVariant}` }} />
+                  <div style={{ position: 'absolute', top: 12, left: 12, background: '#2196f3', color: 'white', padding: '2px 10px', borderRadius: '4px', fontWeight: 'bold', fontSize: '12px' }}>
+                    {selectedComingSoon.age || 'T13'}
+                  </div>
+               </div>
+               <div style={{ flex: 1 }}>
+                  <h2 style={{ fontSize: '28px', fontWeight: 800, margin: '0 0 16px 0', color: colors.onSurface, lineHeight: 1.3 }}>
+                    {selectedComingSoon.title}
+                  </h2>
+                  <p style={{ fontSize: '15px', lineHeight: '1.7', marginBottom: '24px', color: colors.onSurfaceVariant }}>
+                    {selectedComingSoon.description}
+                  </p>
+                  <table style={{ width: '100%', fontSize: '15px', color: colors.onSurfaceVariant }}>
+                    <tbody>
+                      <tr><td style={{ width: '140px', paddingBottom: '10px', fontWeight: 600, color: '#d1c4c9' }}>Đạo diễn:</td><td style={{ paddingBottom: '10px' }}>Đang cập nhật</td></tr>
+                      <tr><td style={{ paddingBottom: '10px', fontWeight: 600, color: '#d1c4c9' }}>Diễn viên:</td><td style={{ paddingBottom: '10px' }}>Đang cập nhật</td></tr>
+                      <tr><td style={{ paddingBottom: '10px', fontWeight: 600, color: '#d1c4c9' }}>Thể loại:</td><td style={{ paddingBottom: '10px' }}>{selectedComingSoon.genre}</td></tr>
+                      <tr><td style={{ paddingBottom: '10px', fontWeight: 600, color: '#d1c4c9' }}>Thời lượng:</td><td style={{ paddingBottom: '10px' }}>{selectedComingSoon.duration}</td></tr>
+                      <tr><td style={{ paddingBottom: '10px', fontWeight: 600, color: '#d1c4c9' }}>Ngôn ngữ:</td><td style={{ paddingBottom: '10px' }}>Tiếng Anh - Phụ đề Tiếng Việt</td></tr>
+                      <tr><td style={{ paddingBottom: '10px', fontWeight: 600, color: '#d1c4c9' }}>Khởi chiếu:</td><td style={{ paddingBottom: '10px', color: colors.primaryRed, fontWeight: 'bold' }}>{selectedComingSoon.date}/2026</td></tr>
+                    </tbody>
+                  </table>
+               </div>
+            </div>
+            <div style={{ backgroundColor: colors.surfaceVariant, padding: '16px', textAlign: 'center', borderTop: `1px solid rgba(255,255,255,0.05)`, borderBottom: `1px solid rgba(255,255,255,0.05)` }}>
+              <h3 style={{ color: '#ffffff', margin: 0, fontWeight: 800, fontSize: '20px', letterSpacing: '2px' }}>TRAILER</h3>
+            </div>
+            <div style={{ backgroundColor: '#0a0809', padding: '40px', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ width: '100%', maxWidth: '720px', aspectRatio: '16/9', backgroundColor: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', border: `1px solid ${colors.surfaceVariant}`, position: 'relative', overflow: 'hidden' }}>
+                <img src={selectedComingSoon.coverImage} style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover', opacity: 0.3 }} />
+                <PlayCircleOutlined style={{ fontSize: '64px', color: colors.primaryRed, cursor: 'pointer', zIndex: 2, transition: 'transform 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'} />
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
       {/* Footer */}
-      <Footer style={{ background: '#110706', borderTop: '1px solid rgba(255,255,255,0.05)', padding: '56px 48px 32px' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-          <Row gutter={[48, 32]}>
-            <Col xs={24} md={6}>
-              <Title level={4} style={{ color: colors.primary, marginBottom: 20, fontWeight: 800, fontSize: '24px' }}>KSTAR</Title>
-              <Paragraph style={{ color: colors.onSurfaceVariant, fontSize: 14, lineHeight: 1.6 }}>Hệ thống rạp chiếu phim hiện đại hàng đầu Việt Nam, mang lại trải nghiệm điện ảnh chân thực và đẳng cấp nhất.</Paragraph>
-              <Space size="middle">
-                <Button shape="circle" icon={<GlobalOutlined />} style={{ background: colors.surfaceVariant, border: 'none', color: colors.onSurfaceVariant }} />
-                <Button shape="circle" icon={<VideoCameraOutlined />} style={{ background: colors.surfaceVariant, border: 'none', color: colors.onSurfaceVariant }} />
-                <Button shape="circle" icon={<ShareAltOutlined />} style={{ background: colors.surfaceVariant, border: 'none', color: colors.onSurfaceVariant }} />
-              </Space>
-            </Col>
-            
-            <Col xs={24} md={6}>
-              <Title level={5} className="footer-title">Chăm sóc khách hàng</Title>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {footerCustomerLinks.map(link => (
-                  <li key={link} style={{ marginBottom: 12 }}><a href="#" style={{ color: colors.onSurfaceVariant }}>{link}</a></li>
-                ))}
-              </ul>
-            </Col>
-            
-            <Col xs={24} md={6}>
-              <Title level={5} className="footer-title">Về chúng tôi</Title>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {footerAboutLinks.map(link => (
-                  <li key={link} style={{ marginBottom: 12 }}><a href="#" style={{ color: colors.onSurfaceVariant }}>{link}</a></li>
-                ))}
-              </ul>
-            </Col>
-            
-            <Col xs={24} md={6}>
-              <Title level={5} className="footer-title">Đăng ký bản tin</Title>
-              <Paragraph style={{ color: colors.onSurfaceVariant, fontSize: 13 }}>Nhận thông báo về các bộ phim bom tấn và ưu đãi mới nhất.</Paragraph>
-              <Form layout="inline" style={{ flexWrap: 'wrap', gap: 12 }}>
-                <Form.Item name="email" style={{ flex: 1, margin: 0 }}>
-                  <Input placeholder="Email của bạn" style={{ borderRadius: 40, background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff' }} />
-                </Form.Item>
-                <Form.Item style={{ margin: 0 }}>
-                  <Button type="primary" htmlType="submit" style={{ background: colors.primaryRed, borderColor: colors.primaryRed, borderRadius: 40, height: 44, padding: '0 20px' }}>Gửi</Button>
-                </Form.Item>
-              </Form>
-            </Col>
-          </Row>
-          <Divider style={{ background: 'rgba(255,255,255,0.05)', margin: '40px 0 24px' }} />
-          <Text style={{ color: colors.onSurfaceVariant, display: 'block', textAlign: 'center', fontSize: '13px' }}>© 2024 KSTAR Cinema. All Rights Reserved.</Text>
-        </div>
+      <Footer style={{ background: '#0a0809', borderTop: `1px solid ${colors.surfaceVariant}`, padding: '56px 48px 32px' }}>
+         <div style={{ maxWidth: 1280, margin: '0 auto', textAlign: 'center', color: colors.onSurfaceVariant }}>
+            <Title level={4} style={{ color: colors.primaryRed, fontWeight: 900, marginBottom: 12 }}>KSTAR CINEMA</Title>
+            <p>© 2024 KSTAR Cinema. All Rights Reserved.</p>
+         </div>
       </Footer>
     </Layout>
   );

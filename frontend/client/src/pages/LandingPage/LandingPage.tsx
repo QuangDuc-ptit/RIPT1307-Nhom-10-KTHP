@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import MovieCard from "@/components/common/MovieCard";
 import { useAuthStore } from '@/store/auth';
 import './LandingPage.css';
-
 import {
   Row, Col, Typography, Space, Button, Input, Form, Divider, Modal, Layout, Menu, Badge, Avatar, Dropdown
 } from 'antd';
@@ -14,22 +13,10 @@ import {
   SearchOutlined,
   BellOutlined,
 } from '@ant-design/icons';
+// 🟢 IMPORT KHO DỮ LIỆU TỔNG
+import { moviesData } from '@/api/movies';
 
 const { Title, Paragraph, Text } = Typography;
-
-/* ================= MOCK DATA CHUẨN ================= */
-const MOCK_MOVIES = [
-  { id: 1, title: "Cục Vàng Của Ngoại", category: "dang-chieu", genre: "tinh-cam", image: "/movies/Cuc_Vang_Cua_Ngoai.jpg", rating: "9.2", age: "P" },
-  { id: 2, title: "Phim: Mai", category: "dang-chieu", genre: "tinh-cam", image: "/movies/Mai.jpg", rating: "9.5", age: "T18" },
-  { id: 3, title: "Mắt Biếc", category: "sap-chieu", genre: "tinh-cam", image: "/movies/Mat_Biec.jpg", rating: "Chưa chiếu", age: "T16" },
-  { id: 4, title: "Nhà Bà Nữ", category: "sap-chieu", genre: "tinh-cam", image: "/movies/Nha_Ba_Nu.jpg", rating: "Chưa chiếu", age: "T16" },
-  { id: 5, title: "Us", category: "dang-chieu", genre: "kinh-di", image: "/movies/Us.jpg", rating: "8.8", age: "T16" },
-  { id: 6, title: "Your Name", category: "sap-chieu", genre: "hoat-hinh", image: "/movies/Your_Name.jpg", rating: "Chưa chiếu", age: "P" },
-  { id: 7, title: "The Wild Robot", category: "dang-chieu", genre: "hoat-hinh", image: "/movies/The_Wild_Robot.jpg", rating: "8.8", age: "T16" },
-  { id: 8, title: "Tiệc Trăng Máu", category: "sap-chieu", genre: "hanh-dong", image: "/movies/Tiec_Trang_Mau.jpg", rating: "Chưa chiếu", age: "P" },
-  { id: 9, title: "Larva", category: "dang-chieu", genre: "hoat-hinh", image: "/movies/Larva.jpg", rating: "8.8", age: "T16" },
-  { id: 10, title: "Doremon Bản Giao Hưởng Địa Cầu", category: "sap-chieu", genre: "hoat-hinh", image: "/movies/Ban_Giao_Huong.jpg", rating: "Chưa chiếu", age: "P" },
-];
 
 const MOCK_BLOGS = [
   { id: 1, title: "Top 10 phim được mong chờ nhất hè này", date: "26/05/2026", summary: "Khám phá những bom tấn điện ảnh hot nhất sắp ra mắt tại KSTAR.", image: "/banners/Su_kien1.png" },
@@ -39,24 +26,9 @@ const MOCK_BLOGS = [
 ];
 
 const HERO_SLIDES = [
-  {
-    id: 1,
-    title: "KSTAR Cinema",
-    subtitle: "Khám phá thế giới điện ảnh sống động với công nghệ IMAX hiện đại.",
-    image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1974&auto=format&fit=crop",
-  },
-  {
-    id: 2,
-    title: "Bom Tấn Mỗi Tuần",
-    subtitle: "Cập nhật những bộ phim hot nhất tại hệ thống rạp KSTAR.",
-    image: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=2070&auto=format&fit=crop",
-  },
-  {
-    id: 3,
-    title: "Trải Nghiệm IMAX",
-    subtitle: "Âm thanh đỉnh cao và hình ảnh sắc nét chưa từng có.",
-    image: "https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?q=80&w=2070&auto=format&fit=crop",
-  },
+  { id: 1, title: "KSTAR Cinema", subtitle: "Khám phá thế giới điện ảnh sống động với công nghệ IMAX hiện đại.", image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1974&auto=format&fit=crop" },
+  { id: 2, title: "Bom Tấn Mỗi Tuần", subtitle: "Cập nhật những bộ phim hot nhất tại hệ thống rạp KSTAR.", image: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=2070&auto=format&fit=crop" },
+  { id: 3, title: "Trải Nghiệm IMAX", subtitle: "Âm thanh đỉnh cao và hình ảnh sắc nét chưa từng có.", image: "https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?q=80&w=2070&auto=format&fit=crop" },
 ];
 
 const { Header } = Layout;
@@ -69,13 +41,12 @@ const LandingPage = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
-  const user = useAuthStore((s) => s.user);
+  
+  const user = useAuthStore((s: any) => s.user);
   const isLoggedIn = Boolean(user);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev === HERO_SLIDES.length - 1 ? 0 : prev + 1));
-    }, 5000);
+    const interval = setInterval(() => setCurrentSlide((prev) => (prev === HERO_SLIDES.length - 1 ? 0 : prev + 1)), 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -108,9 +79,10 @@ const LandingPage = () => {
     setPendingAction(null);
   };
 
-  const filteredMovies = MOCK_MOVIES.filter((movie) => {
+  // 🚀 LỌC DỮ LIỆU TỪ KHO API TỔNG (moviesData)
+  const filteredMovies = moviesData.filter((movie: any) => {
     const matchTab = movie.category === movieTab;
-    const matchGenre = selectedGenre === "all" || movie.genre === selectedGenre;
+    const matchGenre = selectedGenre === "all" || (movie.genre && movie.genre.toLowerCase().includes(selectedGenre.toLowerCase()));
     return matchTab && matchGenre;
   });
 
@@ -200,28 +172,15 @@ const LandingPage = () => {
         </div>
       </Header>
 
-      {/* Marquee */}
       <div className="cinema-marquee">
         <div className="cinema-track">
-          <div className="cinema-item">
-            🔥 DEADLINE có thể đợi nhưng suất chiếu thì không • 🍿 Đặt vé ngay tại KSTAR Cinema • 🎞️ Thế giới điện ảnh đang chờ bạn •
-          </div>
-          <div className="cinema-item">
-            🔥 DEADLINE có thể đợi nhưng suất chiếu thì không • 🍿 Đặt vé ngay tại KSTAR Cinema • 🎞️ Thế giới điện ảnh đang chờ bạn •
-          </div>
+          <div className="cinema-item">🔥 DEADLINE có thể đợi nhưng suất chiếu thì không • 🍿 Đặt vé ngay tại KSTAR Cinema • 🎞️ Thế giới điện ảnh đang chờ bạn •</div>
+          <div className="cinema-item">🔥 DEADLINE có thể đợi nhưng suất chiếu thì không • 🍿 Đặt vé ngay tại KSTAR Cinema • 🎞️ Thế giới điện ảnh đang chờ bạn •</div>
         </div>
       </div>
 
       <main>
-        {/* Hero Section */}
-        <section
-          id="home"
-          className="hero-section"
-          key={currentSlide}
-          style={{
-            backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.7)), url(${HERO_SLIDES[currentSlide].image})`
-          }}
-        >
+        <section id="home" className="hero-section" key={currentSlide} style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.7)), url(${HERO_SLIDES[currentSlide].image})` }}>
           <div className="hero-overlay"></div>
           <div className="hero-content">
             <span className="hero-tag">CHÀO MỪNG ĐẾN VỚI</span>
@@ -233,17 +192,12 @@ const LandingPage = () => {
             </div>
             <div className="hero-dots">
               {HERO_SLIDES.map((_, index) => (
-                <span
-                  key={index}
-                  className={currentSlide === index ? "dot active" : "dot"}
-                  onClick={() => setCurrentSlide(index)}
-                />
+                <span key={index} className={currentSlide === index ? "dot active" : "dot"} onClick={() => setCurrentSlide(index)} />
               ))}
             </div>
           </div>
         </section>
 
-        {/* Movies Section */}
         <section id="movies" className="movies-section">
           <div className="section-header">
             <div className="section-title-row">
@@ -256,19 +210,19 @@ const LandingPage = () => {
             <div className="filter-container">
               <span className="filter-label">Thể loại:</span>
               <button className={`filter-btn ${selectedGenre === "all" ? "active" : ""}`} onClick={() => setSelectedGenre("all")}>Tất cả</button>
-              <button className={`filter-btn ${selectedGenre === "hanh-dong" ? "active" : ""}`} onClick={() => setSelectedGenre("hanh-dong")}>Hành động</button>
-              <button className={`filter-btn ${selectedGenre === "tinh-cam" ? "active" : ""}`} onClick={() => setSelectedGenre("tinh-cam")}>Tình cảm</button>
-              <button className={`filter-btn ${selectedGenre === "hoat-hinh" ? "active" : ""}`} onClick={() => setSelectedGenre("hoat-hinh")}>Hoạt hình</button>
-              <button className={`filter-btn ${selectedGenre === "kinh-di" ? "active" : ""}`} onClick={() => setSelectedGenre("kinh-di")}>Kinh dị</button>
+              <button className={`filter-btn ${selectedGenre === "Hành động" ? "active" : ""}`} onClick={() => setSelectedGenre("Hành động")}>Hành động</button>
+              <button className={`filter-btn ${selectedGenre === "Tình cảm" ? "active" : ""}`} onClick={() => setSelectedGenre("Tình cảm")}>Tình cảm</button>
+              <button className={`filter-btn ${selectedGenre === "Hoạt hình" ? "active" : ""}`} onClick={() => setSelectedGenre("Hoạt hình")}>Hoạt hình</button>
+              <button className={`filter-btn ${selectedGenre === "Kinh dị" ? "active" : ""}`} onClick={() => setSelectedGenre("Kinh dị")}>Kinh dị</button>
             </div>
           </div>
           <div className="movie-grid">
             {filteredMovies.length > 0 ? (
-              filteredMovies.map((movie) => (
-                <MovieCard
-                  key={movie.id}
-                  movie={movie}
-                  onBook={(e) => handleProtectedAction(e, () => navigate(`/movie/${movie.id}`))}
+              filteredMovies.map((movie: any) => (
+                <MovieCard 
+                  key={movie.id} 
+                  movie={{...movie, image: movie.poster}} // Gắn trường poster vào props image để khớp với thẻ MovieCard
+                  onBook={(e: any) => handleProtectedAction(e, () => navigate(`/movie/${movie.id}`))} 
                 />
               ))
             ) : (
@@ -276,11 +230,10 @@ const LandingPage = () => {
             )}
           </div>
           <div className="more-movies-action">
-            <button className="btn-view-more" onClick={(e) => handleProtectedAction(e, () => alert("Tải thêm dữ liệu phim..."))}>Xem thêm phim</button>
+            <Button type="primary" size="large" style={{ background: footerStyles.primaryRed, borderRadius: 40, fontWeight: 'bold' }} onClick={() => navigate("/home")}>Vào trang chủ chính</Button>
           </div>
         </section>
 
-        {/* Blog Section */}
         <section id="blog" className="blog-section">
           <div className="section-header"><h2>Tin tức</h2></div>
           <div className="blog-grid">
@@ -291,20 +244,13 @@ const LandingPage = () => {
                   <span className="blog-date">{blog.date}</span>
                   <h3>{blog.title}</h3>
                   <p>{blog.summary}</p>
-                  <Link
-                    to={`/blog/${blog.id}`}
-                    className="blog-more"
-                    onClick={(e) => handleProtectedAction(e, () => navigate(`/blog/${blog.id}`))}
-                  >
-                    Đọc tiếp →
-                  </Link>
+                  <Link to={`/blog/${blog.id}`} className="blog-more" onClick={(e) => handleProtectedAction(e, () => navigate(`/blog/${blog.id}`))}>Đọc tiếp →</Link>
                 </div>
               </article>
             ))}
           </div>
         </section>
 
-        {/* Contact Section */}
         <section id="contact" className="contact-section">
           <div className="contact-container">
             <div className="contact-info">
@@ -326,137 +272,43 @@ const LandingPage = () => {
         </section>
       </main>
 
-      {/* Footer */}
+      {/* Footer giữ nguyên */}
       <footer style={{ background: '#110706', borderTop: '1px solid rgba(255,255,255,0.05)', padding: '56px 48px 32px' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <Row gutter={[48, 32]}>
             <Col xs={24} md={6}>
               <Title level={4} style={{ color: footerStyles.primary, marginBottom: 20, fontWeight: 800, fontSize: '24px' }}>KSTAR</Title>
               <Paragraph style={{ color: footerStyles.onSurfaceVariant, fontSize: 14, lineHeight: 1.6 }}>Hệ thống rạp chiếu phim hiện đại hàng đầu Việt Nam, mang lại trải nghiệm điện ảnh chân thực và đẳng cấp nhất.</Paragraph>
-              <Space size="middle">
-                <Button shape="circle" icon={<GlobalOutlined />} style={{ background: footerStyles.surfaceVariant, border: 'none', color: footerStyles.onSurfaceVariant }} />
-                <Button shape="circle" icon={<VideoCameraOutlined />} style={{ background: footerStyles.surfaceVariant, border: 'none', color: footerStyles.onSurfaceVariant }} />
-                <Button shape="circle" icon={<ShareAltOutlined />} style={{ background: footerStyles.surfaceVariant, border: 'none', color: footerStyles.onSurfaceVariant }} />
-              </Space>
             </Col>
             <Col xs={24} md={6}>
-              <Title level={5} style={{ color: footerStyles.primary, marginBottom: 20, fontWeight: 600 }}>Chăm sóc khách hàng</Title>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                <li style={{ marginBottom: 12 }}><a href="#" style={{ color: footerStyles.onSurfaceVariant }}>FAQs</a></li>
-                <li style={{ marginBottom: 12 }}><a href="#" style={{ color: footerStyles.onSurfaceVariant }}>Terms of Service</a></li>
-                <li style={{ marginBottom: 12 }}><a href="#" style={{ color: footerStyles.onSurfaceVariant }}>Privacy Policy</a></li>
-                <li style={{ marginBottom: 12 }}><a href="#" style={{ color: footerStyles.onSurfaceVariant }}>Contact Us</a></li>
-              </ul>
+              <Title level={5} style={{ color: 'white', marginBottom: 20 }}>Chăm sóc khách hàng</Title>
             </Col>
             <Col xs={24} md={6}>
-              <Title level={5} style={{ color: footerStyles.primary, marginBottom: 20, fontWeight: 600 }}>Về chúng tôi</Title>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                <li style={{ marginBottom: 12 }}><a href="#" style={{ color: footerStyles.onSurfaceVariant }}>About Us</a></li>
-                <li style={{ marginBottom: 12 }}><a href="#" style={{ color: footerStyles.onSurfaceVariant }}>Careers</a></li>
-                <li style={{ marginBottom: 12 }}><a href="#" style={{ color: footerStyles.onSurfaceVariant }}>Membership</a></li>
-                <li style={{ marginBottom: 12 }}><a href="#" style={{ color: footerStyles.onSurfaceVariant }}>Cinemas</a></li>
-              </ul>
+              <Title level={5} style={{ color: 'white', marginBottom: 20 }}>Về chúng tôi</Title>
             </Col>
             <Col xs={24} md={6}>
-              <Title level={5} style={{ color: footerStyles.primary, marginBottom: 20, fontWeight: 600 }}>Đăng ký bản tin</Title>
-              <Paragraph style={{ color: footerStyles.onSurfaceVariant, fontSize: 13 }}>Nhận thông báo về các bộ phim bom tấn và ưu đãi mới nhất.</Paragraph>
+              <Title level={5} style={{ color: 'white', marginBottom: 20 }}>Đăng ký bản tin</Title>
               <Form layout="inline" style={{ flexWrap: 'wrap', gap: 12 }}>
                 <Form.Item name="email" style={{ flex: 1, margin: 0 }}>
                   <Input placeholder="Email của bạn" style={{ borderRadius: 40, background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff' }} />
                 </Form.Item>
                 <Form.Item style={{ margin: 0 }}>
-                  <Button type="primary" htmlType="submit" style={{ background: footerStyles.primaryRed, borderColor: footerStyles.primaryRed, borderRadius: 40, height: 44, padding: '0 20px' }}>Gửi</Button>
+                  <Button type="primary" htmlType="submit" style={{ background: footerStyles.primaryRed, border: 'none', borderRadius: 40 }}>Gửi</Button>
                 </Form.Item>
               </Form>
             </Col>
           </Row>
-          <Divider style={{ background: 'rgba(255,255,255,0.05)', margin: '40px 0 24px' }} />
-          <Text style={{ color: footerStyles.onSurfaceVariant, display: 'block', textAlign: 'center', fontSize: '13px' }}>© 2024 KSTAR Cinema. All Rights Reserved.</Text>
         </div>
       </footer>
 
-      {/* Modal yêu cầu đăng nhập (nền đen, 2 nút) */}
-      <Modal
-        open={showLoginModal}
-        footer={null}
-        closable={false}
-        centered
-        width={480}
-        styles={{
-          content: {
-            background: '#0f0f0f',
-            borderRadius: 20,
-            padding: 0,
-            boxShadow: '0 20px 40px rgba(0,0,0,0.8), 0 0 0 1px rgba(229,9,20,0.3) inset',
-            border: 'none',
-          },
-          body: {
-            background: '#0f0f0f',
-            borderRadius: 20,
-            padding: '32px 24px',
-          }
-        }}
-      >
+      {/* Modal yêu cầu đăng nhập */}
+      <Modal open={showLoginModal} footer={null} closable={false} centered width={480} styles={{ content: { background: '#0f0f0f', borderRadius: 20, padding: 0 }, body: { padding: '32px 24px' } }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ marginBottom: 20 }}>
-            <span style={{ fontSize: 48, display: 'block' }}>🎬</span>
-          </div>
-          <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: '#ffffff' }}>
-            Yêu cầu đăng nhập để thực hiện tiếp
-          </div>
-          <div style={{ fontSize: 15, color: '#b0b0b0', marginBottom: 28, lineHeight: 1.5 }}>
-            Vui lòng đăng nhập để tiếp tục thao tác.
-          </div>
+          <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: '#ffffff' }}>Yêu cầu đăng nhập để thực hiện tiếp</div>
+          <div style={{ fontSize: 15, color: '#b0b0b0', marginBottom: 28, lineHeight: 1.5 }}>Vui lòng đăng nhập để tiếp tục thao tác.</div>
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
-            <button
-              onClick={handleCancel}
-              style={{
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                padding: '8px 24px',
-                borderRadius: 40,
-                color: '#e0e0e0',
-                fontSize: 14,
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
-              }}
-            >
-              Quay lại
-            </button>
-            <button
-              onClick={handleLoginNow}
-              style={{
-                background: '#E50914',
-                border: 'none',
-                padding: '8px 28px',
-                borderRadius: 40,
-                color: '#ffffff',
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 12px rgba(229,9,20,0.4)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#ff1e2e';
-                e.currentTarget.style.transform = 'scale(1.02)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#E50914';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-            >
-              Đăng nhập ngay
-            </button>
+            <button onClick={handleCancel} style={{ background: 'rgba(255,255,255,0.08)', color: '#e0e0e0', padding: '8px 24px', borderRadius: 40, border: 'none', cursor: 'pointer' }}>Quay lại</button>
+            <button onClick={handleLoginNow} style={{ background: '#E50914', color: '#fff', padding: '8px 28px', borderRadius: 40, border: 'none', cursor: 'pointer' }}>Đăng nhập ngay</button>
           </div>
         </div>
       </Modal>
