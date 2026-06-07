@@ -14,7 +14,7 @@ import {
   BellOutlined,
 } from '@ant-design/icons';
 // 🟢 IMPORT KHO DỮ LIỆU TỔNG
-import { moviesData } from '@/api/movies';
+import { fetchMovies, Movie } from '@/api/movies';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -41,11 +41,17 @@ const LandingPage = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [moviesData, setMoviesData] = useState<Movie[]>([]);
   
   const user = useAuthStore((s: any) => s.user);
   const isLoggedIn = Boolean(user);
 
   useEffect(() => {
+    const loadMovies = async () => {
+      const data = await fetchMovies();
+      setMoviesData(data);
+    };
+    loadMovies();
     const interval = setInterval(() => setCurrentSlide((prev) => (prev === HERO_SLIDES.length - 1 ? 0 : prev + 1)), 5000);
     return () => clearInterval(interval);
   }, []);

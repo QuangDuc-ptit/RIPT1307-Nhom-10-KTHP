@@ -6,7 +6,7 @@ import { Layout, Button, Input, Select, DatePicker, Row, Col, Badge, Avatar, Spa
 import { SearchOutlined, BellOutlined, StarFilled, PlayCircleOutlined, LeftOutlined, RightOutlined, GlobalOutlined, VideoCameraOutlined, ShareAltOutlined, ArrowRightOutlined, CalendarOutlined, CloseOutlined } from '@ant-design/icons';
 
 // 🟢 IMPORT HÀM TỪ API CHUNG
-import { getNowShowingMovies, getComingSoonMovies } from '@/api/movies';
+import { getNowShowingMovies, getComingSoonMovies, Movie } from '@/api/movies';
 
 const { Header, Footer, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -22,12 +22,25 @@ export default function HomePage() {
   const prevBtnRef = useRef<HTMLButtonElement>(null);
   const nextBtnRef = useRef<HTMLButtonElement>(null);
 
-  const nowShowingMovies = getNowShowingMovies();
-  const comingSoonMovies = getComingSoonMovies();
+  const [nowShowingMovies, setNowShowingMovies] = useState<Movie[]>([]);
+  const [comingSoonMovies, setComingSoonMovies] = useState<Movie[]>([]);
 
   // STATE CHO SLIDER HERO & MUA VÉ NHANH
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [quickBookMovieId, setQuickBookMovieId] = useState<number>(nowShowingMovies[0]?.id || 2);
+  const [quickBookMovieId, setQuickBookMovieId] = useState<number | string>('');
+
+  useEffect(() => {
+    const loadData = async () => {
+      const nowShowing = await getNowShowingMovies();
+      const comingSoon = await getComingSoonMovies();
+      setNowShowingMovies(nowShowing);
+      setComingSoonMovies(comingSoon);
+      if (nowShowing.length > 0) {
+        setQuickBookMovieId(nowShowing[0].id);
+      }
+    };
+    loadData();
+  }, []);
 
   // STATE QUẢN LÝ POPUP PHIM SẮP CHIẾU
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -76,7 +89,7 @@ export default function HomePage() {
     </Col>
   );
 
-  const handleBookMovie = (movieId: number) => {
+  const handleBookMovie = (movieId: number | string) => {
     navigate(`/movie/${movieId}`);
   };
 

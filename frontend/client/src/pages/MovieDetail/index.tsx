@@ -6,21 +6,24 @@ import Sidebar from './Sidebar';
 import Footer from '@/components/layout/Footer';
 
 // Import kho dữ liệu chung
-import { getMovieById } from '@/api/movies';
+import { getMovieById, Movie } from '@/api/movies';
 
 const MovieDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [isVisible, setIsVisible] = useState(false);
+  const [rawMovie, setRawMovie] = useState<Movie | null>(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setIsVisible(false);
-    const timer = setTimeout(() => setIsVisible(true), 50);
-    return () => clearTimeout(timer);
+    
+    const fetchDetail = async () => {
+      const data = await getMovieById(id || '2');
+      setRawMovie(data);
+      setTimeout(() => setIsVisible(true), 50);
+    };
+    fetchDetail();
   }, [id]);
-
-  // Lấy dữ liệu từ API chung
-  const rawMovie = getMovieById(id || '2');
 
   // Chuẩn hóa dữ liệu để khớp với MovieDetailData
   const currentMovie = rawMovie ? {
