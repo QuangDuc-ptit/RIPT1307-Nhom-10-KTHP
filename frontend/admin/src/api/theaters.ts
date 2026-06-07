@@ -27,11 +27,11 @@ export interface Room {
 }
 
 export const theatersApi = {
-  getCinemas: () => apiClient.get<Cinema[]>('/rap-chieu').then(r => r.data),
-  createCinema: (data: { name: string; address: string }) => apiClient.post<Cinema>('/rap-chieu', data).then(r => r.data),
-  getRooms: (cinemaId: string) => apiClient.get<Room[]>(`/phong-chieu?cinemaId=${cinemaId}`).then(r => r.data),
-  createRoom: (data: { name: string; cinemaId: string }) => apiClient.post<Room>('/phong-chieu', data).then(r => r.data),
-  getRoomDetail: (id: string) => apiClient.get<Room>(`/phong-chieu/${id}`).then(r => r.data),
+  getCinemas: () => apiClient.get<Cinema[]>('/admin/rap-chieu').then(r => r.data),
+  createCinema: (data: { name: string; address: string }) => apiClient.post<Cinema>('/admin/rap-chieu', data).then(r => r.data),
+  getRooms: (cinemaId: string) => apiClient.get<Room[]>(`/admin/phong-chieu?cinemaId=${cinemaId}`).then(r => r.data),
+  createRoom: (data: { name: string; cinemaId: string }) => apiClient.post<Room>('/admin/phong-chieu', data).then(r => r.data),
+  getRoomDetail: (id: string) => apiClient.get<Room>(`/admin/phong-chieu/${id}`).then(r => r.data),
   generateSeats: (roomId: string, data: { rowCount: number; seatsPerRow: number; vipRows?: string[]; sweetboxRows?: string[] }) => 
-    apiClient.post<{ success: boolean, count: number }>(`/phong-chieu/${roomId}/sinh-ghe`, data).then(r => r.data),
+    apiClient.post<{ success: boolean, count: number }>(`/admin/phong-chieu/${roomId}/sinh-ghe`, data).then(r => r.data),
 };
