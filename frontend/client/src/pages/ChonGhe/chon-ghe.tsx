@@ -23,11 +23,11 @@ interface Seat {
 }
 
 // --- Constants ---
-const REGULAR_PRICE = 120000;
-const VIP_PRICE = 180000;
-const SWEETBOX_PRICE = 250000;
-const CENTER_BONUS = 20000;
-const BOOKING_FEE = 25000;
+const REGULAR_PRICE = 80000;
+const VIP_PRICE = 120000;
+const SWEETBOX_PRICE = 160000;
+const CENTER_BONUS = 0;
+const BOOKING_FEE = 0;
 
 const centerRows = ['F', 'G', 'H', 'I', 'J', 'K'];
 const CENTER_HORIZONTAL_EXPAND = 1;
@@ -306,9 +306,9 @@ const ChonGhe: React.FC = () => {
         boxShadow: '0 0 12px rgba(229,9,20,0.8)',
       };
     }
-    if (seat.status === "RESERVED") return { ...base, backgroundColor: '#555555', cursor: 'not-allowed', opacity: 0.7 };
-    if (seat.status === "BOOKED") return { ...base, backgroundColor: '#5b57c7', cursor: 'not-allowed' };
-    if (seat.status === "LOCKED") return { ...base, backgroundColor: '#003366', cursor: 'not-allowed' };
+    if (seat.status === "RESERVED") return { ...base, backgroundColor: '#003366', cursor: 'not-allowed', opacity: 0.8 }; // Xanh nước biển đậm (Đang giữ chỗ)
+    if (seat.status === "BOOKED") return { ...base, backgroundColor: '#9c27b0', cursor: 'not-allowed' }; // Màu tím (Đã đặt)
+    if (seat.status === "LOCKED") return { ...base, backgroundColor: '#333333', cursor: 'not-allowed' }; // Đen xám (Bảo trì/Hỏng)
     if (seat.type === "VIP") {
       if (seat.isCenterZone) return { ...base, backgroundColor: '#00c853' };
       return { ...base, backgroundColor: '#f5b000' };
@@ -375,8 +375,9 @@ const ChonGhe: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#e91e63', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>SWEETBOX</span></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#00c853', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>VIP TRUNG TÂM</span></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#ff0000', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>ĐÃ CHỌN</span></div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#5b57c7', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>ĐÃ ĐẶT</span></div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#003366', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>BỊ KHÓA</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#9c27b0', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>ĐÃ ĐẶT</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#003366', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>ĐANG GIỮ CHỖ</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#333333', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>BỊ KHÓA</span></div>
             </div>
 
             {isLoading ? (

@@ -131,12 +131,18 @@ const CheckoutPage: React.FC = () => {
         foods: foodItems.map(f => ({ foodId: f.id, quantity: f.quantity }))
       };
 
-      await bookingApi.createBooking(data);
+      const res = await bookingApi.createBooking(data);
+      
+      // Giả lập thanh toán thành công (ép DB sang trạng thái SUCCESS)
+      const bookingId = (res as any).data?.booking?.id || (res as any).booking?.id;
+      if (bookingId) {
+        await bookingApi.mockPayment(bookingId);
+      }
       
       message.success({ content: 'Thanh toán thành công! Đơn hàng đã được ghi nhận.', key: 'checkout', duration: 3 });
       
-      // Chuyển hướng về trang chủ hoặc trang lịch sử vé
-      setTimeout(() => navigate('/'), 2000);
+      // Chuyển hướng về trang chủ
+      setTimeout(() => navigate('/home'), 2000);
     } catch (error: any) {
       console.error('Lỗi khi thanh toán:', error);
       message.error({ 

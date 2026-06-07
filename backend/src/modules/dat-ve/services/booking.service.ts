@@ -33,11 +33,11 @@ export const bookingService = {
           throw conflict(`Ghế ${stSeat.seat.row}${stSeat.seat.number} chưa được giữ hoặc đã hết hạn giữ chỗ! Vui lòng giữ ghế trước khi tạo đơn.`);
         }
 
-        // Tính giá ghế (Hardcode theo thỏa thuận)
+        // Tính giá ghế (Đồng bộ với thiết lập cứng trên giao diện Admin)
         let price = 0;
-        if (stSeat.seat.type === SeatType.NORMAL) price = 80000;
-        else if (stSeat.seat.type === SeatType.VIP) price = 120000;
-        else if (stSeat.seat.type === SeatType.SWEETBOX) price = 200000;
+        if (stSeat.seat.type === 'NORMAL') price = 80000;
+        else if (stSeat.seat.type === 'VIP') price = 120000;
+        else if (stSeat.seat.type === 'SWEETBOX') price = 160000;
 
         totalSeatAmount += price;
         bookingSeatsData.push({
@@ -105,6 +105,37 @@ export const bookingService = {
       });
 
       return booking;
+    });
+  },
+
+  mockPayment: async (userId: string, bookingId: string) => {
+    return await prisma.$transaction(async (tx) => {
+      const booking = await tx.booking.findUnique({
+        where: { id: bookingId },
+        include: { bookingSeats: true }
+      });
+
+      if (!booking || booking.userId !== userId) {
+        throw badRequest('Đơn hàng không tồn tại');
+      }
+
+      if (booking.status !== 'PENDING') {
+        throw conflict('Đơn hàng không ở trạng thái chờ thanh toán');
+      }
+
+      // Update booking status
+      const updatedBooking = await tx.booking.update({
+        where: { id: bookingId },
+        data: { status: 'SUCCESS' }
+      });
+
+      // Update seat status
+      await tx.showtimeSeat.updateMany({
+        where: { id: { in: booking.bookingSeats.map(s => s.showtimeSeatId) } },
+        data: { status: 'BOOKED', expiresAt: null }
+      });
+
+      return updatedBooking;
     });
   }
 };

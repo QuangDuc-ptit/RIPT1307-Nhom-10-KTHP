@@ -15,5 +15,6 @@ router.use(requireAuth);
 router.post('/giu-ghe', validate({ body: giuGheSchema }), asyncHandler(datVeController.giuGhe));
 router.post('/huy-ghe', validate({ body: huyGheSchema }), asyncHandler(datVeController.huyGhe));
 router.post('/booking', validate({ body: createBookingSchema }), asyncHandler(bookingController.createBooking));
+router.post('/mock-payment', asyncHandler(bookingController.mockPayment));
 
 export default router;

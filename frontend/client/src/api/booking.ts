@@ -65,5 +65,10 @@ export const bookingApi = {
   createBooking: async (data: { showtimeId: string, showtimeSeatIds: string[], foods: { foodId: string, quantity: number }[] }) => {
     const res = await apiClient.post('/dat-ve/booking', data);
     return res;
+  },
+
+  mockPayment: async (bookingId: string) => {
+    const res = await apiClient.post('/dat-ve/mock-payment', { bookingId });
+    return res;
   }
 };
