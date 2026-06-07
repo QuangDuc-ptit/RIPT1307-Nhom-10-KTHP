@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { bookingApi, ShowtimeSeat } from '@/api/booking';
+import { message } from 'antd';
 
 // --- Types ---
-type SeatType = "REGULAR" | "VIP";
+type SeatType = "REGULAR" | "VIP" | "SWEETBOX";
 type SeatStatus = "AVAILABLE" | "BOOKED" | "LOCKED";
 
 interface Seat {
-  id: string;
+  id: string; // The showtimeSeatId
+  seatId: string; // The physical seatId
   row: string;
   number: number;
   type: SeatType;
@@ -18,30 +21,17 @@ interface Seat {
 // --- Constants ---
 const REGULAR_PRICE = 120000;
 const VIP_PRICE = 180000;
+const SWEETBOX_PRICE = 250000;
 const CENTER_BONUS = 20000;
 const BOOKING_FEE = 25000;
 
-// --- Cấu hình ghế: 14 hàng (A → N), mỗi hàng 15 cột ---
-const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'];
-const seatsPerRow = 15;
-const vipRows = ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'];
-
-// --- Cấu hình vùng trung tâm (động) ---
-// Các hàng thuộc vùng trung tâm (có thể mở rộng thêm)
 const centerRows = ['F', 'G', 'H', 'I', 'J', 'K'];
-// Số ghế mở rộng mỗi bên của tâm (0 = 2 trái + 2 phải, 1 = 3 trái + 3 phải, ...)
 const CENTER_HORIZONTAL_EXPAND = 1;
 
-/**
- * Tính danh sách các số cột thuộc vùng trung tâm dựa trên tổng số ghế của hàng.
- * @param totalSeats - tổng số ghế mỗi hàng (ví dụ 15)
- * @param expand - số lượng ghế mở rộng thêm mỗi bên
- * @returns mảng số cột (ví dụ [6,7,8,9,10] nếu totalSeats=15, expand=1)
- */
 function getCenterSeats(totalSeats: number, expand: number = CENTER_HORIZONTAL_EXPAND): number[] {
   const centerLeft = Math.floor(totalSeats / 2);
   const centerRight = centerLeft + 1;
-  const sideCount = 2 + expand; // số ghế mỗi bên tính từ tâm (2 ghế gốc + mở rộng)
+  const sideCount = 2 + expand; 
   const start = centerLeft - (sideCount - 1);
   const end = centerRight + (sideCount - 1);
   const seats: number[] = [];
@@ -51,72 +41,14 @@ function getCenterSeats(totalSeats: number, expand: number = CENTER_HORIZONTAL_E
   return seats;
 }
 
-// --- Dữ liệu mẫu ghế đặt/khóa (giữ nguyên) ---
-const bookedSeats = [
-  'A1', 'A2', 'A15',
-  'B5', 'B6', 'B10',
-  'C3', 'C4', 'C8', 'C12',
-  'D1', 'D15',
-  'E5', 'E6', 'E11',
-  'F4', 'F7', 'F9',
-  'G2', 'G9', 'G14',
-  'H8', 'H9', 'H13',
-  'I3', 'I4', 'I10',
-  'J1', 'J15',
-  'K5', 'K6', 'K12',
-  'L2', 'L9', 'L11',
-  'M7', 'M8', 'M14',
-  'N4', 'N5', 'N10'
-];
-const lockedSeats = [
-  'C1', 'C2', 'I1', 'I2', 'J2', 'J3', 'K1', 'K2', 'L3', 'L4', 'M1', 'M2', 'N1', 'N2'
-];
-
-// --- Hàm xác định vùng trung tâm (động) ---
 function isCenterZone(row: string, seatNumber: number, totalSeats: number): boolean {
   if (!centerRows.includes(row)) return false;
   const centerSeats = getCenterSeats(totalSeats);
   return centerSeats.includes(seatNumber);
 }
 
-// --- Tạo ghế đơn ---
-const generateSingleSeat = (row: string, number: number, totalSeats: number): Seat => {
-  const isCenter = isCenterZone(row, number, totalSeats);
-  let type: SeatType = "REGULAR";
-  if (vipRows.includes(row)) type = "VIP";
-
-  let price = type === "VIP" ? VIP_PRICE : REGULAR_PRICE;
-  if (isCenter && type === "VIP") price += CENTER_BONUS;
-
-  let status: SeatStatus = "AVAILABLE";
-  const seatId = `${row}${number}`;
-  if (bookedSeats.includes(seatId)) status = "BOOKED";
-  if (lockedSeats.includes(seatId)) status = "LOCKED";
-
-  return {
-    id: seatId,
-    row,
-    number,
-    type,
-    status,
-    isCenterZone: isCenter,
-    price,
-  };
-};
-
-const generateSeats = (): Seat[] => {
-  const seats: Seat[] = [];
-  for (const row of rows) {
-    for (let i = 1; i <= seatsPerRow; i++) {
-      seats.push(generateSingleSeat(row, i, seatsPerRow));
-    }
-  }
-  return seats;
-};
-
 const isSeatSelectable = (seat: Seat): boolean => seat.status === "AVAILABLE";
 
-// Format tiền đẹp hơn (thêm dấu phân cách, font chữ rõ)
 const formatVND = (amount: number) => {
   return amount.toLocaleString('vi-VN') + ' ₫';
 };
@@ -126,16 +58,79 @@ const ChonGhe: React.FC = () => {
   const navigate = useNavigate();
   const bookingInfo = location.state as any;
 
-  const movieTitle = bookingInfo?.movie?.title || 'Interstellar: Trải nghiệm IMAX';
-  const cinemaName = bookingInfo?.cinema?.name || 'Grand Cinema';
-  const roomName = bookingInfo?.room?.roomName || 'Phòng chiếu 4';
-  const showDate = bookingInfo?.showtime?.date || 'Hôm nay';
-  const showTime = bookingInfo?.showtime?.time || '20:30';
+  const movieTitle = bookingInfo?.movie?.title || 'Đang cập nhật';
+  const cinemaName = bookingInfo?.cinema?.name || 'Đang cập nhật';
+  const roomName = bookingInfo?.room?.roomName || 'Đang cập nhật';
+  
+  // Parse date and time from the showtime object
+  const startTime = bookingInfo?.showtime?.startTime ? new Date(bookingInfo.showtime.startTime) : null;
+  const showDate = startTime ? `${startTime.getDate().toString().padStart(2, '0')}/${(startTime.getMonth() + 1).toString().padStart(2, '0')}` : 'Hôm nay';
+  const showTime = bookingInfo?.showtime?.timeString || (startTime ? `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}` : '20:30');
 
   const [selectedSeatIds, setSelectedSeatIds] = useState<Set<string>>(new Set());
   const [timeLeft, setTimeLeft] = useState<number>(594);
+  const [allSeats, setAllSeats] = useState<Seat[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const allSeats = useMemo(() => generateSeats(), []);
+  // Lấy dữ liệu ghế từ API
+  useEffect(() => {
+    const fetchSeats = async () => {
+      const showtimeId = bookingInfo?.showtime?.id;
+      if (!showtimeId) {
+        message.error("Không tìm thấy thông tin suất chiếu");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const detail = await bookingApi.getShowtimeDetail(showtimeId);
+        if (detail && detail.seats) {
+          // Tính totalSeats cho mỗi row để tính vùng trung tâm (nếu cần)
+          // Giả sử lấy max number làm totalSeats
+          let maxNumber = 15;
+          detail.seats.forEach(s => {
+            if (s.seat.number > maxNumber) maxNumber = s.seat.number;
+          });
+
+          const mappedSeats: Seat[] = detail.seats.map(stSeat => {
+            const row = stSeat.seat.row;
+            const number = stSeat.seat.number;
+            const type = stSeat.seat.type as SeatType;
+            const isCenter = isCenterZone(row, number, maxNumber);
+            
+            let price = type === "VIP" ? VIP_PRICE : (type === "SWEETBOX" ? SWEETBOX_PRICE : REGULAR_PRICE);
+            if (isCenter && type === "VIP") price += CENTER_BONUS;
+
+            return {
+              id: stSeat.id, // Dùng ID của showtimeSeat để đặt vé
+              seatId: stSeat.seatId,
+              row,
+              number,
+              type,
+              status: stSeat.status,
+              isCenterZone: isCenter,
+              price
+            };
+          });
+
+          setAllSeats(mappedSeats);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy sơ đồ ghế", error);
+        message.error("Không thể tải sơ đồ ghế, vui lòng thử lại");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSeats();
+  }, [bookingInfo]);
+
+  const rows = useMemo(() => {
+    const uniqueRows = Array.from(new Set(allSeats.map(s => s.row)));
+    return uniqueRows.sort();
+  }, [allSeats]);
+
   const seatMap = useMemo(() => new Map(allSeats.map(seat => [seat.id, seat])), [allSeats]);
 
   // Fonts & timer
@@ -186,14 +181,16 @@ const ChonGhe: React.FC = () => {
   const total = hasTickets ? subtotal + BOOKING_FEE : 0;
   const ticketCount = selectedSeats.length;
 
-  const previewSeats = selectedSeats.map(s => s.id);
+  const previewSeats = selectedSeats.map(s => `${s.row}${s.number}`);
   const displayedSeats = previewSeats.slice(0, 6);
 
   const seatsByRow = useMemo(() => {
     const grouped: Record<string, Seat[]> = {};
-    rows.forEach(row => { grouped[row] = allSeats.filter(seat => seat.row === row); });
+    rows.forEach(row => { 
+      grouped[row] = allSeats.filter(seat => seat.row === row).sort((a,b) => a.number - b.number); 
+    });
     return grouped;
-  }, [allSeats]);
+  }, [allSeats, rows]);
 
   const handleConfirm = () => navigate('/checkout', { state: { selectedSeats, total, bookingInfo } });
   const handleFoodDrink = () => navigate('/food-drink', { state: { selectedSeats, totalSeatsPrice: subtotal, bookingInfo } });
@@ -223,6 +220,10 @@ const ChonGhe: React.FC = () => {
       cursor: 'pointer',
       transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
     };
+    if (seat.type === "SWEETBOX") {
+      base.width = 'clamp(40px, 8vw, 60px)'; // Rộng gấp đôi ghế thường
+    }
+    
     if (isSelected) {
       return {
         ...base,
@@ -236,6 +237,9 @@ const ChonGhe: React.FC = () => {
     if (seat.type === "VIP") {
       if (seat.isCenterZone) return { ...base, backgroundColor: '#00c853' };
       return { ...base, backgroundColor: '#f5b000' };
+    }
+    if (seat.type === "SWEETBOX") {
+      return { ...base, backgroundColor: '#e91e63' }; // Màu hồng cho Sweetbox
     }
     return { ...base, backgroundColor: '#444444' };
   };
@@ -293,40 +297,45 @@ const ChonGhe: React.FC = () => {
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 'clamp(12px, 4vw, 32px)', marginBottom: '64px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#444444', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>GHẾ THƯỜNG</span></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#f5b000', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>GHẾ VIP</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#e91e63', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>SWEETBOX</span></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#00c853', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>VIP TRUNG TÂM</span></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#ff0000', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>ĐÃ CHỌN</span></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#5b57c7', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>ĐÃ ĐẶT</span></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#222222', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>BỊ KHÓA</span></div>
             </div>
 
-            {/* Danh sách ghế với lối đi (7 trái, 8 phải) */}
-            <div style={{ overflowX: 'auto', width: '100%', paddingBottom: '16px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 1.5vw, 10px)', minWidth: 'min-content' }}>
-                {rows.map(row => {
-                  const rowSeats = seatsByRow[row];
-                  if (!rowSeats) return null;
-                  const leftSeats = rowSeats.slice(0, 7);
-                  const rightSeats = rowSeats.slice(7, 15);
-                  const gapBetweenHalves = 'clamp(30px, 6vw, 50px)';
-                  return (
-                    <div key={row} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: gapBetweenHalves }}>
-                      <div style={{ width: '20px', fontSize: 'clamp(8px, 2vw, 10px)', fontWeight: 'bold', color: `${colors.onSurfaceVariant}66`, textAlign: 'center' }}>{row}</div>
-                      <div style={{ display: 'flex', gap: 'clamp(3px, 1vw, 6px)' }}>
-                        {leftSeats.map(seat => (
-                          <button key={seat.id} onClick={() => handleSeatClick(seat.id)} disabled={!isSeatSelectable(seat)} style={getSeatStyle(seat, selectedSeatIds.has(seat.id))} />
-                        ))}
+            {isLoading ? (
+              <div style={{ padding: '40px', color: colors.textDim }}>Đang tải sơ đồ ghế...</div>
+            ) : (
+              <div style={{ overflowX: 'auto', width: '100%', paddingBottom: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 1.5vw, 10px)', minWidth: 'min-content' }}>
+                  {rows.map(row => {
+                    const rowSeats = seatsByRow[row];
+                    if (!rowSeats) return null;
+                    const midpoint = Math.ceil(rowSeats.length / 2);
+                    const leftSeats = rowSeats.slice(0, midpoint);
+                    const rightSeats = rowSeats.slice(midpoint);
+                    const gapBetweenHalves = 'clamp(30px, 6vw, 50px)';
+                    return (
+                      <div key={row} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: gapBetweenHalves }}>
+                        <div style={{ width: '20px', fontSize: 'clamp(8px, 2vw, 10px)', fontWeight: 'bold', color: `${colors.onSurfaceVariant}66`, textAlign: 'center' }}>{row}</div>
+                        <div style={{ display: 'flex', gap: 'clamp(3px, 1vw, 6px)' }}>
+                          {leftSeats.map(seat => (
+                            <button key={seat.id} onClick={() => handleSeatClick(seat.id)} disabled={!isSeatSelectable(seat)} style={getSeatStyle(seat, selectedSeatIds.has(seat.id))} />
+                          ))}
+                        </div>
+                        <div style={{ display: 'flex', gap: 'clamp(3px, 1vw, 6px)' }}>
+                          {rightSeats.map(seat => (
+                            <button key={seat.id} onClick={() => handleSeatClick(seat.id)} disabled={!isSeatSelectable(seat)} style={getSeatStyle(seat, selectedSeatIds.has(seat.id))} />
+                          ))}
+                        </div>
+                        <div style={{ width: '20px', fontSize: 'clamp(8px, 2vw, 10px)', fontWeight: 'bold', color: `${colors.onSurfaceVariant}66`, textAlign: 'center' }}>{row}</div>
                       </div>
-                      <div style={{ display: 'flex', gap: 'clamp(3px, 1vw, 6px)' }}>
-                        {rightSeats.map(seat => (
-                          <button key={seat.id} onClick={() => handleSeatClick(seat.id)} disabled={!isSeatSelectable(seat)} style={getSeatStyle(seat, selectedSeatIds.has(seat.id))} />
-                        ))}
-                      </div>
-                      <div style={{ width: '20px', fontSize: 'clamp(8px, 2vw, 10px)', fontWeight: 'bold', color: `${colors.onSurfaceVariant}66`, textAlign: 'center' }}>{row}</div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Timer */}
             <div style={{ ...glassStyle, borderRadius: '16px', padding: 'clamp(12px, 3vw, 16px) clamp(16px, 4vw, 24px)', display: 'flex', alignItems: 'center', gap: 'clamp(12px, 3vw, 16px)', width: '100%', maxWidth: '600px', marginTop: '32px' }}>
