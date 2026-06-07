@@ -1,14 +1,15 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Space, Button, InputNumber, Dropdown, MenuProps, message } from 'antd';
+import { Space, Button, InputNumber, Dropdown, MenuProps, message, Modal, Input, Select, Spin } from 'antd';
 import { 
   DownOutlined, 
   UndoOutlined, 
   RedoOutlined, 
   AppstoreOutlined, 
-  SaveOutlined 
+  SaveOutlined,
+  PlusOutlined
 } from '@ant-design/icons';
+import { theatersApi, Cinema, Room } from '../../api/theaters';
 
-// Interface cấu hình riêng cho từng phòng chiếu
 interface ScreenConfig {
   rows: number;
   cols: number;
@@ -17,62 +18,163 @@ interface ScreenConfig {
   priceCouple: number;
 }
 
-// Interface để quản lý lịch sử undo/redo cho từng phòng
 interface GridState {
   rows: number;
   cols: number;
 }
 
 export default function TheatersPage() {
-  const [selectedScreen, setSelectedScreen] = useState<string | null>(null);
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [selectedCinemaId, setSelectedCinemaId] = useState<string | null>(null);
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
 
-  // Khởi tạo data từ localStorage, nếu chưa có dữ liệu cũ thì nạp giá trị mặc định ban đầu bằng VND
-  const [theaterConfigs, setTheaterConfigs] = useState<Record<string, ScreenConfig>>(() => {
-    const savedConfigs = localStorage.getItem('global_theater_configs');
-    if (savedConfigs) {
-      try {
-        return JSON.parse(savedConfigs);
-      } catch (e) {
-        // Phòng hờ dữ liệu bị lỗi format JSON
-      }
-    }
-    // Giá vé mặc định ban đầu theo đơn vị VND (80k - 120k - 160k)
-    return {
-      'Screen 1 - IMAX': { rows: 11, cols: 13, priceStandard: 80000, priceVip: 120000, priceCouple: 160000 },
-      'Screen 2 - IMAX': { rows: 12, cols: 12, priceStandard: 80000, priceVip: 120000, priceCouple: 160000 },
-      'Screen 3 - IMAX': { rows: 10, cols: 10, priceStandard: 80000, priceVip: 120000, priceCouple: 160000 },
-      'Screen 4 - IMAX': { rows: 10, cols: 10, priceStandard: 80000, priceVip: 120000, priceCouple: 160000 },
-      'Screen 5 - IMAX': { rows: 10, cols: 10, priceStandard: 80000, priceVip: 120000, priceCouple: 160000 },
-      'Screen 6 - IMAX': { rows: 10, cols: 10, priceStandard: 80000, priceVip: 120000, priceCouple: 160000 },
-    };
-  });
+  const [loadingCinemas, setLoadingCinemas] = useState(true);
+  const [loadingRooms, setLoadingRooms] = useState(false);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // Tự động đồng bộ toàn bộ thay đổi của các phòng chiếu vào localStorage của trình duyệt
-  useEffect(() => {
-    localStorage.setItem('global_theater_configs', JSON.stringify(theaterConfigs));
-  }, [theaterConfigs]);
+  // Modal states
+  const [isCinemaModalOpen, setIsCinemaModalOpen] = useState(false);
+  const [newCinemaName, setNewCinemaName] = useState('');
+  const [newCinemaAddress, setNewCinemaAddress] = useState('');
+  
+  const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
+  const [newRoomName, setNewRoomName] = useState('');
 
-  // Lấy ra cấu hình hiện tại của phòng đang chọn (nếu chưa chọn thì lấy tạm mặc định)
-  const currentConfig = useMemo(() => {
-    if (!selectedScreen) return { rows: 10, cols: 10, priceStandard: 80000, priceVip: 120000, priceCouple: 160000 };
-    return theaterConfigs[selectedScreen];
-  }, [selectedScreen, theaterConfigs]);
-
-  // Các hàm cập nhật config động dựa theo phòng đang chọn
-  const updateCurrentConfig = (fields: Partial<ScreenConfig>) => {
-    if (!selectedScreen) return;
-    setTheaterConfigs(prev => ({
-      ...prev,
-      [selectedScreen]: {
-        ...prev[selectedScreen],
-        ...fields
-      }
-    }));
-  };
-
-  // LOGIC UNDO / REDO TRẠNG THÁI KÍCH THƯỚC (Quản lý theo phòng hiện tại)
+  const [currentConfig, setCurrentConfig] = useState<ScreenConfig>({ rows: 10, cols: 10, priceStandard: 80000, priceVip: 120000, priceCouple: 160000 });
   const [history, setHistory] = useState<GridState[]>([{ rows: 10, cols: 10 }]);
   const [historyIndex, setHistoryIndex] = useState<number>(0);
+
+  useEffect(() => {
+    fetchCinemas();
+  }, []);
+
+  const fetchCinemas = async () => {
+    try {
+      const res = await theatersApi.getCinemas();
+      setCinemas(res);
+    } catch (err) {
+      message.error('Không thể tải danh sách rạp chiếu');
+    } finally {
+      setLoadingCinemas(false);
+    }
+  };
+
+  const handleCinemaChange = async (cinemaId: string) => {
+    setSelectedCinemaId(cinemaId);
+    setSelectedRoomId(null);
+    setRooms([]);
+    setLoadingRooms(true);
+    try {
+      const res = await theatersApi.getRooms(cinemaId);
+      setRooms(res);
+    } catch (err) {
+      message.error('Không thể tải danh sách phòng chiếu');
+    } finally {
+      setLoadingRooms(false);
+    }
+  };
+
+  const handleRoomChange = async (roomId: string) => {
+    setSelectedRoomId(roomId);
+    setLoadingDetail(true);
+    try {
+      const room = await theatersApi.getRoomDetail(roomId);
+      if (room.seats && room.seats.length > 0) {
+        let maxRowCode = 65;
+        let maxCol = 10;
+        room.seats.forEach(s => {
+          const code = s.row.charCodeAt(0);
+          if (code > maxRowCode) maxRowCode = code;
+          if (s.number > maxCol) maxCol = s.number;
+        });
+        const rowsCount = maxRowCode - 65 + 1;
+        const newRows = Math.max(10, rowsCount);
+        const newCols = Math.max(10, maxCol);
+        
+        setCurrentConfig(prev => ({ ...prev, rows: newRows, cols: newCols }));
+        setHistory([{ rows: newRows, cols: newCols }]);
+        setHistoryIndex(0);
+      } else {
+        setCurrentConfig(prev => ({ ...prev, rows: 10, cols: 10 }));
+        setHistory([{ rows: 10, cols: 10 }]);
+        setHistoryIndex(0);
+      }
+    } catch (error) {
+      message.error('Không thể tải chi tiết phòng chiếu');
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
+  const handleCreateCinema = async () => {
+    if (!newCinemaName || !newCinemaAddress) {
+      message.warning('Vui lòng nhập đầy đủ tên rạp và địa chỉ');
+      return;
+    }
+    try {
+      const cinema = await theatersApi.createCinema({ name: newCinemaName, address: newCinemaAddress });
+      message.success('Tạo rạp chiếu thành công');
+      setCinemas([...cinemas, cinema]);
+      setIsCinemaModalOpen(false);
+      setNewCinemaName('');
+      setNewCinemaAddress('');
+      handleCinemaChange(cinema.id);
+    } catch (err) {
+      message.error('Có lỗi xảy ra khi tạo rạp chiếu');
+    }
+  };
+
+  const handleCreateRoom = async () => {
+    if (!selectedCinemaId) return;
+    if (!newRoomName) {
+      message.warning('Vui lòng nhập tên phòng chiếu');
+      return;
+    }
+    try {
+      const room = await theatersApi.createRoom({ name: newRoomName, cinemaId: selectedCinemaId });
+      message.success('Tạo phòng chiếu thành công');
+      setRooms([...rooms, room]);
+      setIsRoomModalOpen(false);
+      setNewRoomName('');
+      handleRoomChange(room.id);
+    } catch (err) {
+      message.error('Có lỗi xảy ra khi tạo phòng chiếu');
+    }
+  };
+
+  const handleSave = async () => {
+    if (!selectedRoomId) return;
+    setSaving(true);
+    try {
+      // Logic xác định dòng VIP (cố định D, E, F, G như giao diện)
+      const vipRows = ['D', 'E', 'F', 'G'].filter(char => char.charCodeAt(0) - 65 < currentConfig.rows);
+      
+      // Logic xác định Sweetbox (Couple): 2 hàng cuối
+      const sweetboxRows = [];
+      const coupleStartIdx = Math.max(0, currentConfig.rows - 2);
+      for (let i = coupleStartIdx; i < currentConfig.rows; i++) {
+        sweetboxRows.push(String.fromCharCode(65 + i));
+      }
+
+      await theatersApi.generateSeats(selectedRoomId, {
+        rowCount: currentConfig.rows,
+        seatsPerRow: currentConfig.cols,
+        vipRows,
+        sweetboxRows
+      });
+      message.success('Đã lưu cấu hình ghế vào cơ sở dữ liệu thành công!');
+    } catch (err) {
+      message.error('Có lỗi xảy ra khi lưu cấu hình ghế.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateCurrentConfig = (fields: Partial<ScreenConfig>) => {
+    setCurrentConfig(prev => ({ ...prev, ...fields }));
+  };
 
   const updateGridSize = (newRows: number, newCols: number) => {
     const validRows = Math.max(10, Math.min(20, newRows));
@@ -101,15 +203,6 @@ export default function TheatersPage() {
     }
   };
 
-  // Khi chuyển đổi phòng chiếu, reset lại lịch sử undo/redo của grid size về trạng thái phòng đó
-  const handleScreenChange = (screenKey: string) => {
-    setSelectedScreen(screenKey);
-    const targetConfig = theaterConfigs[screenKey];
-    setHistory([{ rows: targetConfig.rows, cols: targetConfig.cols }]);
-    setHistoryIndex(0);
-  };
-
-  // LOGIC DROPDOWN CHÈN BẢNG KIỂU WORD
   const [hoveredRow, setHoveredRow] = useState<number>(0);
   const [hoveredCol, setHoveredCol] = useState<number>(0);
 
@@ -126,23 +219,12 @@ export default function TheatersPage() {
               return (
                 <div
                   key={cIdx}
-                  onMouseEnter={() => {
-                    setHoveredRow(rIdx + 1);
-                    setHoveredCol(cIdx + 1);
-                  }}
-                  onMouseLeave={() => {
-                    setHoveredRow(0);
-                    setHoveredCol(0);
-                  }}
+                  onMouseEnter={() => { setHoveredRow(rIdx + 1); setHoveredCol(cIdx + 1); }}
+                  onMouseLeave={() => { setHoveredRow(0); setHoveredCol(0); }}
                   onClick={() => updateGridSize(rIdx + 10, cIdx + 10)}
                   style={{
-                    width: 18,
-                    height: 18,
-                    borderRadius: 2,
-                    border: '1px solid #cbd5e1',
-                    background: isSelected ? '#c7d2fe' : '#f8fafc',
-                    cursor: 'pointer',
-                    transition: 'all 0.1s ease'
+                    width: 18, height: 18, borderRadius: 2, border: '1px solid #cbd5e1',
+                    background: isSelected ? '#c7d2fe' : '#f8fafc', cursor: 'pointer', transition: 'all 0.1s ease'
                   }}
                 />
               );
@@ -156,15 +238,6 @@ export default function TheatersPage() {
     </div>
   );
 
-  const screenItems: MenuProps['items'] = [
-    { key: 'Screen 1 - IMAX', label: 'Screen 1 - IMAX' },
-    { key: 'Screen 2 - IMAX', label: 'Screen 2 - IMAX' },
-    { key: 'Screen 3 - IMAX', label: 'Screen 3 - IMAX' },
-    { key: 'Screen 4 - IMAX', label: 'Screen 4 - IMAX' },
-    { key: 'Screen 5 - IMAX', label: 'Screen 5 - IMAX' },
-    { key: 'Screen 6 - IMAX', label: 'Screen 6 - IMAX' },
-  ];
-
   const rowLabels = useMemo(() => {
     const labels = [];
     for (let i = 0; i < currentConfig.rows; i++) {
@@ -173,26 +246,72 @@ export default function TheatersPage() {
     return labels;
   }, [currentConfig.rows]);
 
+  const selectedCinema = cinemas.find(c => c.id === selectedCinemaId);
+  const selectedRoom = rooms.find(r => r.id === selectedRoomId);
+
   return (
     <div style={{ background: '#fff', minHeight: '75vh', padding: '12px 0' }}>
       
-      {/* HÀNG 1: BREADCRUMB & NÚT LƯU */}
+      {/* HÀNG 1: CHỌN RẠP, CHỌN PHÒNG & NÚT LƯU */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <Space style={{ fontSize: '14px', color: '#64748b' }}>
-          <span>Theaters</span>
-          <span>&gt;</span>
-          <Dropdown menu={{ items: screenItems, onClick: (info) => handleScreenChange(info.key) }} trigger={['click']}>
-            <Button type="text" style={{ fontWeight: 700, color: '#1e293b', fontSize: '16px', padding: 0 }}>
-              {selectedScreen ? selectedScreen : 'Chọn phòng chiếu'} <DownOutlined style={{ fontSize: 12, marginLeft: 4 }} />
-            </Button>
-          </Dropdown>
+        <Space size={16} style={{ fontSize: '14px', color: '#64748b' }}>
+          {/* Dropdown Rạp */}
+          <Space>
+            <span style={{ fontWeight: 600 }}>Rạp chiếu:</span>
+            <Select
+              style={{ width: 220 }}
+              placeholder="Chọn rạp chiếu"
+              loading={loadingCinemas}
+              value={selectedCinemaId}
+              onChange={handleCinemaChange}
+              options={cinemas.map(c => ({ label: c.name, value: c.id }))}
+              dropdownRender={(menu) => (
+                <>
+                  {menu}
+                  <div style={{ padding: '8px', borderTop: '1px solid #e8e8e8' }}>
+                    <Button type="dashed" block icon={<PlusOutlined />} onClick={() => setIsCinemaModalOpen(true)}>
+                      Thêm rạp mới
+                    </Button>
+                  </div>
+                </>
+              )}
+            />
+          </Space>
+
+          {selectedCinemaId && <span>&gt;</span>}
+
+          {/* Dropdown Phòng chiếu */}
+          {selectedCinemaId && (
+            <Space>
+              <span style={{ fontWeight: 600 }}>Phòng chiếu:</span>
+              <Select
+                style={{ width: 180 }}
+                placeholder="Chọn phòng"
+                loading={loadingRooms}
+                value={selectedRoomId}
+                onChange={handleRoomChange}
+                options={rooms.map(r => ({ label: r.name, value: r.id }))}
+                dropdownRender={(menu) => (
+                  <>
+                    {menu}
+                    <div style={{ padding: '8px', borderTop: '1px solid #e8e8e8' }}>
+                      <Button type="dashed" block icon={<PlusOutlined />} onClick={() => setIsRoomModalOpen(true)}>
+                        Thêm phòng mới
+                      </Button>
+                    </div>
+                  </>
+                )}
+              />
+            </Space>
+          )}
         </Space>
 
-        {selectedScreen && (
+        {selectedRoomId && (
           <Button 
             type="primary" 
             icon={<SaveOutlined />} 
-            onClick={() => message.success(`Đã lưu cấu hình thành công cho ${selectedScreen}!`)}
+            onClick={handleSave}
+            loading={saving}
             style={{ borderRadius: 6, background: '#1677ff', fontWeight: 600 }}
           >
             Lưu
@@ -200,28 +319,26 @@ export default function TheatersPage() {
         )}
       </div>
 
-      {!selectedScreen ? (
+      {!selectedRoomId ? (
         <div style={{ textAlign: 'center', padding: '100px 0', color: '#94a3b8' }}>
           <AppstoreOutlined style={{ fontSize: 40, marginBottom: 12, color: '#cbd5e1' }} />
-          <p style={{ fontSize: '14px' }}>Vui lòng chọn phòng chiếu phía trên để hiển thị ma trận cấu hình ghế.</p>
+          <p style={{ fontSize: '14px' }}>Vui lòng chọn hoặc tạo mới Rạp và Phòng chiếu để hiển thị ma trận ghế.</p>
+        </div>
+      ) : loadingDetail ? (
+        <div style={{ textAlign: 'center', padding: '100px 0' }}>
+          <Spin size="large" />
         </div>
       ) : (
         <>
           {/* HÀNG 2: THANH CẤU HÌNH THEO TỪNG PHÒNG CHIẾU */}
           <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            background: '#f8fafc', 
-            padding: '16px', 
-            borderRadius: 8,
-            marginBottom: 32,
-            border: '1px dashed #cbd5e1'
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+            background: '#f8fafc', padding: '16px', borderRadius: 8, marginBottom: 32, border: '1px dashed #cbd5e1'
           }}>
             <Space size={32}>
               {/* Kích thước */}
               <Space direction="vertical" size={4}>
-                <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700 }}>KÍCH THƯRICH</span>
+                <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700 }}>KÍCH THƯỚC</span>
                 <Space>
                   <span style={{ fontSize: '13px' }}>Hàng:</span>
                   <InputNumber min={10} max={20} value={currentConfig.rows} onChange={(val) => updateGridSize(val || 10, currentConfig.cols)} size="small" style={{ width: 55 }} />
@@ -232,52 +349,22 @@ export default function TheatersPage() {
 
               {/* GIÁ VÉ SỐ TIỀN CỦA TỪNG PHÒNG */}
               <Space direction="vertical" size={4}>
-                <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700 }}>GIÁ VÉ</span>
+                <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700 }}>GIÁ VÉ (Chỉ hiển thị)</span>
                 <Space size={16}>
                   <Space size={4}>
                     <span style={{ background: '#93c5fd', color: '#1d4ed8', width: 12, height: 12, borderRadius: 2, display: 'inline-block' }} />
                     <span style={{ fontSize: '12px', color: '#1d4ed8', fontWeight: 600 }}>Standard:</span>
-                    <InputNumber 
-                      min={0} 
-                      step={5000}
-                      formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                      parser={(value) => value ? Number(value.replace(/[^\d]/g, '')) : 0}
-                      value={currentConfig.priceStandard} 
-                      onChange={(val) => updateCurrentConfig({ priceStandard: val || 0 })} 
-                      size="small" 
-                      style={{ width: 110 }} 
-                      addonAfter="đ" 
-                    />
+                    <InputNumber min={0} step={5000} formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(value) => value ? Number(value.replace(/[^\d]/g, '')) : 0} value={currentConfig.priceStandard} onChange={(val) => updateCurrentConfig({ priceStandard: val || 0 })} size="small" style={{ width: 110 }} addonAfter="đ" />
                   </Space>
                   <Space size={4}>
                     <span style={{ background: '#fef08a', color: '#a16207', width: 12, height: 12, borderRadius: 2, display: 'inline-block' }} />
                     <span style={{ fontSize: '12px', color: '#a16207', fontWeight: 600 }}>VIP:</span>
-                    <InputNumber 
-                      min={0} 
-                      step={5000}
-                      formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                      parser={(value) => value ? Number(value.replace(/[^\d]/g, '')) : 0}
-                      value={currentConfig.priceVip} 
-                      onChange={(val) => updateCurrentConfig({ priceVip: val || 0 })} 
-                      size="small" 
-                      style={{ width: 110 }} 
-                      addonAfter="đ" 
-                    />
+                    <InputNumber min={0} step={5000} formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(value) => value ? Number(value.replace(/[^\d]/g, '')) : 0} value={currentConfig.priceVip} onChange={(val) => updateCurrentConfig({ priceVip: val || 0 })} size="small" style={{ width: 110 }} addonAfter="đ" />
                   </Space>
                   <Space size={4}>
                     <span style={{ background: '#fbcfe8', color: '#db2777', width: 12, height: 12, borderRadius: 2, display: 'inline-block' }} />
                     <span style={{ fontSize: '12px', color: '#db2777', fontWeight: 600 }}>Couple:</span>
-                    <InputNumber 
-                      min={0} 
-                      step={5000}
-                      formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                      parser={(value) => value ? Number(value.replace(/[^\d]/g, '')) : 0}
-                      value={currentConfig.priceCouple} 
-                      onChange={(val) => updateCurrentConfig({ priceCouple: val || 0 })} 
-                      size="small" 
-                      style={{ width: 110 }} 
-                      addonAfter="đ" 
-                    />
+                    <InputNumber min={0} step={5000} formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(value) => value ? Number(value.replace(/[^\d]/g, '')) : 0} value={currentConfig.priceCouple} onChange={(val) => updateCurrentConfig({ priceCouple: val || 0 })} size="small" style={{ width: 110 }} addonAfter="đ" />
                   </Space>
                 </Space>
               </Space>
@@ -326,40 +413,21 @@ export default function TheatersPage() {
                     <span style={{ width: 20, fontWeight: 700, color: '#475569', fontSize: '13px' }}>{rowLabel}</span>
                     
                     {(() => {
-                      // LOGIC GHẾ ĐÔI COUPLE: CỐ ĐỊNH ĐÚNG 6 GHẾ MỖI HÀNG
                       if (isCoupleRow) {
                         let coupleCount = 0;
                         return displayColsArray.map((_, colDisplayIndex) => {
                           const displayColNum = colDisplayIndex + 1;
-
-                          // Lối đi xám cố định
                           if (displayColNum === 4 || displayColNum === 9) {
-                            return (
-                              <div 
-                                key={`walkway-couple-${displayColNum}`} 
-                                style={{ width: 24, height: 24, background: '#e2e8f0', borderRadius: 4 }} 
-                              />
-                            );
+                            return <div key={`walkway-couple-${displayColNum}`} style={{ width: 24, height: 24, background: '#e2e8f0', borderRadius: 4 }} />;
                           }
-
-                          // Tạo tối đa đúng 6 cặp ghế đôi bo góc mỗi hàng
                           coupleCount++;
-                          if (coupleCount <= 6) {
+                          if (coupleCount <= Math.floor(currentConfig.cols / 2)) {
                             return (
                               <div 
                                 key={`couple-${rowLabel}-${coupleCount}`}
                                 style={{ 
-                                  width: 54, 
-                                  height: 24, 
-                                  background: '#fbcfe8', 
-                                  borderRadius: 6,
-                                  border: '1px solid #f472b6',
-                                  fontSize: '10px',
-                                  fontWeight: 600,
-                                  color: '#db2777',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center'
+                                  width: 54, height: 24, background: '#fbcfe8', borderRadius: 6, border: '1px solid #f472b6',
+                                  fontSize: '10px', fontWeight: 600, color: '#db2777', display: 'flex', alignItems: 'center', justifyContent: 'center'
                                 }}
                               >
                                 C{coupleCount}
@@ -370,22 +438,13 @@ export default function TheatersPage() {
                         });
                       }
 
-                      // LOGIC RENDER GHẾ THƯỜNG & VIP
                       return displayColsArray.map((_, colDisplayIndex) => {
                         const displayColNum = colDisplayIndex + 1;
-
                         if (displayColNum === 4 || displayColNum === 9) {
-                          return (
-                            <div 
-                              key={`walkway-${displayColNum}`} 
-                              style={{ width: 24, height: 24, background: '#e2e8f0', borderRadius: 4 }} 
-                            />
-                          );
+                          return <div key={`walkway-${displayColNum}`} style={{ width: 24, height: 24, background: '#e2e8f0', borderRadius: 4 }} />;
                         }
 
                         currentSeatNumber++;
-
-                        // Cố định vùng ghế VIP
                         const charCode = rowLabel.charCodeAt(0);
                         const isVipRow = charCode >= 68 && charCode <= 71; 
                         const isVipCol = currentSeatNumber >= 4 && currentSeatNumber <= 7;
@@ -405,7 +464,6 @@ export default function TheatersPage() {
                           );
                         }
 
-                        // Ghế Standard thông thường
                         return (
                           <div 
                             key={`${rowLabel}-${currentSeatNumber}`}
@@ -427,6 +485,45 @@ export default function TheatersPage() {
           </div>
         </>
       )}
+
+      {/* MODAL THÊM RẠP MỚI */}
+      <Modal
+        title="Thêm Rạp Chiếu Mới"
+        open={isCinemaModalOpen}
+        onOk={handleCreateCinema}
+        onCancel={() => setIsCinemaModalOpen(false)}
+        okText="Lưu rạp"
+        cancelText="Hủy"
+      >
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontWeight: 600, display: 'block', marginBottom: 8 }}>Tên rạp</label>
+          <Input placeholder="Nhập tên rạp..." value={newCinemaName} onChange={e => setNewCinemaName(e.target.value)} />
+        </div>
+        <div>
+          <label style={{ fontWeight: 600, display: 'block', marginBottom: 8 }}>Địa chỉ</label>
+          <Input placeholder="Nhập địa chỉ..." value={newCinemaAddress} onChange={e => setNewCinemaAddress(e.target.value)} />
+        </div>
+      </Modal>
+
+      {/* MODAL THÊM PHÒNG CHIẾU MỚI */}
+      <Modal
+        title="Thêm Phòng Chiếu Mới"
+        open={isRoomModalOpen}
+        onOk={handleCreateRoom}
+        onCancel={() => setIsRoomModalOpen(false)}
+        okText="Lưu phòng"
+        cancelText="Hủy"
+      >
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontWeight: 600, display: 'block', marginBottom: 8 }}>Rạp trực thuộc</label>
+          <Input disabled value={selectedCinema?.name || ''} />
+        </div>
+        <div>
+          <label style={{ fontWeight: 600, display: 'block', marginBottom: 8 }}>Tên phòng chiếu</label>
+          <Input placeholder="Ví dụ: Screen 1, IMAX 01..." value={newRoomName} onChange={e => setNewRoomName(e.target.value)} />
+        </div>
+      </Modal>
+
     </div>
   );
 }
