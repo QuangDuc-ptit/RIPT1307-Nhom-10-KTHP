@@ -28,6 +28,7 @@ export default function AppRoutes() {
       <Route path="/auth/register" element={<RegisterPage />} />
       <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
       <Route path="/home-debug" element={<HomePage />} />
+      <Route path="/movie/:id" element={<MovieDetailPage />} />
       
       {/* Route chọn ghế và đồ ăn */}
       <Route path="/chon-ghe" element={<ChonGhe />} />
@@ -37,7 +38,6 @@ export default function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route path="/home" element={<HomePage />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/movie/:id" element={<MovieDetailPage />} />
         <Route path="/orders" element={<OrderHistoryPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
       </Route>
