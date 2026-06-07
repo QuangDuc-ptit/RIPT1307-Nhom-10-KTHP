@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { PrismaClient, SeatType } from '@prisma/client';
 
 const prisma = new PrismaClient();

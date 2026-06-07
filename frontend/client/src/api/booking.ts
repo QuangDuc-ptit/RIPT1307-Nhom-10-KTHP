@@ -1,18 +1,23 @@
 import { apiClient } from './client';
 
+export type SeatStatus = 'AVAILABLE' | 'BOOKED' | 'LOCKED' | 'RESERVED';
+
+export interface Seat {
+  id: string;
+  row: string;
+  number: number;
+  type: 'NORMAL' | 'VIP' | 'SWEETBOX';
+  roomId: string;
+}
+
 export interface ShowtimeSeat {
   id: string;
   showtimeId: string;
   seatId: string;
-  status: 'AVAILABLE' | 'BOOKED' | 'LOCKED';
+  status: SeatStatus;
   userId?: string;
-  seat: {
-    id: string;
-    row: string;
-    number: number;
-    type: 'NORMAL' | 'VIP' | 'SWEETBOX';
-    roomId: string;
-  };
+  version: number;
+  seat: Seat;
 }
 
 export interface Room {

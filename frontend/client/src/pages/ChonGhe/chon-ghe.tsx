@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Room, Seat, Showtime, ShowtimeSeat } from '@/api/booking';
+import { Room, Showtime, ShowtimeSeat } from '@/api/booking';
 import { tokenStore } from '@/api/client';
 import { getSocket } from '@/api/socket';
 import { bookingApi } from '@/api/booking';
 import { message } from 'antd';
 
 // --- Types ---
-type SeatType = "REGULAR" | "VIP" | "SWEETBOX";
-type SeatStatus = "AVAILABLE" | "BOOKED" | "LOCKED";
+type SeatType = "NORMAL" | "VIP" | "SWEETBOX";
+type SeatStatus = "AVAILABLE" | "BOOKED" | "LOCKED" | "RESERVED";
 
 interface Seat {
   id: string; // The showtimeSeatId
@@ -19,6 +19,7 @@ interface Seat {
   status: SeatStatus;
   isCenterZone: boolean;
   price: number;
+  version: number;
 }
 
 // --- Constants ---

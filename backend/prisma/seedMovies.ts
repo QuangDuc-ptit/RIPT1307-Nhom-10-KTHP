@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { PrismaClient, MovieStatus } from '@prisma/client';
 import slugify from 'slugify';
 
