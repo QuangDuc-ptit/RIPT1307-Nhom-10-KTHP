@@ -41,7 +41,7 @@ const mapBackendToClientMovie = (m: any): Movie => {
 
 export const fetchMovies = async (): Promise<Movie[]> => {
   try {
-    const res = await apiClient.get('/phim?pageSize=50');
+    const res = await apiClient.get('/movies?pageSize=50');
     if (res.data?.items) {
       return res.data.items.map(mapBackendToClientMovie);
     }
@@ -64,7 +64,7 @@ export const getComingSoonMovies = async (): Promise<Movie[]> => {
 
 export const getMovieById = async (id: string | number): Promise<Movie | null> => {
   try {
-    const res = await apiClient.get(`/phim/${id}`);
+    const res = await apiClient.get(`/movies/${id}`);
     if (res.data) {
       return mapBackendToClientMovie(res.data);
     }
