@@ -204,6 +204,7 @@ const ChonGhe: React.FC = () => {
     primaryContainer: '#e50914',
     primary: '#ffb4aa',
     border: 'rgba(255,255,255,0.1)',
+    textDim: '#a3989c',
   };
   const glassStyle: React.CSSProperties = {
     background: 'rgba(255,255,255,0.05)',
