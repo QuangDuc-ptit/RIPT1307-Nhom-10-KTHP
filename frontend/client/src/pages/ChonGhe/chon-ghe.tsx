@@ -308,7 +308,7 @@ const ChonGhe: React.FC = () => {
     }
     if (seat.status === "RESERVED") return { ...base, backgroundColor: '#555555', cursor: 'not-allowed', opacity: 0.7 };
     if (seat.status === "BOOKED") return { ...base, backgroundColor: '#5b57c7', cursor: 'not-allowed' };
-    if (seat.status === "LOCKED") return { ...base, backgroundColor: '#222222', cursor: 'not-allowed' };
+    if (seat.status === "LOCKED") return { ...base, backgroundColor: '#003366', cursor: 'not-allowed' };
     if (seat.type === "VIP") {
       if (seat.isCenterZone) return { ...base, backgroundColor: '#00c853' };
       return { ...base, backgroundColor: '#f5b000' };
@@ -376,7 +376,7 @@ const ChonGhe: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#00c853', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>VIP TRUNG TÂM</span></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#ff0000', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>ĐÃ CHỌN</span></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#5b57c7', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>ĐÃ ĐẶT</span></div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#222222', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>BỊ KHÓA</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '14px', height: '14px', backgroundColor: '#003366', borderRadius: '2px' }}></div><span style={{ fontSize: 'clamp(8px, 2.5vw, 10px)', fontWeight: 'bold', letterSpacing: '1px' }}>BỊ KHÓA</span></div>
             </div>
 
             {isLoading ? (
