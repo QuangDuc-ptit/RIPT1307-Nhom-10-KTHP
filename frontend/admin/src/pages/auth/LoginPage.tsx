@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, Form, Input, App as AntdApp } from 'antd';
 import { LockOutlined, MailOutlined } from '@ant-design/icons';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuthStore } from '@/store/auth';
 import { tokenStore } from '@/api/client';
@@ -15,27 +15,10 @@ export default function LoginPage() {
   const login = useAuthStore((s) => s.login);
   const bootstrap = useAuthStore((s) => s.bootstrap);
   const [loading, setLoading] = useState(false);
-  const [searchParams, setSearchParams] = useSearchParams();
 
   const from = (location.state as any)?.from?.pathname || '/dashboard';
 
-  useEffect(() => {
-    const accessToken = searchParams.get('accessToken');
-    const refreshToken = searchParams.get('refreshToken');
-    if (accessToken) {
-      tokenStore.set(accessToken);
-      if (refreshToken) tokenStore.setRefresh(refreshToken);
-      // Xóa params khỏi URL để đẹp hơn
-      searchParams.delete('accessToken');
-      searchParams.delete('refreshToken');
-      setSearchParams(searchParams, { replace: true });
-      
-      // Gọi bootstrap để lấy user profile và vào dashboard
-      bootstrap().then(() => {
-        navigate(from, { replace: true });
-      });
-    }
-  }, [searchParams, setSearchParams, bootstrap, navigate, from]);
+
 
   const onFinish = async (values: LoginPayload) => {
     setLoading(true);
@@ -44,7 +27,15 @@ export default function LoginPage() {
       message.success('Đăng nhập thành công');
       navigate(from, { replace: true });
     } catch (e: any) {
-      message.error(e.message || 'Đăng nhập thất bại');
+      if (e.code === 'FORBIDDEN' && e.accessToken) {
+        message.loading('Đang chuyển hướng đến trang Khách hàng...');
+        const clientBaseUrl = 'https://kstar-client.netlify.app';
+        setTimeout(() => {
+          window.location.href = `${clientBaseUrl}/home?accessToken=${e.accessToken}&refreshToken=${e.refreshToken}`;
+        }, 1000);
+      } else {
+        message.error(e.message || 'Đăng nhập thất bại');
+      }
     } finally {
       setLoading(false);
     }

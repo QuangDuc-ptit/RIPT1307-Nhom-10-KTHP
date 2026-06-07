@@ -97,6 +97,7 @@ export default function UserFormModal({ open, editing, onClose, onSuccess }: Pro
             options={[
               { value: 'USER', label: 'Người dùng' },
               { value: 'ADMIN', label: 'Quản trị' },
+              { value: 'STAFF', label: 'Nhân viên' },
             ]}
           />
         </Form.Item>

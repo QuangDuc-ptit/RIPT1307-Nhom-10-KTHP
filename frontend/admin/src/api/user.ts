@@ -5,7 +5,7 @@ export interface CreateUserPayload {
   email: string;
   name: string;
   password: string;
-  role: 'USER' | 'ADMIN';
+  role: 'USER' | 'ADMIN' | 'STAFF';
 }
 
 export type UpdateUserPayload = Partial<Omit<CreateUserPayload, 'email'>>;

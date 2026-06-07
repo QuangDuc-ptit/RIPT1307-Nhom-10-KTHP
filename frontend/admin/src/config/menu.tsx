@@ -17,7 +17,7 @@ export interface AdminMenuItem {
   key: string;
   label: React.ReactNode;
   icon?: React.ReactNode;
-  requireRole?: ('ADMIN' | 'USER')[];
+  requireRole?: ('ADMIN' | 'USER' | 'STAFF')[];
   children?: AdminMenuItem[];
 }
 
@@ -57,7 +57,7 @@ export const adminMenu: AdminMenuItem[] = [
 
 export const filterMenuByRole = (
   items: AdminMenuItem[],
-  role: 'ADMIN' | 'USER' | undefined,
+  role: 'ADMIN' | 'USER' | 'STAFF' | undefined,
 ): MenuProps['items'] =>
   items
     .filter((i) => !i.requireRole || (role && i.requireRole.includes(role)))

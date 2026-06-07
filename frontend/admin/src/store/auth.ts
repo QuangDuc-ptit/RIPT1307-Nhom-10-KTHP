@@ -38,10 +38,14 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: async (payload) => {
     const { accessToken, refreshToken, user } = await authApi.login(payload);
-    // Admin chỉ cho ADMIN đăng nhập. Backend cũng đã kiểm tra,
-    // nhưng FE chặn sớm để UX tốt hơn.
-    if (user.role !== 'ADMIN') {
-      throw { code: 'FORBIDDEN', message: 'Tài khoản không có quyền truy cập admin' };
+    if (user.role !== 'ADMIN' && user.role !== 'STAFF') {
+      throw { 
+        code: 'FORBIDDEN', 
+        message: 'Chuyển hướng đến trang Khách hàng...', 
+        user, 
+        accessToken, 
+        refreshToken 
+      };
     }
     tokenStore.set(accessToken);
     tokenStore.setRefresh(refreshToken);

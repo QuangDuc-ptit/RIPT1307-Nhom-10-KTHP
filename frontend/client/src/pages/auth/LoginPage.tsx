@@ -35,9 +35,9 @@ const LoginPage: React.FC = () => {
         antdMessage.success('Đăng nhập thành công');
         
         // Kiểm tra quyền và điều hướng
-        if (result && result.user && (result.user as any).role === 'ADMIN') {
-          // Gắn token vào URL để truyền sang bên admin
-          window.location.href = `http://localhost:5174/auth/login?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
+        if (result && result.user && ['ADMIN', 'STAFF'].includes((result.user as any).role)) {
+          const adminBaseUrl = 'https://kstar-admin.netlify.app';
+          window.location.href = `${adminBaseUrl}/dashboard?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
         } else {
           navigate(from, { replace: true });
         }
@@ -73,8 +73,9 @@ const LoginPage: React.FC = () => {
       const res = await socialLogin({ provider: providerName, idToken });
       antdMessage.success('Đăng nhập thành công');
       
-      if (res && res.user && (res.user as any).role === 'ADMIN') {
-        window.location.href = `http://localhost:5174/auth/login?accessToken=${res.accessToken}&refreshToken=${res.refreshToken}`;
+      if (res && res.user && ['ADMIN', 'STAFF'].includes((res.user as any).role)) {
+        const adminBaseUrl = 'https://kstar-admin.netlify.app';
+        window.location.href = `${adminBaseUrl}/dashboard?accessToken=${res.accessToken}&refreshToken=${res.refreshToken}`;
       } else {
         navigate(from, { replace: true });
       }
