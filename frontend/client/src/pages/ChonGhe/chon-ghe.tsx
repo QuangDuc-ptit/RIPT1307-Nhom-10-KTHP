@@ -305,6 +305,7 @@ const ChonGhe: React.FC = () => {
         boxShadow: '0 0 12px rgba(229,9,20,0.8)',
       };
     }
+    if (seat.status === "RESERVED") return { ...base, backgroundColor: '#555555', cursor: 'not-allowed', opacity: 0.7 };
     if (seat.status === "BOOKED") return { ...base, backgroundColor: '#5b57c7', cursor: 'not-allowed' };
     if (seat.status === "LOCKED") return { ...base, backgroundColor: '#222222', cursor: 'not-allowed' };
     if (seat.type === "VIP") {
