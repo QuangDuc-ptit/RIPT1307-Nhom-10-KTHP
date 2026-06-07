@@ -10,5 +10,13 @@ export const datVeController = {
 
     const result = await datVeService.giuGhe(userId, showtimeSeatId, version);
     ok(res, { message: 'Đã giữ ghế thành công', seat: result });
+  },
+
+  huyGhe: async (req: Request, res: Response) => {
+    const { showtimeSeatId } = req.body;
+    const userId = req.user!.id;
+
+    await datVeService.huyGhe(userId, showtimeSeatId);
+    ok(res, { message: 'Đã hủy giữ ghế' });
   }
 };

@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { bookingApi, ShowtimeSeat } from '@/api/booking';
+import { Room, Seat, Showtime, ShowtimeSeat } from '@/api/booking';
+import { tokenStore } from '@/api/client';
+import { getSocket } from '@/api/socket';
+import { bookingApi } from '@/api/booking';
 import { message } from 'antd';
 
 // --- Types ---
@@ -109,7 +112,8 @@ const ChonGhe: React.FC = () => {
               type,
               status: stSeat.status,
               isCenterZone: isCenter,
-              price
+              price,
+              version: stSeat.version
             };
           });
 
@@ -162,16 +166,84 @@ const ChonGhe: React.FC = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleSeatClick = (seatId: string) => {
+  useEffect(() => {
+    if (!bookingInfo?.showtimeId) return;
+    const socket = getSocket();
+    socket.connect();
+    socket.emit('join_showtime', bookingInfo.showtimeId);
+
+    const handleStatusChange = (data: { showtimeSeatId: string, status: string, userId: string | null, version: number }) => {
+      setAllSeats(prev => prev.map(seat => 
+        seat.id === data.showtimeSeatId 
+          ? { ...seat, status: data.status, version: data.version } as any
+          : seat
+      ));
+      
+      // Bỏ chọn nếu ghế mình đang chọn bị người khác giữ
+      if (data.status === 'RESERVED') {
+        setSelectedSeatIds(prev => {
+          if (prev.has(data.showtimeSeatId)) {
+            const next = new Set(prev);
+            next.delete(data.showtimeSeatId);
+            message.warning('Một ghế bạn đang chọn vừa bị người khác giữ!');
+            return next;
+          }
+          return prev;
+        });
+      }
+    };
+
+    socket.on('seat_status_change', handleStatusChange);
+
+    return () => {
+      socket.emit('leave_showtime', bookingInfo.showtimeId);
+      socket.off('seat_status_change', handleStatusChange);
+      socket.disconnect();
+    };
+  }, [bookingInfo]);
+
+  const handleSeatClick = async (seatId: string) => {
+    if (!tokenStore.get()) {
+      message.warning('Vui lòng đăng nhập để chọn ghế');
+      return;
+    }
+
     const seat = seatMap.get(seatId);
     if (!seat || !isSeatSelectable(seat)) return;
 
+    const isSelecting = !selectedSeatIds.has(seatId);
+
+    if (isSelecting && selectedSeatIds.size >= 8) {
+      message.warning('Chỉ được chọn tối đa 8 ghế');
+      return;
+    }
+
+    // Optimistic update
     setSelectedSeatIds(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(seatId)) newSet.delete(seatId);
-      else newSet.add(seatId);
+      if (isSelecting) newSet.add(seatId);
+      else newSet.delete(seatId);
       return newSet;
     });
+
+    try {
+      if (isSelecting) {
+        const currentVersion = (seat as any).version || 1;
+        await bookingApi.giuGhe(seatId, currentVersion);
+      } else {
+        await bookingApi.huyGhe(seatId);
+      }
+    } catch (error: any) {
+      console.error("Lỗi giữ/nhả ghế:", error);
+      message.error(error.response?.data?.message || 'Không thể thao tác ghế, vui lòng thử lại');
+      // Revert local state
+      setSelectedSeatIds(prev => {
+        const newSet = new Set(prev);
+        if (isSelecting) newSet.delete(seatId);
+        else newSet.add(seatId);
+        return newSet;
+      });
+    }
   };
 
   const selectedSeats = useMemo(() => allSeats.filter(seat => selectedSeatIds.has(seat.id)), [allSeats, selectedSeatIds]);

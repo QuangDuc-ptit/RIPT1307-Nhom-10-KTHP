@@ -5,14 +5,10 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding showtimes for client testing...');
 
-  // Lấy ra 1 bộ phim đang chiếu
-  let movie = await prisma.movie.findUnique({ where: { id: '2' } });
+  // Lấy ra 20 bộ phim đang chiếu
+  const movies = await prisma.movie.findMany({ take: 20 });
   
-  if (!movie) {
-    movie = await prisma.movie.findFirst();
-  }
-  
-  if (!movie) {
+  if (movies.length === 0) {
     console.log('No movie found. Please seed movies first.');
     return;
   }
@@ -29,30 +25,32 @@ async function main() {
 
   const showtimesToCreate = [];
 
+  // Xoá suất chiếu cũ của phim này để tránh trùng lặp nếu chạy lại
+  await prisma.showtime.deleteMany({
+    where: { movieId: { in: movies.map(m => m.id) } }
+  });
+
   // Tạo suất chiếu cho 3 ngày tới
   for (let d = 0; d < 3; d++) {
     const targetDate = new Date(today);
     targetDate.setDate(targetDate.getDate() + d);
 
-    // Mỗi phòng 2 suất chiếu mỗi ngày
+    // Mỗi phòng 2 suất chiếu mỗi ngày, lặp qua tất cả phim
     for (const room of rooms) {
-      for (const h of [10, 18]) {
-        const startTime = new Date(targetDate);
-        startTime.setHours(h, 0, 0, 0);
-        
-        showtimesToCreate.push({
-          movieId: movie.id,
-          roomId: room.id,
-          startTime
-        });
+      for (const movie of movies) {
+        for (const h of [10, 18]) {
+          const startTime = new Date(targetDate);
+          startTime.setHours(h, 0, 0, 0);
+          
+          showtimesToCreate.push({
+            movieId: movie.id,
+            roomId: room.id,
+            startTime
+          });
+        }
       }
     }
   }
-
-  // Xoá suất chiếu cũ của phim này để tránh trùng lặp nếu chạy lại
-  await prisma.showtime.deleteMany({
-    where: { movieId: movie.id }
-  });
 
   // Tạo suất chiếu mới
   for (const st of showtimesToCreate) {

@@ -1,6 +1,7 @@
 import { buildApp } from './app';
 import { env } from './config/env';
 import { prisma } from './config/db';
+import { initSocket } from './config/socket';
 
 const app = buildApp();
 
@@ -9,6 +10,9 @@ const server = app.listen(env.PORT, () => {
   console.log(`   Health:  http://localhost:${env.PORT}/api/health`);
   console.log(`   Env:     ${env.NODE_ENV}\n`);
 });
+
+// Initialize Socket.IO
+initSocket(server);
 
 /**
  * Graceful shutdown: đóng server + Prisma client khi nhận SIGTERM/SIGINT.

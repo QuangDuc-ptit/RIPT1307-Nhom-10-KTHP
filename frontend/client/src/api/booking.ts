@@ -45,5 +45,15 @@ export const bookingApi = {
   getShowtimeDetail: async (showtimeId: string): Promise<Showtime> => {
     const res = await apiClient.get(`/suat-chieu/${showtimeId}`);
     return (res as any).data;
+  },
+
+  giuGhe: async (showtimeSeatId: string, version: number) => {
+    const res = await apiClient.post('/dat-ve/giu-ghe', { showtimeSeatId, version });
+    return res;
+  },
+
+  huyGhe: async (showtimeSeatId: string) => {
+    const res = await apiClient.post('/dat-ve/huy-ghe', { showtimeSeatId });
+    return res;
   }
 };
