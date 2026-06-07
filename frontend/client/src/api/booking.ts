@@ -38,12 +38,12 @@ export interface Showtime {
 
 export const bookingApi = {
   getShowtimesByMovie: async (movieId: string): Promise<Showtime[]> => {
-    const res = await apiClient.get<{ success: boolean; data: Showtime[] }>(`/suat-chieu?movieId=${movieId}`);
-    return res.data.data;
+    const res = await apiClient.get(`/suat-chieu?movieId=${movieId}`);
+    return (res as any).data;
   },
 
   getShowtimeDetail: async (showtimeId: string): Promise<Showtime> => {
-    const res = await apiClient.get<{ success: boolean; data: Showtime }>(`/suat-chieu/${showtimeId}`);
-    return res.data.data;
+    const res = await apiClient.get(`/suat-chieu/${showtimeId}`);
+    return (res as any).data;
   }
 };

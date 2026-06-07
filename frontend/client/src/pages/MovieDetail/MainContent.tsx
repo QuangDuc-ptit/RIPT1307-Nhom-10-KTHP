@@ -63,7 +63,7 @@ const MainContent: React.FC<Props> = ({ movie }) => {
       setIsLoadingShowtimes(true);
       try {
         const data = await bookingApi.getShowtimesByMovie(movie.id.toString());
-        setShowtimes(data);
+        setShowtimes(data || []);
       } catch (error) {
         console.error('Failed to fetch showtimes:', error);
         setShowtimes([]);
