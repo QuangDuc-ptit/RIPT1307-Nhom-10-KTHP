@@ -36,7 +36,7 @@ const LoginPage: React.FC = () => {
         
         // Kiểm tra quyền và điều hướng
         if (result && result.user && ['ADMIN', 'STAFF'].includes((result.user as any).role)) {
-          const adminBaseUrl = 'https://kstar-admin.netlify.app';
+          const adminBaseUrl = 'https://admin-kstar.netlify.app';
           window.location.href = `${adminBaseUrl}/dashboard?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
         } else {
           navigate(from, { replace: true });
@@ -74,7 +74,7 @@ const LoginPage: React.FC = () => {
       antdMessage.success('Đăng nhập thành công');
       
       if (res && res.user && ['ADMIN', 'STAFF'].includes((res.user as any).role)) {
-        const adminBaseUrl = 'https://kstar-admin.netlify.app';
+        const adminBaseUrl = 'https://admin-kstar.netlify.app';
         window.location.href = `${adminBaseUrl}/dashboard?accessToken=${res.accessToken}&refreshToken=${res.refreshToken}`;
       } else {
         navigate(from, { replace: true });

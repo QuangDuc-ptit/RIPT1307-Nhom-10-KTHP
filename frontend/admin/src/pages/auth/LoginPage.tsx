@@ -29,7 +29,7 @@ export default function LoginPage() {
     } catch (e: any) {
       if (e.code === 'FORBIDDEN' && e.accessToken) {
         message.loading('Đang chuyển hướng đến trang Khách hàng...');
-        const clientBaseUrl = 'https://kstar-client.netlify.app';
+        const clientBaseUrl = 'https://user-kstar.netlify.app';
         setTimeout(() => {
           window.location.href = `${clientBaseUrl}/home?accessToken=${e.accessToken}&refreshToken=${e.refreshToken}`;
         }, 1000);
