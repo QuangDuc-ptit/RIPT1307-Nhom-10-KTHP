@@ -20,6 +20,7 @@ const DoAnNuocUongPage = lazy(() => import('@/pages/food/DoAnNuocUongPage'));
 const KhuyenMaiPage = lazy(() => import('@/pages/khuyenmai/KhuyenMaiPage'));
 
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'));
+const ScanTicketPage = lazy(() => import('@/pages/staff/ScanTicketPage'));
 const ForbiddenPage = lazy(() => import('@/pages/ForbiddenPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 
@@ -55,6 +56,8 @@ export function AppRoutes() {
 
             {/* 🌟 Route cho trang Khuyến mãi - Khớp path 'promotions' theo thiết kế menu Figma */}
             <Route path='promotions' element={<KhuyenMaiPage />} />
+            
+            <Route path='staff-scan' element={<ScanTicketPage />} />
             
             <Route path='settings' element={<SettingsPage />} />
           </Route>

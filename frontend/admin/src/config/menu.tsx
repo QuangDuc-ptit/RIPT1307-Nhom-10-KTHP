@@ -6,6 +6,7 @@ import {
   CoffeeOutlined,         // Đồ ăn và nước uống
   PercentageOutlined,     // Khuyến mãi
   SettingOutlined,        // Cài đặt (Đã xóa BarChartOutlined tại đây)
+  ScanOutlined,           // Soát vé
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
@@ -52,6 +53,12 @@ export const adminMenu: AdminMenuItem[] = [
     label: <Link to='/settings'>Cài đặt</Link>,
     icon: <SettingOutlined />,
     requireRole: ['ADMIN'], // Chỉ tài khoản ADMIN mới nhìn thấy mục Cài đặt này
+  },
+  {
+    key: '/staff-scan',
+    label: <Link to='/staff-scan'>Soát vé</Link>,
+    icon: <ScanOutlined />,
+    requireRole: ['ADMIN', 'STAFF'], // Cả ADMIN và STAFF đều có thể soát vé
   },
 ];
 
